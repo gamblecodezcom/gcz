@@ -1,0 +1,11 @@
+{
+  "name": "GambleCodez",
+  "short_name": "GambleCodez",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#00eaff",
+  "icons": [
+    {"src": "favicon.svg", "type": "image/svg+xml", "sizes": "96x96"}
+  ]
+}

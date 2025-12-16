@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GambleCodez – Affiliate Hub</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <!-- Header with animated gradient background and navigation -->
+    <header class="header">
+      <nav class="nav">
+        <div class="logo">GambleCodez</div>
+        <ul class="nav-links">
+          <li><a href="#home">Home</a></li>
+          <li><a href="#raffle">Raffle</a></li>
+          <li><a href="#wallet">Wallet</a></li>
+          <li><a href="#report">Report Site</a></li>
+          <li><a href="#newsletter">Newsletter</a></li>
+        </ul>
+        <div class="theme-toggle" id="themeToggle" title="Toggle light/dark mode">
+          <!-- simple sun/moon SVG icons -->
+          <svg id="sunIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="icon hidden"><path d="M12 4a1 1 0 01-1-1V2a1 1 0 112 0v1a1 1 0 01-1 1zm0 18a1 1 0 011-1h1a1 1 0 110 2h-1a1 1 0 01-1-1zm9-9a1 1 0 01-1-1v-1a1 1 0 112 0v1a1 1 0 01-1 1zm-18 0a1 1 0 011-1V9a1 1 0 10-2 0v1a1 1 0 011 1zm12.657-7.071a1 1 0 010-1.414l.707-.707a1 1 0 011.414 1.414l-.707.707a1 1 0 01-1.414 0zM4.929 19.071a1 1 0 010-1.414l.707-.707a1 1 0 011.414 1.414l-.707.707a1 1 0 01-1.414 0zm12.728 1.414a1 1 0 011.414-1.414l.707.707a1 1 0 01-1.414 1.414l-.707-.707zM4.222 5.636A1 1 0 014.222 4.222l.707-.707a1 1 0 011.414 1.414l-.707.707a1 1 0 01-1.414 0zM12 6a6 6 0 100 12 6 6 0 000-12z" /></svg>
+          <svg id="moonIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="icon"><path d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z" /></svg>
+        </div>
+      </nav>
+    </header>
+    
+    <!-- Hero section -->
+    <section id="home" class="hero">
+      <h1>Welcome to GambleCodez</h1>
+      <p>Your premier affiliate hub for sweepstakes & crypto casinos.</p>
+      <button id="scrollToRaffle" class="cta">Enter the Latest Raffle</button>
+    </section>
+
+    <!-- Authentication section -->
+    <section id="auth" class="auth">
+      <div id="authForms" class="auth-forms">
+        <div class="auth-card" id="registerCard">
+          <h2>Register</h2>
+          <form id="registerForm">
+            <input type="text" id="regUsername" placeholder="Username" required />
+            <input type="email" id="regEmail" placeholder="Email" required />
+            <input type="text" id="regTelegram" placeholder="Telegram handle" required />
+            <input type="text" id="regCwallet" placeholder="Cwallet ID" required />
+            <input type="password" id="regPassword" placeholder="Password" required />
+            <input type="password" id="regConfirmPassword" placeholder="Confirm password" required />
+            <button type="submit">Sign Up</button>
+          </form>
+          <p>Already have an account? <a href="#" id="showLogin">Login</a></p>
+        </div>
+        <div class="auth-card hidden" id="loginCard">
+          <h2>Login</h2>
+          <form id="loginForm">
+            <input type="text" id="loginUsername" placeholder="Username" required />
+            <input type="password" id="loginPassword" placeholder="Password" required />
+            <button type="submit">Login</button>
+          </form>
+          <p>New here? <a href="#" id="showRegister">Create an account</a></p>
+        </div>
+      </div>
+      <div id="userWelcome" class="user-welcome hidden">
+        <p>Welcome, <span id="currentUsername"></span>!</p>
+        <p id="lastCheckin"></p>
+        <button id="logoutBtn">Logout</button>
+        <button id="checkinBtn" class="checkin-btn">Daily Check-In</button>
+      </div>
+    </section>
+
+    <!-- Raffle section -->
+    <section id="raffle" class="section raffle">
+      <h2>Live Raffle</h2>
+      <div id="raffleContainer" class="raffle-container">
+        <p>Loading active raffles...</p>
+      </div>
+    </section>
+
+    <!-- Wallet section -->
+    <section id="wallet" class="section wallet">
+      <h2>Your Cwallet</h2>
+      <div id="walletContainer">
+        <p>Please login to view your wallet.</p>
+      </div>
+    </section>
+
+    <!-- Report Site section -->
+    <section id="report" class="section report">
+      <h2>Report a Site</h2>
+      <form id="reportForm" class="report-form">
+        <input type="text" id="reportSiteName" placeholder="Site name" required />
+        <textarea id="reportDescription" placeholder="Description" rows="3" required></textarea>
+        <button type="submit">Submit Report</button>
+      </form>
+      <p id="reportMessage" class="message"></p>
+    </section>
+
+    <!-- Newsletter section -->
+    <section id="newsletter" class="section newsletter">
+      <h2>Join Our Newsletter</h2>
+      <form id="newsletterForm" class="newsletter-form">
+        <input type="email" id="newsletterEmail" placeholder="Your email" required />
+        <button type="submit">Subscribe</button>
+      </form>
+      <p id="newsletterMessage" class="message"></p>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <p>&copy; <span id="year"></span> GambleCodez. All rights reserved.</p>
+    </footer>
+
+    <script src="app.js"></script>
+  </body>
+</html>

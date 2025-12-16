@@ -1,0 +1,9 @@
+/affiliates        /index.html   200
+/redemption        /index.html   200
+/blacklist         /index.html   200
+
+/network/*         /index.html   200
+/sweeps/*          /index.html   200
+/crypto/*          /index.html   200
+
+/*                 /index.html   200

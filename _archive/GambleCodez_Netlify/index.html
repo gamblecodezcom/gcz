@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>GambleCodez - Affiliate Network</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  </head>
+<body>
+    <header>
+        <div class="header-container">
+            <a href="/" class="logo-section" aria-label="GambleCodez Home">
+                <svg class="crown-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <defs>
+                        <linearGradient id="crownGradient" x1="0%" y1="0%" x2="100%">
+                            <stop offset="0%" style="stop-color:#00eaff;stop-opacity:0.8"/>
+                            <stop offset="50%" style="stop-color:#8a2be2;stop-opacity:1"/>
+                            <stop offset="100%" style="stop-color:#00eaff;stop-opacity:0.8"/>
+                        </linearGradient>
+                        <filter id="gemGlow">
+                            <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                            <feMerge>
+                                <feMergeNode in="coloredBlur"/>
+                                <feMergeNode in="SourceGraphic"/>
+                            </feMerge>
+                        </filter>
+                        <filter id="gemGlow2">
+                            <feGaussianBlur stdDeviation="2.5" result="coloredBlur"/>
+                            <feMerge>
+                                <feMergeNode in="coloredBlur"/>
+                                <feMergeNode in="SourceGraphic"/>
+                            </feMerge>
+                        </filter>
+                    </defs>
+                    <g>
+                        <circle cx="50" cy="55" r="32" fill="none" stroke="rgba(0, 234, 255, 0.3)" stroke-width="1" opacity="0.6"/>
+                        <path d="M 18 62 L 28 32 L 40 50 L 50 18 L 60 50 L 72 32 L 82 62 Z" fill="none" stroke="#00eaff" stroke-width="2.5" stroke-linejoin="round"/>
+                        <rect x="12" y="62" width="76" height="10" rx="3" fill="url(#crownGradient)" opacity="0.8"/>
+                        <circle class="crown-gem-sparkle" cx="28" cy="28" r="4.5" fill="#00eaff" filter="url(#gemGlow)"/>
+                        <circle class="crown-gem-sparkle crown-gem-sparkle-2" cx="50" cy="12" r="5.5" fill="#ff006e" filter="url(#gemGlow2)"/>
+                        <circle class="crown-gem-sparkle crown-gem-sparkle-3" cx="72" cy="28" r="4.5" fill="#00eaff" filter="url(#gemGlow)"/>
+                        <path d="M 50 8 L 52 14 L 58 16 L 52 18 L 50 24 L 48 18 L 42 16 L 48 14 Z" fill="#ffd700" opacity="0.8"/>
+                    </g>
+                </svg>
+                <div>
+                    <div class="logo-text">GAMBLECODEZ</div>
+                    <div class="logo-motto">Play Stupid, Win Big</div>
+                </div>
+            </a>
+            
+            <nav>
+                <ul class="nav-links">
+                    <li><button data-page="affiliates" class="nav-btn active" aria-label="View Affiliates">Affiliates</button></li>
+                    <li><button data-page="redemption" class="nav-btn" aria-label="View Redemption Times">Redemption</button></li>
+                    <li><button data-page="blacklist" class="nav-btn" aria-label="View Blacklisted Sites">Blacklist</button></li>
+                </ul>
+            </nav>
+            
+            <a href="https://t.me/GamblecodezDrops" target="_blank" rel="noopener noreferrer" class="telegram-link" aria-label="Join Telegram Community">
+                ✈ Telegram
+            </a>
+        </div>
+    </header>
+    
+    <main>
+        <!-- Affiliates Page -->
+        <section id="affiliates-page" class="page active">
+            <div class="affiliates-header">
+                <h1 class="page-title">🎰 Trusted Affiliates</h1>
+                <p class="page-subtitle">Premium affiliate network with instant redemption options</p>
+            </div>
+            
+            <div id="aff-error" class="error-message" style="display: none;" role="alert">
+                <span id="aff-error-text"></span>
+                <button id="aff-error-retry" onclick="loadAffiliateData()" aria-label="Retry Loading Data">Retry</button>
+            </div>
+            
+            <div class="stats-bar">
+                <div class="stat-card">
+                    <div class="stat-label">📊 Approved Sites</div>
+                    <div class="stat-value" id="stat-total">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">👑 Top Picks</div>
+                    <div class="stat-value" id="stat-top-pick">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">⚡ Instant</div>
+                    <div class="stat-value" id="stat-instant">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">⏸ Pending</div>
+                    <div class="stat-value" id="stat-pending">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">🚫 Blacklisted</div>
+                    <div class="stat-value" id="stat-blacklisted">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">🔍 Results</div>
+                    <div class="stat-value" id="stat-results">0</div>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <input type="text" id="aff-search" class="search-bar" placeholder="🔍 Search sites, categories..." aria-label="Search affiliates">
+                <select id="aff-category-filter" class="filter-select" aria-label="Filter by category">
+                    <option value="">All Categories</option>
+                </select>
+                <button id="aff-hide-blacklist" class="btn-secondary active" aria-label="Toggle blacklist visibility">Hide Blacklisted</button>
+            </div>
+            
+            <div id="aff-container" class="cards-container" role="grid"></div>
+            <div id="aff-pagination" class="pagination"></div>
+            <div id="aff-no-results" class="no-results">No results found. Try adjusting your search or filters.</div>
+        </section>
+        
+        <!-- Redemption Page -->
+        <section id="redemption-page" class="page">
+            <div class="affiliates-header">
+                <h1 class="page-title">⏱️ Redemption Times</h1>
+                <p class="page-subtitle">Real withdrawal speeds and payout methods</p>
+            </div>
+            
+            <div id="red-error" class="error-message" style="display: none;" role="alert">
+                <span id="red-error-text"></span>
+            </div>
+            
+            <div class="stats-bar">
+                <div class="stat-card">
+                    <div class="stat-label">📈 Sites Tracked</div>
+                    <div class="stat-value" id="stat-sites-tracked">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">⚡ Instant Methods</div>
+                    <div class="stat-value" id="stat-instant-methods">0</div>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <input type="text" id="red-search" class="search-bar" placeholder="🔍 Search site, method..." aria-label="Search redemption data">
+                <select id="red-method-filter" class="filter-select" aria-label="Filter by method">
+                    <option value="">All Methods</option>
+                    <option value="Instant">⚡ Instant</option>
+                    <option value="Crypto">₿ Crypto</option>
+                    <option value="Debit">💳 Debit</option>
+                    <option value="Bank">🏦 Bank</option>
+                    <option value="PayPal">🅿️ PayPal</option>
+                </select>
+            </div>
+            
+            <div style="overflow-x: auto;">
+                <table class="redemption-table">
+                    <thead>
+                        <tr>
+                            <th>Site Name</th>
+                            <th>Speed</th>
+                            <th>Minimum</th>
+                            <th>Type</th>
+                        </tr>
+                    </thead>
+                    <tbody id="red-tbody"></tbody>
+                </table>
+            </div>
+            
+            <div id="red-pagination" class="pagination"></div>
+            <div id="red-no-results" class="no-results" style="display: none;">No data found.</div>
+        </section>
+        
+        <!-- Blacklist Page -->
+        <section id="blacklist-page" class="page">
+            <div class="affiliates-header">
+                <h1 class="page-title">🚫 Blacklist</h1>
+                <p class="page-subtitle">Affiliates with reported issues or payout concerns</p>
+            </div>
+            
+            <div class="controls">
+                <input type="text" id="black-search" class="search-bar" placeholder="🔍 Search blacklist..." aria-label="Search blacklisted sites">
+            </div>
+            
+            <div id="black-container" class="cards-container" role="grid"></div>
+            <div id="black-no-results" class="no-results" style="display: none;">No blacklisted sites.</div>
+        </section>
+    </main>
+    
+    <footer>
+        <p>&copy; 2025 <strong>GambleCodez</strong> | <a href="https://t.me/GamblecodezDrops">🚀 Join Community</a> | Neon Casino Theme Edition</p>
+    </footer>
+    
+    <script>
+        const ITEMS_PER_PAGE = 24;
+        const RED_ITEMS_PER_PAGE = 20;
+        const EMAIL = 'GambleCodez@gmail.com';
+        
+        let affiliatesData = [];
+        let redemptionData = [];
+        let filteredAffiliates = [];
+        let filteredRedemption = [];
+        let currentAffPage = 1;
+        let currentRedPage = 1;
+        let hideBlacklisted = true;
+        
+        const HEADER_MAP = {
+            name: ['name', 'site_name', 'Site', 'Site Name'],
+            affiliate_url: ['affiliate_url', 'url', 'play_url', 'link', 'playurl'],
+            bonus_description: ['bonus_description', 'description', 'desc', 'bonus', 'notes'],
+            category: ['category', 'categories', 'Category', 'type'],
+            status: ['status', 'Status'],
+            level: ['level', 'tier', 'priority'],
+            icon_url: ['icon_url', 'icon', 'logo', 'image'],
+            resolved_domain: ['resolved_domain', 'domain', 'Domain'],
+            redemption_speed: ['redemption_speed', 'speed'],
+            redemption_minimum: ['redemption_minimum', 'minimum', 'min'],
+            redemption_type: ['redemption_type', 'method', 'payout_type'],
+            date_added: ['date_added', 'date', 'added_date']
+        };
+        
+        function getField(row, ...keys) {
+            for (const k of keys) {
+                if (row[k] !== undefined && row[k] !== null) {
+                    return String(row[k] == null ? '' : row[k]).trim();
+                }
+            }
+            return '';
+        }
+        
+        function normalizeHeaders(row) {
+            const normalized = {};
+            for (const [targetKey, possibleHeaders] of Object.entries(HEADER_MAP)) {
+                for (const header of possibleHeaders) {
+                    if (row[header] !== undefined) {
+                        const value = row[header] == null ? '' : row[header];
+                        normalized[targetKey] = value;
+                        break;
+                    }
+                }
+            }
+            return normalized;
+        }
+        
+        async function loadAffiliateData() {
+            const errorEl = document.getElementById('aff-error');
+            const errorText = document.getElementById('aff-error-text');
+            const countEl = document.getElementById('stat-results');
+            
+            errorEl.style.display = 'none';
+            countEl.textContent = 'Loading...';
+            
+            try {
+                const response = await fetch('./affiliates.json', {
+                    headers: { 'Cache-Control': 'no-cache' }
+                });
+                if (!response.ok) throw new Error(`HTTP ${response.status}: Could not load affiliates.json`);
+                
+                const data = await response.json();
+                const affRows = Array.isArray(data) ? data : data.affiliates || [];
+                
+                if (!Array.isArray(affRows) || affRows.length === 0) {
+                    throw new Error('No valid affiliate data found');
+                }
+                
+                affiliatesData = affRows
+                    .map(row => {
+                        const normalized = normalizeHeaders(row);
+                        const name = getField(normalized, 'name');
+                        const url = getField(normalized, 'affiliate_url');
+                        if (!name || !url) return null;
+                        
+                        const categoryStr = getField(normalized, 'category');
+                        const categories = categoryStr
+                            .split(/[,;|]/)
+                            .map(c => c.trim())
+                            .filter(Boolean)
+                            .map(c => c.toUpperCase());
+                        
+                        const statusStr = String(normalized.status || 'approved').toLowerCase();
+                        
+                        return {
+                            name,
+                            url,
+                            description: getField(normalized, 'bonus_description'),
+                            categories,
+                            domain: getField(normalized, 'resolved_domain'),
+                            icon_url: getField(normalized, 'icon_url'),
+                            status: statusStr,
+                            top_pick: (String(getField(normalized, 'category')).toUpperCase().includes('TOP_PICK')) ||
+                                      (String(getField(normalized, 'level')).toLowerCase().includes('top')),
+                            instant: (String(getField(normalized, 'category')).toUpperCase().includes('INSTANT')),
+                            blacklist: statusStr === 'blacklisted' || String(getField(normalized, 'category')).toUpperCase().includes('BLACKLIST'),
+                            pending: statusStr === 'pending'
+                        };
+                    })
+                    .filter(Boolean);
+                
+                if (affiliatesData.length === 0) {
+                    throw new Error('No valid affiliate data found in JSON');
+                }
+                
+                updateStats();
+                applyAffiliateFilters();
+                updateCategoryFilter();
+                countEl.textContent = affiliatesData.length;
+                
+            } catch (error) {
+                console.error('Error loading JSON:', error);
+                errorText.textContent = `⚠️ Error: ${error.message}`;
+                errorEl.style.display = 'flex';
+                countEl.textContent = '0';
+            }
+        }
+        
+        function applyAffiliateFilters() {
+            const search = document.getElementById('aff-search').value.toLowerCase();
+            const categoryFilter = document.getElementById('aff-category-filter').value;
+            
+            filteredAffiliates = affiliatesData.filter(site => {
+                const matchesSearch = !search || 
+                    site.name.toLowerCase().includes(search) ||
+                    site.description.toLowerCase().includes(search) ||
+                    site.categories.some(c => c.toLowerCase().includes(search));
+                
+                const matchesCategory = !categoryFilter || site.categories.includes(categoryFilter.toUpperCase());
+                
+                const isBlacklisted = site.blacklist || site.status === 'blacklisted';
+                const matchesBlacklist = !hideBlacklisted || !isBlacklisted;
+                
+                const isApproved = site.status === 'approved' || site.status === 'pending' || !site.status;
+                
+                return matchesSearch && matchesCategory && matchesBlacklist && isApproved;
+            });
+            
+            currentAffPage = 1;
+            renderAffiliates();
+        }
+        
+        function renderAffiliates() {
+            const start = (currentAffPage - 1) * ITEMS_PER_PAGE;
+            const end = Math.min(start + ITEMS_PER_PAGE, filteredAffiliates.length);
+            const pageItems = filteredAffiliates.slice(start, end);
+            
+            const container = document.getElementById('aff-container');
+            container.innerHTML = '';
+            
+            if (pageItems.length === 0) {
+                document.getElementById('aff-no-results').style.display = 'block';
+                document.getElementById('aff-pagination').innerHTML = '';
+                return;
+            }
+            
+            document.getElementById('aff-no-results').style.display = 'none';
+            
+            pageItems.forEach(site => {
+                const card = document.createElement('div');
+                card.className = `site-card${site.blacklist ? ' blacklisted' : ''}`;
+                
+                const blacklistBanner = site.blacklist ? `<div class="blacklist-banner">⚠ BLACKLISTED</div>` : '';
+                
+                const badgeHTML = site.categories.map(cat => {
+                    const tooltipTexts = {
+                        'TOP_PICK': 'GambleCodez verified top choice',
+                        'INSTANT': 'Instant withdrawal available',
+                        'SWEEPS': 'Sweepstakes format',
+                        'CRYPTO': 'Crypto payments accepted',
+                        'US': 'Available in US',
+                        'NONUS': 'Non-US only',
+                        'FAUCET': 'Faucet rewards',
+                        'LOOTBOX': 'Loot box mechanics',
+                        'KYC': 'KYC verification required',
+                        'NEW': 'Recently added',
+                        'WARNING': 'User reported issues',
+                        'BLACKLIST': 'Blacklisted - Do not use'
+                    };
+                    const tooltip = tooltipTexts[cat] || cat;
+                    const cls = `flag-${cat}`;
+                    return `<div class="tooltip-container"><span class="flag-badge ${cls}">${cat}</span><span class="tooltip-text">${tooltip}</span></div>`;
+                }).join('');
+                
+                const mailtoContact = `mailto:${EMAIL}?subject=${encodeURIComponent(`GambleCodez Report — ${site.name}`)}&body=${encodeURIComponent(`Site: ${site.name}
+URL: ${site.url}
+Domain: ${site.domain}
+Categories: ${site.categories.join(', ')}
+
+Notes:
+`)}`;
+                
+                card.innerHTML = `
+                    ${blacklistBanner}
+                    <div class="site-header">
+                        <img src="${site.icon_url}" alt="${site.name} logo" class="site-icon" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 48 48%22%3E%3Crect fill=%221a2745%22 width=%2248%22 height=%2248%22/%3E%3C/svg%3E'">
+                        <div class="site-info">
+                            <div class="site-name">${site.name}</div>
+                            <div class="site-domain">${site.domain || 'N/A'}</div>
+                        </div>
+                    </div>
+                    <div class="site-description">${site.description}</div>
+                    <div class="badges">${badgeHTML}</div>
+                    <div class="card-actions">
+                        <a href="${site.url}" target="_blank" rel="noopener noreferrer" class="btn-small" aria-label="Visit ${site.name}">Visit</a>
+                        <a href="${mailtoContact}" class="btn-small" aria-label="Contact about ${site.name}">Contact</a>
+                    </div>
+                `;
+                
+                container.appendChild(card);
+            });
+            
+            renderAffPagination();
+            document.getElementById('stat-results').textContent = filteredAffiliates.length;
+        }
+        
+        function renderAffPagination() {
+            const pagination = document.getElementById('aff-pagination');
+            const totalPages = Math.ceil(filteredAffiliates.length / ITEMS_PER_PAGE);
+            
+            pagination.innerHTML = '';
+            if (totalPages <= 1) return;
+            
+            if (currentAffPage > 1) {
+                const btn = document.createElement('button');
+                btn.textContent = '← Prev';
+                btn.onclick = () => { currentAffPage--; renderAffiliates(); };
+                pagination.appendChild(btn);
+            }
+            
+            const start = Math.max(1, currentAffPage - 2);
+            const end = Math.min(totalPages, currentAffPage + 2);
+            
+            if (start > 1) {
+                const btn = document.createElement('button');
+                btn.textContent = '1';
+                btn.onclick = () => { currentAffPage = 1; renderAffiliates(); };
+                pagination.appendChild(btn);
+            }
+            
+            if (start > 2) {
+                pagination.appendChild(document.createTextNode('...'));
+            }
+            
+            for (let i = start; i <= end; i++) {
+                const btn = document.createElement('button');
+                btn.textContent = i;
+                if (i === currentAffPage) btn.classList.add('active');
+                btn.onclick = () => { currentAffPage = i; renderAffiliates(); };
+                pagination.appendChild(btn);
+            }
+            
+            if (end < totalPages - 1) {
+                pagination.appendChild(document.createTextNode('...'));
+            }
+            
+            if (end < totalPages) {
+                const btn = document.createElement('button');
+                btn.textContent = totalPages;
+                btn.onclick = () => { currentAffPage = totalPages; renderAffiliates(); };
+                pagination.appendChild(btn);
+            }
+            
+            if (currentAffPage < totalPages) {
+                const btn = document.createElement('button');
+                btn.textContent = 'Next →';
+                btn.onclick = () => { currentAffPage++; renderAffiliates(); };
+                pagination.appendChild(btn);
+            }
+        }
+        
+        function renderBlacklist() {
+            const blacklisted = affiliatesData.filter(s => s.blacklist || s.status === 'blacklisted');
+            const search = document.getElementById('black-search')?.value.toLowerCase() || '';
+            
+            const filtered = blacklisted.filter(s => 
+                !search || s.name.toLowerCase().includes(search)
+            );
+            
+            const container = document.getElementById('black-container');
+            container.innerHTML = '';
+            
+            if (filtered.length === 0) {
+                document.getElementById('black-no-results').style.display = 'block';
+                return;
+            }
+            
+            document.getElementById('black-no-results').style.display = 'none';
+            
+            filtered.forEach(site => {
+                const card = document.createElement('div');
+                card.className = 'site-card blacklisted';
+                
+                card.innerHTML = `
+                    <div class="blacklist-banner">⚠ BLACKLISTED</div>
+                    <div class="site-header">
+                        <img src="${site.icon_url}" alt="${site.name} logo" class="site-icon" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 48 48%22%3E%3Crect fill=%221a2745%22 width=%2248%22 height=%2248%22/%3E%3C/svg%3E'">
+                        <div class="site-info">
+                            <div class="site-name">${site.name}</div>
+                            <div class="site-domain">${site.domain}</div>
+                        </div>
+                    </div>
+                    <div class="site-description">${site.description}</div>
+                    <div class="badges"><span class="flag-badge flag-BLACKLIST">🚫 BLACKLIST</span></div>
+                `;
+                
+                container.appendChild(card);
+            });
+        }
+        
+        function renderRedemption() {
+            const search = document.getElementById('red-search')?.value.toLowerCase() || '';
+            const methodFilter = document.getElementById('red-method-filter')?.value || '';
+            
+            filteredRedemption = redemptionData.filter(item => {
+                const matchesSearch = !search || 
+                    item.site_name.toLowerCase().includes(search) ||
+                    item.speed.toLowerCase().includes(search) ||
+                    item.type.toLowerCase().includes(search);
+                
+                const matchesMethod = !methodFilter || 
+                    item.speed.includes(methodFilter) ||
+                    item.type.includes(methodFilter);
+                
+                return matchesSearch && matchesMethod;
+            });
+            
+            currentRedPage = 1;
+            renderRedemptionTable();
+        }
+        
+        function renderRedemptionTable() {
+            const start = (currentRedPage - 1) * RED_ITEMS_PER_PAGE;
+            const end = Math.min(start + RED_ITEMS_PER_PAGE, filteredRedemption.length);
+            const pageItems = filteredRedemption.slice(start, end);
+            
+            const tbody = document.getElementById('red-tbody');
+            tbody.innerHTML = '';
+            
+            if (pageItems.length === 0) {
+                document.getElementById('red-no-results').style.display = 'block';
+                document.getElementById('red-pagination').innerHTML = '';
+                return;
+            }
+            
+            document.getElementById('red-no-results').style.display = 'none';
+            
+            pageItems.forEach(item => {
+                const row = document.createElement('tr');
+                const methodClass = getMethodClass(item.speed, item.type);
+                
+                row.innerHTML = `
+                    <td><strong>${item.site_name}</strong></td>
+                    <td><span class="method-badge ${methodClass}">${item.speed}</span></td>
+                    <td>${item.minimum}</td>
+                    <td>${item.type}</td>
+                `;
+                tbody.appendChild(row);
+            });
+            
+            renderRedPagination();
+            updateRedStats();
+        }
+        
+        function getMethodClass(speed, type) {
+            const lower = (speed + type).toLowerCase();
+            if (lower.includes('instant') || lower.includes('<1')) return 'method-instant';
+            if (lower.includes('crypto')) return 'method-crypto';
+            if (lower.includes('paypal')) return 'method-paypal';
+            if (lower.includes('gift')) return 'method-giftcard';
+            if (lower.includes('bank')) return 'method-bank';
+            return 'method-bank';
+        }
+        
+        function renderRedPagination() {
+            const pagination = document.getElementById('red-pagination');
+            const totalPages = Math.ceil(filteredRedemption.length / RED_ITEMS_PER_PAGE);
+            
+            pagination.innerHTML = '';
+            if (totalPages <= 1) return;
+            
+            if (currentRedPage > 1) {
+                const btn = document.createElement('button');
+                btn.textContent = '← Prev';
+                btn.onclick = () => { currentRedPage--; renderRedemptionTable(); };
+                pagination.appendChild(btn);
+            }
+            
+            const start = Math.max(1, currentRedPage - 2);
+            const end = Math.min(totalPages, currentRedPage + 2);
+            
+            for (let i = start; i <= end; i++) {
+                const btn = document.createElement('button');
+                btn.textContent = i;
+                if (i === currentRedPage) btn.classList.add('active');
+                btn.onclick = () => { currentRedPage = i; renderRedemptionTable(); };
+                pagination.appendChild(btn);
+            }
+            
+            if (currentRedPage < totalPages) {
+                const btn = document.createElement('button');
+                btn.textContent = 'Next →';
+                btn.onclick = () => { currentRedPage++; renderRedemptionTable(); };
+                pagination.appendChild(btn);
+            }
+        }
+        
+        function updateStats() {
+            const approved = affiliatesData.filter(s => s.status === 'approved' || !s.status).length;
+            const pending = affiliatesData.filter(s => s.pending).length;
+            const topPicks = affiliatesData.filter(s => s.top_pick).length;
+            const instant = affiliatesData.filter(s => s.instant).length;
+            const blacklisted = affiliatesData.filter(s => s.blacklist).length;
+            
+            document.getElementById('stat-total').textContent = approved;
+            document.getElementById('stat-top-pick').textContent = topPicks;
+            document.getElementById('stat-instant').textContent = instant;
+            document.getElementById('stat-pending').textContent = pending;
+            document.getElementById('stat-blacklisted').textContent = blacklisted;
+        }
+        
+        function updateRedStats() {
+            const instantCount = filteredRedemption.filter(r => r.speed.toLowerCase().includes('instant')).length;
+            document.getElementById('stat-sites-tracked').textContent = redemptionData.length;
+            document.getElementById('stat-instant-methods').textContent = instantCount;
+        }
+        
+        function updateCategoryFilter() {
+            const categories = new Set();
+            affiliatesData.forEach(site => {
+                site.categories.forEach(cat => {
+                    if (!['TOP_PICK', 'INSTANT', 'WARNING', 'BLACKLIST', 'NEW', 'KYC'].includes(cat.toUpperCase())) {
+                        categories.add(cat);
+                    }
+                });
+            });
+            
+            const select = document.getElementById('aff-category-filter');
+            const current = select.value;
+            select.innerHTML = '<option value="">All Categories</option>';
+            [...categories].sort().forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat;
+                option.textContent = cat;
+                select.appendChild(option);
+            });
+            select.value = current;
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            loadAffiliateData();
+            
+            document.getElementById('aff-search').addEventListener('input', applyAffiliateFilters);
+            document.getElementById('aff-category-filter').addEventListener('change', applyAffiliateFilters);
+            document.getElementById('aff-hide-blacklist').addEventListener('click', (e) => {
+                hideBlacklisted = !hideBlacklisted;
+                e.target.classList.toggle('active');
+                applyAffiliateFilters();
+            });
+            
+            document.getElementById('red-search').addEventListener('input', renderRedemption);
+            document.getElementById('red-method-filter').addEventListener('change', renderRedemption);
+            document.getElementById('black-search').addEventListener('input', renderBlacklist);
+            
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const page = e.target.dataset.page;
+                    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+                    document.getElementById(`${page}-page`).classList.add('active');
+                    e.target.classList.add('active');
+                    window.scrollTo(0, 0);
+                });
+            });
+            
+            document.querySelectorAll('[data-page]').forEach(link => {
+                if (!link.classList.contains('nav-btn')) {
+                    link.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const page = link.dataset.page;
+                        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+                        document.getElementById(`${page}-page`).classList.add('active');
+                        document.querySelector(`[data-page="${page}"].nav-btn`).classList.add('active');
+                        window.scrollTo(0, 0);
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

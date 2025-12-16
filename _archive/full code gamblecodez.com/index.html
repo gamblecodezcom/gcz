@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>GambleCodez — Play Stupid, Win Big</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#00eaff">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <span>
+      <img src="favicon.svg" class="crown-logo" alt="Logo"/>
+      <span class="brand-title">GambleCodez</span>
+    </span>
+    <span class="socials">
+      <a href="https://t.me/GambleCodezDrops" title="Telegram" target="_blank">
+        <!-- Telegram SVG here -->
+        <svg width="22" height="22" fill="#00eaff" viewBox="0 0 24 24"><path d="M22 3 2.01 11.39c-.95.38-.94.92-.17 1.15l4.14 1.34 1.5 4.61c.31.97.81 1.21 1.63.99l2.69-1.17 4.3 3.18c.8.59 1.41.28 1.6-.74l3.03-13.24C23.17 3.29 22.68 3 22 3zm-3.56 3.95-8.05 5.14-3.09-.99c-.41-.13-.42-.38.09-.56L17.66 5.74c.51-.19.76.21.22.48z"></path></svg>
+      </a>
+      <a href="https://x.com/GambleCodez" title="X" target="_blank">
+        <!-- X SVG here -->
+        <svg width="22" height="22" fill="#8a2be2" viewBox="0 0 24 24"><path d="M19.6 3H4.41C2.98 3 2 3.98 2 5.41v13.19c0 1.43.98 2.41 2.41 2.41h15.19c1.43 0 2.41-.98 2.41-2.41V5.41C22 3.98 21.03 3 19.6 3zm-.72 4.13-4.13 4.26 4.03 6.07c.14.22.04.47-.19.47h-1.39l-3.26-4.86-2.79 2.93c-.21.22-.56.04-.56-.23V7.77c0-.19.1-.36.32-.36h1.44l1.86 2.82 3.5-3.6c.23-.24.6-.04.6.24v1.36H18c.26 0 .38.32.22.54z"></path></svg>
+      </a>
+    </span>
+  </header>
+  <main>
+    <section class="search-sort-row">
+      <input class="search-bar" id="searchBar" type="search" placeholder="Search casinos…">
+      <select class="cat-filter" id="categoryFilter">
+        <option value="">All Categories</option>
+        <option value="US">🇺🇸 US</option>
+        <option value="NONUS">🌎 NON-US</option>
+        <option value="SWEEPS">🪁 Sweeps</option>
+        <option value="CRYPTO">₿ Crypto</option>
+        <option value="FAUCET">💧 Faucet</option>
+        <option value="LOOTBOX">🎁 Lootbox</option>
+        <option value="INSTANT">⚡ Instant</option>
+      </select>
+      <select class="sort-select" id="sortFilter">
+        <option value="priority">Sort by Priority</option>
+        <option value="name">Sort A-Z</option>
+        <option value="newest">Newest First</option>
+        <option value="oldest">Oldest First</option>
+      </select>
+    </section>
+    <section id="sitesContainer" class="sites-list"></section>
+  </main>
+  <footer>
+    <div>
+      GambleCodez — Play Stupid, Win Big <br>
+      <a href="mailto:GambleCodez@gmail.com?subject=Report Casino&body=Please describe the issue:" style="color:#00eaff;">Report a scam site</a>
+      <span style="margin-left:22px;">Powered by GambleCodez Affiliate Network</span>
+    </div>
+  </footer>
+  <script src="main.js"></script>
+  <script src="newsletter.js"></script>
+  <script src="telegram.js"></script>
+  <script src="pwa.js"></script>
+</body>
+</html>

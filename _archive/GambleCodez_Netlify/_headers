@@ -1,0 +1,26 @@
+/* 
+  Cache-Control: public, max-age=3600
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: SAMEORIGIN
+  X-XSS-Protection: 1; mode=block
+  Referrer-Policy: strict-origin-when-cross-origin
+
+/affiliates.json
+  Cache-Control: public, max-age=300
+  Content-Type: application/json
+
+/style.css
+  Cache-Control: public, max-age=31536000
+  Content-Type: text/css
+
+/index.html
+  Cache-Control: public, max-age=3600
+  Content-Type: text/html; charset=utf-8
+
+/_inject.html
+  Cache-Control: public, max-age=3600
+  Content-Type: text/html; charset=utf-8
+
+/sitemap.xml
+  Cache-Control: public, max-age=86400
+  Content-Type: application/xml

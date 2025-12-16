@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+Allow: /affiliates
+Allow: /redemption
+Allow: /blacklist
+Allow: /sitemap.xml
+Disallow: /admin/
+Disallow: /private/
+Disallow: /_redirects
+Disallow: /_inject.html
+Disallow: /_headers
+
+Sitemap: https://gamblecodez.netlify.app/sitemap.xml
