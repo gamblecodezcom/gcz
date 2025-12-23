@@ -257,3 +257,7 @@ def daily_checkin(current_user: models.User = Depends(get_current_user), db: Ses
     if not success:
         raise HTTPException(status_code=400, detail="Already checked in today")
     return {"message": "Check-in successful"}
+
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}

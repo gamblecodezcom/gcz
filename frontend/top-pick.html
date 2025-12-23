@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Top Pick – GambleCodez</title>
+    <link rel="stylesheet" href="style.css" />
+    <style>
+      .top-pick-hero {
+        padding: 120px 2rem 80px;
+        text-align: center;
+        background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+        position: relative;
+        overflow: hidden;
+      }
+      
+      .top-pick-hero::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: var(--hero-bg-image, none);
+        background-size: cover;
+        background-position: center;
+        opacity: 0.2;
+        z-index: 0;
+      }
+      
+      .top-pick-hero > * {
+        position: relative;
+        z-index: 1;
+      }
+      
+      .top-pick-hero h1 {
+        font-size: 4rem;
+        font-weight: bold;
+        margin-bottom: 1rem;
+        background: linear-gradient(45deg, var(--highlight-color, #00eaff), #8a2be2);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-shadow: 0 0 30px rgba(0, 234, 255, 0.5);
+      }
+      
+      .top-pick-hero p {
+        font-size: 1.5rem;
+        color: #cccccc;
+        max-width: 800px;
+        margin: 0 auto 2rem;
+      }
+      
+      .top-pick-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 4rem 2rem;
+      }
+      
+      .top-pick-card {
+        background: rgba(26, 26, 26, 0.9);
+        border: 2px solid #333;
+        border-radius: 16px;
+        padding: 3rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      }
+      
+      .top-pick-card h2 {
+        font-size: 2.5rem;
+        margin-bottom: 1.5rem;
+        color: var(--highlight-color, #00eaff);
+      }
+      
+      .cta-buttons {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-top: 2rem;
+      }
+      
+      .cta-button {
+        padding: 1.5rem 3rem;
+        font-size: 1.25rem;
+        font-weight: bold;
+        border: 2px solid var(--highlight-color, #00eaff);
+        border-radius: 8px;
+        background: transparent;
+        color: var(--highlight-color, #00eaff);
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.3s;
+      }
+      
+      .cta-button:hover {
+        background: var(--highlight-color, #00eaff);
+        color: #0a0a0a;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 20px rgba(0, 234, 255, 0.4);
+      }
+      
+      .cta-button.primary {
+        background: linear-gradient(45deg, var(--highlight-color, #00eaff), #8a2be2);
+        color: white;
+        border: none;
+      }
+      
+      .bonus-code {
+        background: rgba(0, 234, 255, 0.1);
+        border: 2px dashed var(--highlight-color, #00eaff);
+        border-radius: 8px;
+        padding: 2rem;
+        text-align: center;
+        margin: 2rem 0;
+      }
+      
+      .bonus-code code {
+        font-size: 2rem;
+        font-weight: bold;
+        color: var(--highlight-color, #00eaff);
+        letter-spacing: 4px;
+      }
+      
+      .pros-cons {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        margin-top: 2rem;
+      }
+      
+      .pros, .cons {
+        padding: 1.5rem;
+        border-radius: 8px;
+      }
+      
+      .pros {
+        background: rgba(0, 255, 0, 0.1);
+        border: 2px solid #00ff00;
+      }
+      
+      .cons {
+        background: rgba(255, 0, 0, 0.1);
+        border: 2px solid #ff0000;
+      }
+      
+      .faq-item {
+        margin-bottom: 1.5rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid #333;
+      }
+      
+      .faq-item h3 {
+        color: var(--highlight-color, #00eaff);
+        margin-bottom: 0.5rem;
+      }
+      
+      .loading {
+        text-align: center;
+        padding: 4rem;
+        font-size: 1.5rem;
+        color: #cccccc;
+      }
+      
+      @media (max-width: 768px) {
+        .top-pick-hero h1 {
+          font-size: 2.5rem;
+        }
+        
+        .pros-cons {
+          grid-template-columns: 1fr;
+        }
+        
+        .cta-buttons {
+          flex-direction: column;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Header -->
+    <header class="header">
+      <nav class="nav">
+        <div class="logo"><a href="/" style="text-decoration: none; color: inherit;">GambleCodez</a></div>
+        <ul class="nav-links">
+          <li><a href="/">Home</a></li>
+          <li><a href="/top-pick">Top Pick</a></li>
+          <li><a href="#raffle">Raffle</a></li>
+          <li><a href="#wallet">Wallet</a></li>
+          <li><a href="#report">Report Site</a></li>
+          <li><a href="#newsletter">Newsletter</a></li>
+        </ul>
+      </nav>
+    </header>
+    
+    <!-- Top Pick Content -->
+    <div id="top-pick-container">
+      <div class="loading">Loading Top Pick...</div>
+    </div>
+    
+    <script>
+      async function loadTopPick() {
+        try {
+          const res = await fetch('/api/top-pick');
+          const data = await res.json();
+          
+          if (!data.success || !data.data) {
+            document.getElementById('top-pick-container').innerHTML = `
+              <div class="top-pick-content">
+                <div class="top-pick-card">
+                  <h2>No Top Pick Configured</h2>
+                  <p>Check back soon for our top pick!</p>
+                </div>
+              </div>
+            `;
+            return;
+          }
+          
+          const config = data.data;
+          const affiliate = config.affiliate;
+          
+          if (!affiliate) {
+            document.getElementById('top-pick-container').innerHTML = `
+              <div class="top-pick-content">
+                <div class="top-pick-card">
+                  <h2>Top Pick Not Available</h2>
+                  <p>No affiliate selected as top pick.</p>
+                </div>
+              </div>
+            `;
+            return;
+          }
+          
+          // Set CSS variables
+          document.documentElement.style.setProperty('--highlight-color', config.highlight_color || '#00eaff');
+          if (config.background_image_url) {
+            document.documentElement.style.setProperty('--hero-bg-image', `url(${config.background_image_url})`);
+          }
+          
+          // Parse JSON fields
+          const descriptionBlocks = typeof config.description_blocks === 'string' 
+            ? JSON.parse(config.description_blocks) 
+            : (config.description_blocks || []);
+          const bonusCodeSection = typeof config.bonus_code_section === 'string'
+            ? JSON.parse(config.bonus_code_section)
+            : (config.bonus_code_section || {});
+          const ctaButtons = typeof config.cta_buttons === 'string'
+            ? JSON.parse(config.cta_buttons)
+            : (config.cta_buttons || []);
+          const whySection = typeof config.why_section === 'string'
+            ? JSON.parse(config.why_section)
+            : (config.why_section || {});
+          const prosCons = typeof config.pros_cons_section === 'string'
+            ? JSON.parse(config.pros_cons_section)
+            : (config.pros_cons_section || {});
+          const faq = typeof config.faq_section === 'string'
+            ? JSON.parse(config.faq_section)
+            : (config.faq_section || []);
+          
+          // Build redirect URL
+          const redirectUrl = affiliate.slug ? `/r/${affiliate.slug}` : (affiliate.final_redirect_url || affiliate.referral_url);
+          
+          // Render
+          let html = `
+            <div class="top-pick-hero" style="background-color: ${config.background_color || '#0a0a0a'}">
+              <h1>${config.hero_title || 'Top Pick'}</h1>
+              ${config.hero_subtitle ? `<p>${config.hero_subtitle}</p>` : ''}
+              <div class="cta-buttons">
+                <a href="${redirectUrl}" class="cta-button primary">Visit ${affiliate.name}</a>
+                ${ctaButtons.map(btn => `
+                  <a href="${btn.url}" class="cta-button">${btn.label}</a>
+                `).join('')}
+              </div>
+            </div>
+            
+            <div class="top-pick-content">
+              ${descriptionBlocks.map(block => `
+                <div class="top-pick-card">
+                  ${block.title ? `<h2>${block.title}</h2>` : ''}
+                  ${block.content ? `<p style="font-size: 1.25rem; line-height: 1.8;">${block.content}</p>` : ''}
+                </div>
+              `).join('')}
+              
+              ${bonusCodeSection.show && affiliate.bonus_code ? `
+                <div class="top-pick-card">
+                  <h2>${bonusCodeSection.title || 'Bonus Code'}</h2>
+                  <div class="bonus-code">
+                    <code>${affiliate.bonus_code}</code>
+                  </div>
+                </div>
+              ` : ''}
+              
+              ${whySection.title || whySection.content ? `
+                <div class="top-pick-card">
+                  <h2>${whySection.title || 'Why This is #1'}</h2>
+                  <p style="font-size: 1.25rem; line-height: 1.8;">${whySection.content || ''}</p>
+                </div>
+              ` : ''}
+              
+              ${prosCons.pros || prosCons.cons ? `
+                <div class="top-pick-card">
+                  <h2>Pros & Cons</h2>
+                  <div class="pros-cons">
+                    ${prosCons.pros ? `
+                      <div class="pros">
+                        <h3 style="color: #00ff00; margin-bottom: 1rem;">Pros</h3>
+                        <ul style="list-style: none; padding: 0;">
+                          ${prosCons.pros.map(pro => `<li style="margin-bottom: 0.5rem;">✓ ${pro}</li>`).join('')}
+                        </ul>
+                      </div>
+                    ` : ''}
+                    ${prosCons.cons ? `
+                      <div class="cons">
+                        <h3 style="color: #ff0000; margin-bottom: 1rem;">Cons</h3>
+                        <ul style="list-style: none; padding: 0;">
+                          ${prosCons.cons.map(con => `<li style="margin-bottom: 0.5rem;">✗ ${con}</li>`).join('')}
+                        </ul>
+                      </div>
+                    ` : ''}
+                  </div>
+                </div>
+              ` : ''}
+              
+              ${faq.length > 0 ? `
+                <div class="top-pick-card">
+                  <h2>FAQ</h2>
+                  ${faq.map(item => `
+                    <div class="faq-item">
+                      <h3>${item.question || ''}</h3>
+                      <p style="font-size: 1.1rem; line-height: 1.6;">${item.answer || ''}</p>
+                    </div>
+                  `).join('')}
+                </div>
+              ` : ''}
+            </div>
+          `;
+          
+          document.getElementById('top-pick-container').innerHTML = html;
+        } catch (error) {
+          console.error('Load top pick error:', error);
+          document.getElementById('top-pick-container').innerHTML = `
+            <div class="top-pick-content">
+              <div class="top-pick-card">
+                <h2>Error Loading Top Pick</h2>
+                <p>Please try again later.</p>
+              </div>
+            </div>
+          `;
+        }
+      }
+      
+      // Load on page load
+      window.addEventListener('DOMContentLoaded', loadTopPick);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gamblecodez-api
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=${DATABASE_URL:-postgresql://user:password@db:5432/gamblecodez}
+      - SECRET_KEY=${SECRET_KEY}
+      - NODE_ENV=${NODE_ENV:-production}
+    env_file:
+      - .env
+    depends_on:
+      - db
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - gamblecodez-network
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: gamblecodez-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+      - WEBAPP_BASE_URL=${WEBAPP_BASE_URL:-http://localhost:3000}
+    env_file:
+      - .env
+    depends_on:
+      - api
+    restart: unless-stopped
+    networks:
+      - gamblecodez-network
+
+  # Optional: Local PostgreSQL database (comment out if using Neon/remote DB)
+  db:
+    image: postgres:15-alpine
+    container_name: gamblecodez-db
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-gamblecodez}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-changeme}
+      - POSTGRES_DB=${POSTGRES_DB:-gamblecodez}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    networks:
+      - gamblecodez-network
+    # Uncomment to use remote database (Neon) instead:
+    # profiles:
+    #   - disabled
+
+networks:
+  gamblecodez-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

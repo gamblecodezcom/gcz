@@ -1,0 +1,117 @@
+# GambleCodez Production Nginx Configuration
+# Template file - copy to /etc/nginx/sites-available/gamblecodez and customize
+# 
+# Installation:
+#   sudo cp deploy/nginx.conf.example /etc/nginx/sites-available/gamblecodez
+#   sudo ln -s /etc/nginx/sites-available/gamblecodez /etc/nginx/sites-enabled/
+#   sudo nginx -t
+#   sudo systemctl reload nginx
+
+# Upstream API server (PM2 running FastAPI)
+upstream gamblecodez_api {
+    server 127.0.0.1:8001;
+    keepalive 64;
+}
+
+# Redirect HTTP → HTTPS
+server {
+    listen 80;
+    listen [::]:80;
+    server_name gamblecodez.com www.gamblecodez.com;
+    return 301 https://$host$request_uri;
+}
+
+# MAIN HTTPS SERVER
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name gamblecodez.com www.gamblecodez.com;
+
+    # SSL Certificates (Let's Encrypt)
+    ssl_certificate /etc/letsencrypt/live/gamblecodez.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/gamblecodez.com/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+
+    # Security headers
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header Referrer-Policy "no-referrer-when-downgrade" always;
+
+    # Logging
+    access_log /var/log/nginx/gamblecodez.com-access.log;
+    error_log /var/log/nginx/gamblecodez.com-error.log warn;
+
+    # Serve static frontend
+    root /root/gcz/frontend;
+    index index.html;
+
+    # Admin panel (static files, no public links - must come before root location)
+    location /admin {
+        alias /root/gcz/admin;
+        index index.html;
+        try_files $uri $uri/ /admin/index.html;
+        
+        # Security: Deny directory listing
+        autoindex off;
+    }
+
+    # Static frontend SPA routing
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # Static assets caching
+    location ~* \.(css|js|jpg|jpeg|png|gif|ico|svg|woff|woff2|ttf|eot)$ {
+        expires 30d;
+        add_header Cache-Control "public, immutable";
+    }
+
+    # Proxy: Health check (exact match, highest priority - must come before regex)
+    location = /health {
+        proxy_pass http://gamblecodez_api/health;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        access_log off;
+    }
+
+    # Proxy: API routes
+    location /api/ {
+        proxy_pass http://gamblecodez_api;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Proxy: Telegram bot webhook
+    location /webhook {
+        proxy_pass http://gamblecodez_api;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Smart Redirect: /Sitename → /api/redirect/Sitename
+    # Note: This regex location must come AFTER /health exact match
+    location ~ ^/([A-Za-z0-9_-]+)$ {
+        rewrite ^/([A-Za-z0-9_-]+)$ /api/redirect/$1 break;
+        proxy_pass http://gamblecodez_api;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Deny sensitive files
+    location ~ /\.(?!well-known) {
+        deny all;
+    }
+}

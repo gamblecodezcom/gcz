@@ -9,6 +9,8 @@
     "bot": "node bot/bot.js",
     "migrate": "node scripts/migrate.js",
     "sync:affiliates": "node scripts/sync_affiliates.js",
+    "generate:icons": "node scripts/generate_icon_urls.js",
+    "test:redirects": "node scripts/test_redirects.js",
     "pm2:start": "pm2 start pm2.config.cjs",
     "pm2:stop": "pm2 stop all",
     "pm2:restart": "pm2 restart all",

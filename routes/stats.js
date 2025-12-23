@@ -6,15 +6,18 @@ const { requireAuth } = require('../middleware/auth');
 // Get dashboard stats
 router.get('/dashboard', requireAuth, async (req, res) => {
   try {
-    const [totals] = await db.query(`
+    const totalsResult = await db.query(`
       SELECT 
         (SELECT COUNT(*) FROM affiliates) as total_affiliates,
         (SELECT COUNT(*) FROM affiliates WHERE status = 'active') as active_affiliates,
         (SELECT COUNT(*) FROM conversions) as total_conversions,
-        (SELECT SUM(revenue) FROM affiliates) as total_revenue,
+        (SELECT COALESCE(SUM(revenue), 0) FROM affiliates) as total_revenue,
         (SELECT COUNT(*) FROM payouts WHERE status = 'calculated') as pending_payouts,
-        (SELECT COUNT(*) FROM campaigns WHERE status = 'active') as active_campaigns
+        (SELECT COUNT(*) FROM campaigns WHERE status = 'active') as active_campaigns,
+        (SELECT COUNT(*) FROM newsletter_subscriptions) as newsletter_count,
+        (SELECT COUNT(*) FROM ads WHERE is_active = true) as active_ads
     `);
+    const totals = totalsResult[0] || {};
 
     const recentActivity = await db.query(`
       SELECT 
@@ -45,22 +48,23 @@ router.get('/dashboard', requireAuth, async (req, res) => {
 // Get affiliate performance
 router.get('/affiliates/:id/performance', requireAuth, async (req, res) => {
   try {
-    const [stats] = await db.query(`
+    const statsResult = await db.query(`
       SELECT 
         COUNT(*) as total_conversions,
-        SUM(amount) as total_revenue,
-        AVG(amount) as avg_conversion_value
+        COALESCE(SUM(amount), 0) as total_revenue,
+        COALESCE(AVG(amount), 0) as avg_conversion_value
       FROM conversions
-      WHERE affiliate_id = ? AND status = 'approved'
+      WHERE affiliate_id = $1 AND status = 'approved'
     `, [req.params.id]);
+    const stats = statsResult[0] || {};
 
     const monthly = await db.query(`
       SELECT 
-        DATE_FORMAT(occurred_at, '%Y-%m') as month,
+        TO_CHAR(occurred_at, 'YYYY-MM') as month,
         COUNT(*) as conversions,
-        SUM(amount) as revenue
+        COALESCE(SUM(amount), 0) as revenue
       FROM conversions
-      WHERE affiliate_id = ? AND status = 'approved'
+      WHERE affiliate_id = $1 AND status = 'approved'
       GROUP BY month
       ORDER BY month DESC
       LIMIT 12
