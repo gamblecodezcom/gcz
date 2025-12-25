@@ -1,38 +1,109 @@
 #!/usr/bin/env bash
 # ============================================================
-#  GAMBLECODEZ — MASTER SYSTEM CONTROL (FINAL)
-#  Single authoritative ops + admin execution surface
+#  GAMBLECODEZ — MASTER SYSTEM CONTROL (SELF-HEAL AWARE)
 # ============================================================
 
 set -euo pipefail
 
 ROOT="/root/gcz"
+ENV_FILE="$ROOT/.env"
 
 # ------------------------------------------------------------
-# LOAD ENV (AUTHORITATIVE SOURCE OF TRUTH)
+# LOAD ENV
 # ------------------------------------------------------------
-set -a
-source "$ROOT/.env"
-set +a
+if [[ -f "$ENV_FILE" ]]; then
+  set -a
+  # shellcheck disable=SC1090
+  source "$ENV_FILE"
+  set +a
+fi
 
 # ------------------------------------------------------------
-# NORMALIZED RUNTIME VARS (FROM FINAL ENV)
+# NORMALIZED RUNTIME VARS
 # ------------------------------------------------------------
-API_URL="${BACKENDAPIURL}"
-REDIRECT_URL="${REDIRECTBASEURL}"
-CSV="${AFFILIATESCSVPATH}"
-BACKUP_PATH="${BACKUP_DIR}"
+API_URL="${BACKEND_API_URL:-https://gamblecodez.com}"
+REDIRECT_URL_BASE="${REDIRECT_BASE_URL:-https://gamblecodez.com/affiliates/redirect}"
+REDIRECT_HEALTH_URL="${REDIRECT_URL_BASE}/health"
+CSV="${AFFILIATES_CSV_PATH:-/root/gcz/master_affiliates.csv}"
+BACKUP_PATH="${BACKUP_DIR:-/root/gcz/backups}"
 
-export TZ="${CRONTIMEZONE:-UTC}"
+export TZ="${CRON_TIMEZONE:-UTC}"
+export PGPASSWORD="${PGPASSWORD:-}"
 
 LOG_DIR="$ROOT/logs"
-
 mkdir -p "$LOG_DIR" "$BACKUP_PATH"
 
 cd "$ROOT" || exit 1
 
 # ------------------------------------------------------------
-# INTERNAL COMMANDS (ADMIN UI WILL CALL THESE)
+# SELF-HEAL HELPERS
+# ------------------------------------------------------------
+fix_node_modules() {
+  echo "[heal] ensuring node modules (express, node-fetch, pm2)..."
+  npm list express >/dev/null 2>&1 || npm install express --silent
+  npm list node-fetch >/dev/null 2>&1 || npm install node-fetch --silent
+  npm list pm2 >/dev/null 2>&1 || npm install pm2 --silent || true
+}
+
+fix_package_type_module() {
+  if ! grep -q '"type": "module"' "$ROOT/package.json"; then
+    echo "[heal] adding \"type\": \"module\" to package.json"
+    tmp="$(mktemp)"
+    jq '.type="module"' "$ROOT/package.json" > "$tmp" 2>/dev/null || {
+      # Fallback if jq not present
+      sed -i '0,/{/s//{\n  "type": "module",/' "$ROOT/package.json"
+      return
+    }
+    mv "$tmp" "$ROOT/package.json"
+  fi
+}
+
+fix_backend_init() {
+  if [[ ! -f "$ROOT/backend/__init__.py" ]]; then
+    echo "[heal] adding backend/__init__.py"
+    touch "$ROOT/backend/__init__.py"
+  fi
+}
+
+fix_affiliates_csv_header() {
+  if [[ -f "$CSV" ]]; then
+    if ! head -n1 "$CSV" | grep -q "resolved_domain"; then
+      echo "[heal] adding resolved_domain column to CSV header"
+      tmp="$(mktemp)"
+      awk 'BEGIN{FS=OFS=","} NR==1{for(i=1;i<=NF;i++)if($i=="resolved_domain")f=1; if(!f){$0=$0",resolved_domain"} }1' "$CSV" > "$tmp"
+      mv "$tmp" "$CSV"
+    fi
+  fi
+}
+
+fix_affiliates_sql_column() {
+  echo "[heal] ensuring resolved_domain column in affiliates_master"
+  psql -U gamblecodez -h localhost -d gambledb -c \
+    "ALTER TABLE affiliates_master ADD COLUMN IF NOT EXISTS resolved_domain TEXT;" >/dev/null 2>&1 || true
+}
+
+fix_pm2_processes() {
+  echo "[heal] ensuring PM2 processes exist"
+  pm2 describe gcz-api >/dev/null 2>&1 || pm2 start server.js --name gcz-api || true
+  pm2 describe gcz-bot >/dev/null 2>&1 || pm2 start start-bot.js --name gcz-bot || true
+  pm2 describe gcz-watchdog >/dev/null 2>&1 || pm2 start watchdog.js --name gcz-watchdog || true
+  pm2 describe gcz-redirect >/dev/null 2>&1 || pm2 start python3 --name gcz-redirect -- "$ROOT/backend/redirect.py" || true
+  pm2 save || true
+}
+
+self_heal_core() {
+  echo "==== [heal] Core self-healing starting ===="
+  fix_node_modules
+  fix_package_type_module
+  fix_backend_init
+  fix_affiliates_csv_header
+  fix_affiliates_sql_column
+  fix_pm2_processes
+  echo "==== [heal] Core self-healing complete ===="
+}
+
+# ------------------------------------------------------------
+# COMMANDS
 # ------------------------------------------------------------
 
 status_all() {
@@ -49,35 +120,40 @@ status_all() {
   echo
 
   echo "==== REDIRECT HEALTH ===="
-  curl -s "$REDIRECT_URL/health" || echo "REDIRECT DOWN"
+  curl -s "$REDIRECT_HEALTH_URL" || echo "REDIRECT DOWN"
 }
 
 restart_all() {
-  pm2 restart ecosystem.config.cjs --update-env
-  pm2 save
+  self_heal_core
+  pm2 restart ecosystem.config.cjs --update-env || true
+  pm2 save || true
 }
 
-restart_api()       { pm2 restart gcz-api; }
-restart_bot()       { pm2 restart gcz-bot; }
-restart_redirect()  { pm2 restart gcz-redirect; }
-restart_watchdog()  { pm2 restart gcz-watchdog; }
+restart_api()       { self_heal_core; pm2 restart gcz-api || true; }
+restart_bot()       { self_heal_core; pm2 restart gcz-bot || true; }
+restart_redirect()  { self_heal_core; pm2 restart gcz-redirect || true; }
+restart_watchdog()  { self_heal_core; pm2 restart gcz-watchdog || true; }
 
 run_daily() {
+  self_heal_core
   echo "[daily] starting"
   node jobs/daily.js
 }
 
 warm_redirect() {
+  self_heal_core
   echo "[warmup] starting"
   node jobs/warmup.js
 }
 
 reconcile_db_csv() {
+  self_heal_core
   echo "[reconcile] starting"
   node jobs/reconcile.js
 }
 
 backup_all() {
+  self_heal_core
   TS="$(date +%F_%H%M%S)"
 
   echo "[backup] CSV"
@@ -88,6 +164,7 @@ backup_all() {
 }
 
 affiliate_audit() {
+  self_heal_core
   echo "[audit] latest affiliates"
   psql -U gamblecodez -h localhost -d gambledb \
     -c "SELECT name, affiliateurl, level, date_added FROM affiliates_master ORDER BY date_added DESC LIMIT 25;"
@@ -99,7 +176,7 @@ view_logs_redirect()  { pm2 logs gcz-redirect; }
 view_logs_watchdog()  { pm2 logs gcz-watchdog; }
 
 # ------------------------------------------------------------
-# NON-INTERACTIVE MODE (ADMIN DASHBOARD SAFE)
+# NON-INTERACTIVE MODE
 # ------------------------------------------------------------
 
 if [[ "${1:-}" != "" ]]; then
@@ -124,7 +201,7 @@ if [[ "${1:-}" != "" ]]; then
 fi
 
 # ------------------------------------------------------------
-# INTERACTIVE DASHBOARD (SSH / TERMUX)
+# INTERACTIVE DASHBOARD
 # ------------------------------------------------------------
 
 clear

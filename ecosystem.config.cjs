@@ -32,17 +32,6 @@ module.exports = {
         NODE_ENV: "production",
         PYTHONUNBUFFERED: "1"
       }
-    },
-    {
-      name: "gcz-admin",
-      script: "app.js",
-      cwd: "/root/gcz/admin",
-      watch: false,
-      autorestart: true,
-      env: {
-        NODE_ENV: "production",
-        PORT: 3000
-      }
     }
   ]
 };
