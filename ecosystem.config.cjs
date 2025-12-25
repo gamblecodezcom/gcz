@@ -2,11 +2,10 @@ module.exports = {
   apps: [
     {
       name: "gcz-api",
-      script: "./server.js",
+      script: "server.js",
       cwd: "/root/gcz",
       watch: false,
       autorestart: true,
-      env_file: "./.env",
       env: {
         NODE_ENV: "production",
         PORT: 3000
@@ -14,37 +13,35 @@ module.exports = {
     },
     {
       name: "gcz-bot",
-      script: "./start-bot.js",
+      script: "watchdog.js",
       cwd: "/root/gcz",
       watch: false,
       autorestart: true,
-      env_file: "./.env",
       env: {
         NODE_ENV: "production"
       }
     },
     {
       name: "gcz-redirect",
-      script: "/root/gcz/venv/bin/uvicorn",
-      args: "backend.main:app --host 0.0.0.0 --port 8000",
-      cwd: "/root/gcz",
-      interpreter: "none",
+      script: "/root/gcz/backend/redirect.py",
+      interpreter: "python3",
+      cwd: "/root/gcz/backend",
       watch: false,
       autorestart: true,
-      env_file: "./.env",
       env: {
+        NODE_ENV: "production",
         PYTHONUNBUFFERED: "1"
       }
     },
     {
-      name: "gcz-watchdog",
-      script: "./watchdog.js",
-      cwd: "/root/gcz",
+      name: "gcz-admin",
+      script: "app.js",
+      cwd: "/root/gcz/admin",
       watch: false,
       autorestart: true,
-      env_file: "./.env",
       env: {
-        NODE_ENV: "production"
+        NODE_ENV: "production",
+        PORT: 3000
       }
     }
   ]

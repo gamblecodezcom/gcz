@@ -1,5 +1,11 @@
 {
+  "type": "module",
   "name": "gcz-backend",
   "private": true,
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+  "type": "module",
+    "express": "^5.2.1",
+    "node-fetch": "^3.3.2"
+  }
 }
