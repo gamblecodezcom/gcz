@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>GCZ Admin</title>
+  <link rel="stylesheet" href="/admin/styles.css">
+</head>
+<body>
+  <div id="app">
+    <nav class="sidebar">
+      <div class="logo">🎰 GCZ Admin</div>
+      <ul>
+        <li><a href="#" data-route="dashboard">📊 Dashboard</a></li>
+        <li><a href="#" data-route="affiliates">🔗 Affiliates</a></li>
+        <li><a href="#" data-route="campaigns">📢 Campaigns</a></li>
+        <li><a href="#" data-route="stats">📈 Stats</a></li>
+        <li><a href="#" data-route="settings">⚙️ Settings</a></li>
+      </ul>
+      <button id="logout">🚪 Logout</button>
+    </nav>
+    <main id="content">
+      <div id="login" class="login-form">
+        <h2>Login</h2>
+        <input type="text" id="username" placeholder="Username">
+        <input type="password" id="password" placeholder="Password">
+        <button onclick="login()">Login</button>
+      </div>
+    </main>
+  </div>
+  <script src="/admin/app.js"></script>
+</body>
+</html>
+
+    <!-- UptimeRobot Status Widget -->
+    <div class="status-section">
+      <h3>🔔 System Status</h3>
+      <iframe src="https://stats.uptimerobot.com/uWtbxqus93" 
+              width="100%" height="250" frameborder="0" 
+              style="border:1px solid #4ecdc4; border-radius:12px; background:#1a1a2e;"></iframe>
+    </div>
