@@ -1,0 +1,41 @@
+# Environment
+.env
+.env.*
+*.env
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# PM2
+.pids
+*.pid
+*.seed
+*.pm2
+pm2.log
+logs/
+*.log
+
+# System
+.DS_Store
+Thumbs.db
+
+# Backups
+*.tar.gz
+*.zip
+
+# Python (redirect engine)
+__pycache__/
+*.pyc
+
+# CSV / Data
+*.csv
+*.xlsx
+*.bak
+
+# Secrets
+*.key
+*.pem
+ssl/

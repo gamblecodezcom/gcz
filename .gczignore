@@ -1,0 +1,49 @@
+# === GambleCodez Backup Ignore Rules ===
+# Prevent backup scripts from ingesting junk, secrets, or runtime artifacts
+
+# Node runtime
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Python runtime
+__pycache__/
+*.pyc
+
+# Environment / Secrets
+.env
+.env.*
+*.env
+ssl/
+*.key
+*.pem
+
+# Logs
+*.log
+logs/
+pm2.log
+*.pid
+.pids
+
+# System junk
+.DS_Store
+Thumbs.db
+
+# Backups (avoid recursive ingestion)
+*.tar.gz
+*.zip
+*.bak
+
+# CSV / Data (runtime generated)
+*.csv
+*.xlsx
+
+# PM2 dumps
+*.pm2
+dump.pm2
+
+# Temporary files
+tmp/
+temp/
+*.tmp
