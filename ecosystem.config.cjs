@@ -23,7 +23,7 @@ module.exports = {
     },
     {
       name: "gcz-bot",
-      script: "start-bot.js",
+      script: "bot/client.js",
       cwd: "/var/www/html/gcz",
       watch: false,
       env: {
