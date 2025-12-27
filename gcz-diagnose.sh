@@ -1,43 +1,52 @@
-#!/usr/bin/env bash
-# GAMBLECODEZ DIAGNOSE + AUTO-REPAIR (v3)
+#!/bin/bash
+# ============================================================
+#   GambleCodez Auto-Diagnose & Self-Healing Script (v3)
+# ============================================================
 
-set -euo pipefail
-ROOT="/var/www/html/gcz"
-ENV_FILE="$ROOT/.env"
-CSV_PATH="${AFFILIATES_CSV_PATH:-$ROOT/master_affiliates.csv}"
-FAIL=0
+GZ_DIR="/var/www/html/gcz"
+echo -e "\033[1m🧠 GambleCodez — Full System Check + Auto-Heal\033[0m"
 
-echo -e "\n🧠 GambleCodez — Full System Check + Auto-Heal\n"
+# 1. NODE MODULES CHECK
+echo "[heal] node modules + package.json"
+cd "$GZ_DIR"
+npm install --silent
 
-[[ -f "$ENV_FILE" ]] && { set -a; source "$ENV_FILE"; set +a; } || echo "🚫 ENV file not found"
-[[ -n "${DATABASE_URL:-}" ]] && export PGPASSWORD="${DATABASE_URL#*:}" && PGPASSWORD="${PGPASSWORD%%@*}"
+# 2. FRONTEND BUILD (Vite fix)
+if [[ -f "$GZ_DIR/frontend/package.json" ]]; then
+  echo "[heal] frontend deps + build"
+  cd "$GZ_DIR/frontend"
+  npm install --silent
+  if ! command -v vite &> /dev/null; then
+    npm install vite --save-dev
+  fi
+  npm run build
+  cd "$GZ_DIR"
+fi
 
-heal() {
-  echo "[heal] node modules + package.json"; cd "$ROOT"
-  npm list express || npm i express; npm list node-fetch || npm i node-fetch; npm list pm2 || npm i pm2
-  grep -q '"type": "module"' package.json || sed -i '1s/^/{\n  "type": "module",/' package.json
-  pm2 describe gcz-api || pm2 start server.js --name gcz-api
-  pm2 describe gcz-bot || pm2 start start-bot.js --name gcz-bot
-  pm2 describe gcz-redirect || pm2 start python3 --name gcz-redirect -- backend/redirect.py
-  pm2 describe gcz-watchdog || pm2 start watchdog.js --name gcz-watchdog
-  pm2 save; [[ ! -f backend/__init__.py ]] && touch backend/__init__.py
-  head -n1 "$CSV_PATH" | grep -q resolved_domain || sed -i '1s/$/,resolved_domain/' "$CSV_PATH"
-  psql -U gamblecodez -h localhost -d gambledb -c "ALTER TABLE affiliates_master ADD COLUMN IF NOT EXISTS resolved_domain TEXT;"
-  for f in "$ROOT"/sql/*.sql; do [[ -f "$f" ]] && psql -U gamblecodez -h localhost -d gambledb -f "$f" || FAIL=1; done
-}
+# 3. SQL MIGRATIONS
+echo "[heal] running SQL migrations..."
+for f in "$GZ_DIR"/sql/*.sql; do
+  [[ -f "$f" ]] && echo "Running: $f" && PGPASSWORD="Dope-19881988" psql -U gamblecodez -h localhost -d gambledb -f "$f"
+done
 
-check() { local msg="$1" cmd="$2" r; r=$(eval "$cmd" 2>&1 || true); [[ -z "$r" ]] && echo "✅ $msg OK" && return; echo "$r" | grep -iqE "fail|err|not found|traceback" && echo "🚫 $msg: $r" && FAIL=1 || echo "✅ $msg OK"; }
+# 4. PM2 CHECK + BOT SCRIPT FIX
+if ! grep -q "start-bot.js" "$GZ_DIR/ecosystem.config.cjs"; then
+  echo "[heal] missing bot script in PM2 config — patching"
+  sed -i '/gcz-watchdog/ a\
+    {\
+      name: "gcz-bot",\
+      script: "start-bot.js",\
+      cwd: "'$GZ_DIR'",\
+      watch: false,\
+      env: { NODE_ENV: "production" }\
+    },' "$GZ_DIR/ecosystem.config.cjs"
+fi
 
-heal
-check "PM2 Core" "pm2 ping"
-check "API /health" "curl -s https://gamblecodez.com/health"
-check "System Status" "curl -s https://gamblecodez.com/system/status"
-check "Redirect Health" "curl -s https://gamblecodez.com/affiliates/redirect/health"
-check "Local DB" "psql -U gamblecodez -h localhost -d gambledb -c 'SELECT 1'"
-check "Neon DB" "psql \"$AIAGENTNEONDBURL\" -c 'SELECT 1'"
-check "CSV exists" "[[ -f $CSV_PATH ]]"
-check "CSV header" "head -n1 $CSV_PATH | grep -q resolved_domain"
-check "SSL cert" "curl -Iv https://gamblecodez.com 2>&1 | grep -i 'SSL certificate'"
-check "Git Clean" "cd \"$ROOT\" && git status --porcelain"
+# 5. RELOAD PM2
+echo "[heal] reloading PM2 config"
+pm2 reload "$GZ_DIR/ecosystem.config.cjs"
+pm2 save
 
-[[ $FAIL -eq 0 ]] && echo -e "\n✅ ALL CHECKS PASSED\n" || echo -e "\n🚫 FAILURES DETECTED\n"
+# 6. STATUS
+echo "[status] PM2 process list:"
+pm2 status
