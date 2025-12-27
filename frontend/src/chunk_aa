@@ -1,0 +1,780 @@
+===== FILE: ./main.jsx =====
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './components/Layout/App.jsx';
+import './index.css';
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+
+// Register Service Worker
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW failed:', err));
+  });
+}
+
+===== FILE: ./components/Ads/PromoPopup.jsx =====
+import React from 'react';
+
+export default function PromoPopup() {
+  return null;
+}
+
+===== FILE: ./components/UI/CategoryBadge.jsx =====
+import React from 'react';
+import { getCategoryColor } from '../../utils/constants';
+
+export default function CategoryBadge({ category, label = null }) {
+  const labels = { us: 'US', nonus: 'Non-US', sweeps: 'Sweeps', crypto: 'Crypto', instant: 'Instant', lootbox: 'Lootbox', faucet: 'Faucet', new: '🆕 New', top_pick: '⭐ Top Pick' };
+  
+  const color = getCategoryColor(category);
+  const text = label || labels[category?.toLowerCase()] || 'Category';
+  
+  return (
+    <span className="inline-block px-3 py-1 rounded-full text-xs font-bold text-black" style={{ backgroundColor: color }}>
+      {text}
+    </span>
+  );
+}
+
+===== FILE: ./components/UI/NeonButton.jsx =====
+import React from 'react';
+
+export default function NeonButton({ 
+  children, 
+  variant = 'primary', 
+  size = 'md', 
+  loading = false, 
+  disabled = false, 
+  className = '', 
+  onClick, 
+  ...props 
+}) {
+  const variants = {
+    primary: 'bg-gradient-to-r from-cyan-400 to-purple-600 text-black font-bold',
+    secondary: 'bg-transparent border-2 border-cyan-400 text-cyan-400',
+    danger: 'bg-red-600 text-white font-bold',
+    success: 'bg-green-500 text-black font-bold',
+  };
+  
+  const sizes = {
+    sm: 'px-3 py-2 text-sm',
+    md: 'px-6 py-3 text-base',
+    lg: 'px-8 py-4 text-lg',
+  };
+  
+  return (
+    <button
+      className={`rounded-lg font-semibold transition-all duration-300 hover:shadow-glow-cyan disabled:opacity-50 disabled:cursor-not-allowed ${variants[variant]} ${sizes[size]} ${className}`}
+      disabled={disabled || loading}
+      onClick={onClick}
+      {...props}
+    >
+      {loading ? '⟳ Loading...' : children}
+    </button>
+  );
+}
+
+===== FILE: ./components/UI/Modal.jsx =====
+import React from 'react';
+
+export default function Modal({ isOpen, onClose, title, children, size = 'md', className = '' }) {
+  if (!isOpen) return null;
+  
+  const sizes = {
+    sm: 'max-w-sm',
+    md: 'max-w-md',
+    lg: 'max-w-lg',
+    xl: 'max-w-xl',
+  };
+  
+  return (
+    <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center modal-slide">
+      <div className={`bg-gray-950 border border-cyan-400/30 rounded-lg p-6 shadow-lg shadow-cyan-500/30 ${sizes[size]} ${className}`}>
+        {title && <h2 className="text-2xl font-bold text-cyan-400 mb-4">{title}</h2>}
+        {children}
+        <button onClick={onClose} className="absolute top-4 right-4 text-cyan-400 hover:text-purple-600">✕</button>
+      </div>
+    </div>
+  );
+}
+
+===== FILE: ./components/UI/NeonCard.jsx =====
+import React from 'react';
+
+export default function NeonCard({ children, className = '', glowColor = 'cyan', interactive = true, onClick, ...props }) {
+  const glows = {
+    cyan: 'hover:shadow-lg hover:shadow-cyan-500/50',
+    purple: 'hover:shadow-lg hover:shadow-purple-600/50',
+    pink: 'hover:shadow-lg hover:shadow-pink-600/50',
+    green: 'hover:shadow-lg hover:shadow-green-500/50',
+  };
+  
+  return (
+    <div
+      className={`bg-gray-950 border border-gray-800 rounded-lg p-4 transition-all duration-300 ${interactive ? 'cursor-pointer hover:scale-105' : ''} ${glows[glowColor]} ${className}`}
+      onClick={onClick}
+      {...props}
+    >
+      {children}
+    </div>
+  );
+}
+
+===== FILE: ./components/UI/Toast.jsx =====
+import React, { useEffect } from 'react';
+
+export default function Toast({ message, type = 'info', duration = 4000, onClose }) {
+  useEffect(() => {
+    const timer = setTimeout(onClose, duration);
+    return () => clearTimeout(timer);
+  }, [duration, onClose]);
+  
+  const types = {
+    success: 'bg-green-500 border-green-500 text-black',
+    error: 'bg-red-600 border-red-600 text-white',
+    warning: 'bg-yellow-500 border-yellow-500 text-black',
+    info: 'bg-cyan-400 border-cyan-400 text-black',
+  };
+  
+  return (
+    <div className={`fixed bottom-6 right-6 px-6 py-4 rounded-lg border font-bold transition-all duration-300 toast-slide z-50 ${types[type]}`}>
+      {message}
+    </div>
+  );
+}
+
+===== FILE: ./components/Layout/Header.jsx =====
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+
+export default function Header() {
+  const [flipCount, setFlipCount] = useState(0);
+  
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setFlipCount(prev => prev + 1);
+    }, 60000);
+    return () => clearInterval(interval);
+  }, []);
+  
+  return (
+    <header className="bg-gray-950 border-b border-gray-800 sticky top-0 z-40 py-4 px-6">
+      <div className="max-w-7xl mx-auto flex items-center justify-between">
+        <Link to="/" className="flex items-center gap-3">
+          <div className={`text-4xl ${flipCount % 2 === 0 ? 'crown-flip' : ''}`} key={flipCount}>👑</div>
+          <div>
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-purple-600 bg-clip-text text-transparent">GambleCodez</h1>
+            <p className="text-xs text-gray-400">Redeem today, flex tomorrow.</p>
+          </div>
+        </Link>
+        <nav className="hidden md:flex gap-6">
+          <Link to="/sites" className="text-gray-300 hover:text-cyan-400">Sites</Link>
+          <Link to="/raffles" className="text-gray-300 hover:text-cyan-400">Raffles</Link>
+          <Link to="/newsletter" className="text-gray-300 hover:text-cyan-400">Newsletter</Link>
+        </nav>
+      </div>
+    </header>
+  );
+}
+
+===== FILE: ./components/Layout/Footer.jsx =====
+import React from 'react';
+import { SOCIALS } from '../../utils/constants';
+
+export default function Footer() {
+  return (
+    <footer className="bg-gray-950 border-t border-gray-800 mt-16 py-8 px-6">
+      <div className="max-w-7xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-8 mb-8">
+          <div>
+            <h3 className="font-bold text-cyan-400 mb-4">GambleCodez</h3>
+            <p className="text-sm text-gray-400">Discover and win at the best online casinos.</p>
+          </div>
+          <div>
+            <h4 className="font-bold text-cyan-400 mb-4">Links</h4>
+            <ul className="text-sm space-y-2">
+              <li><a href="/sites" className="text-gray-400 hover:text-cyan-400">All Sites</a></li>
+              <li><a href="/raffles" className="text-gray-400 hover:text-cyan-400">Raffles</a></li>
+              <li><a href="/blacklist" className="text-gray-400 hover:text-cyan-400">Blacklist</a></li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="font-bold text-cyan-400 mb-4">Social</h4>
+            <div className="flex gap-4">
+              <a href={SOCIALS.telegram} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-cyan-400">Telegram</a>
+              <a href={SOCIALS.twitter} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-cyan-400">Twitter</a>
+            </div>
+          </div>
+        </div>
+        <div className="border-t border-gray-800 pt-8 text-center text-xs text-gray-500">
+          <p>&copy; 2025 GambleCodez. All rights reserved.</p>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
+===== FILE: ./components/Layout/Navigation.jsx =====
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { CATEGORIES } from '../../utils/constants';
+
+export default function Navigation() {
+  const [mobileOpen, setMobileOpen] = useState(false);
+  
+  return (
+    <nav className="bg-gray-900 border-b border-gray-800 sticky top-16 z-30">
+      <div className="max-w-7xl mx-auto px-6 py-4">
+        <div className="flex justify-between items-center md:hidden">
+          <button onClick={() => setMobileOpen(!mobileOpen)} className="text-cyan-400 text-xl">☰</button>
+        </div>
+        
+        <div className={`${mobileOpen ? 'block' : 'hidden'} md:block`}>
+          <ul className="flex flex-col md:flex-row gap-2 md:gap-4">
+            <li><Link to="/sites" className="text-gray-300 hover:text-cyan-400 block py-2">All Sites</Link></li>
+            {CATEGORIES.map(cat => (
+              <li key={cat.name}><Link to={cat.path} className="text-gray-300 hover:text-cyan-400 block py-2">{cat.label}</Link></li>
+            ))}
+            <li><Link to="/top-picks" className="text-yellow-400 hover:text-cyan-400 block py-2">⭐ Top Picks</Link></li>
+            <li><Link to="/new" className="text-yellow-400 hover:text-cyan-400 block py-2">🆕 New</Link></li>
+            <li><Link to="/blacklist" className="text-red-500 hover:text-red-400 block py-2">⚠️ Blacklist</Link></li>
+            <li><Link to="/contact" className="text-gray-300 hover:text-cyan-400 block py-2">📞 Report</Link></li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+  );
+}
+
+===== FILE: ./components/Layout/App.jsx =====
+import React from "react";
+
+export default function App() {
+  return (
+    <div style={{ color: "white", padding: "40px", fontSize: "24px" }}>
+      <h1>GambleCodez Frontend Loaded</h1>
+      <p>If you see this, the React app is working.</p>
+    </div>
+  );
+}
+
+===== FILE: ./index.css =====
+@import "tailwindcss";
+@import "./styles/global.css";
+
+===== FILE: ./context/UserContext.jsx =====
+import React, { createContext, useState, useEffect } from 'react';
+
+export const UserContext = createContext();
+
+export const UserProvider = ({ children }) => {
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [userEmail, setUserEmail] = useState(null);
+  const [lastCheckin, setLastCheckin] = useState(null);
+  
+  useEffect(() => {
+    const subscribed = localStorage.getItem('gcz_subscribed') === 'true';
+    setIsSubscribed(subscribed);
+  }, []);
+  
+  return (
+    <UserContext.Provider value={{ isSubscribed, setIsSubscribed, userEmail, setUserEmail, lastCheckin, setLastCheckin }}>
+      {children}
+    </UserContext.Provider>
+  );
+};
+
+===== FILE: ./context/AdsContext.jsx =====
+import React, { createContext, useState } from 'react';
+
+export const AdsContext = createContext();
+
+export const AdsProvider = ({ children }) => {
+  const [currentAd] = useState(null);
+  const [showAd] = useState(false);
+  
+  const dismissAd = () => {};
+  
+  return (
+    <AdsContext.Provider value={{ currentAd, showAd, dismissAd }}>
+      {children}
+    </AdsContext.Provider>
+  );
+};
+
+===== FILE: ./context/SitesContext.jsx =====
+import React, { createContext, useState, useCallback } from 'react';
+import { apiClient } from '../utils/api';
+
+export const SitesContext = createContext();
+
+export const SitesProvider = ({ children }) => {
+  const [sites, setSites] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [sortBy, setSortBy] = useState('priority');
+  
+  const fetchSites = useCallback(async (category = null, page = 1) => {
+    setLoading(true);
+    try {
+      const params = { page, limit: 12, sort: sortBy };
+      if (category) params.category = category;
+      
+      const data = await apiClient.getSites(params);
+      setSites(data.sites || []);
+      setCurrentPage(data.current_page || 1);
+      setTotalPages(data.total_pages || 1);
+    } catch (err) {
+      setError(err.message);
+      setSites([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [sortBy]);
+  
+  return (
+    <SitesContext.Provider
+      value={{ sites, loading, error, currentPage, totalPages, sortBy, setSortBy, fetchSites, setCurrentPage }}
+    >
+      {children}
+    </SitesContext.Provider>
+  );
+};
+
+===== FILE: ./utils/api.js =====
+const API_BASE = process.env.VITE_API_URL || 'http://localhost:5000/api';
+
+export const apiClient = {
+  getSites: async (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return fetch(`${API_BASE}/sites?${query}`).then(r => r.json());
+  },
+  
+  redirectSite: async (siteId) => {
+    const res = await fetch(`${API_BASE}/redirect/${siteId}`, { method: 'POST' });
+    return await res.json();
+  },
+  
+  subscribeNewsletter: async (email, telegramHandle, payoutId) => {
+    return fetch(`${API_BASE}/newsletter/subscribe`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, telegram_handle: telegramHandle, payout_id: payoutId }),
+    }).then(r => r.json());
+  },
+  
+  getRaffles: async () => {
+    return fetch(`${API_BASE}/raffles`).then(r => r.json());
+  },
+  
+  enterRaffle: async (raffleId, email) => {
+    return fetch(`${API_BASE}/raffles/${raffleId}/enter`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    }).then(r => r.json());
+  },
+  
+  submitContact: async (name, email, subject, message) => {
+    return fetch(`${API_BASE}/contact`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, subject, message }),
+    }).then(r => r.json());
+  },
+};
+
+===== FILE: ./utils/constants.js =====
+export const CATEGORY_COLORS = {
+  us: '#3b82f6',
+  nonus: '#a855f7',
+  sweeps: '#06b6d4',
+  crypto: '#f97316',
+  instant: '#10b981',
+  lootbox: '#ec4899',
+  faucet: '#14b8a6',
+  new: '#fbbf24',
+  blacklist: '#ef4444',
+  top_pick: '#fbbf24',
+};
+
+export const CATEGORIES = [
+  { name: 'us', label: 'US', path: '/us' },
+  { name: 'nonus', label: 'Non-US', path: '/nonus' },
+  { name: 'sweeps', label: 'Sweeps', path: '/sweeps' },
+  { name: 'crypto', label: 'Crypto', path: '/crypto' },
+  { name: 'instant', label: 'Instant', path: '/instant' },
+  { name: 'lootbox', label: 'Lootbox', path: '/lootbox' },
+  { name: 'faucet', label: 'Faucet', path: '/faucet' },
+];
+
+export const SOCIALS = {
+  telegram: 'https://t.me/GambleCodezDrops',
+  twitter: 'https://twitter.com/GambleCodez',
+  telegramBot: 'https://t.me/GambleCodezCasinoDrops_bot',
+};
+
+export const getCategoryColor = (category) => {
+  return CATEGORY_COLORS[category?.toLowerCase()] || CATEGORY_COLORS.us;
+};
+
+===== FILE: ./styles/global.css =====
+body {
+  margin: 0;
+  background: #000;
+  color: #fff;
+  font-family: sans-serif;
+}
+
+===== FILE: ./pages/AllSites.jsx =====
+import React, { useContext, useEffect, useState } from 'react';
+import { SitesContext } from '../context/SitesContext';
+
+export default function AllSites() {
+  const { sites, loading, fetchSites, currentPage, setCurrentPage, totalPages, sortBy, setSortBy } = useContext(SitesContext);
+  
+  useEffect(() => {
+    fetchSites(null, currentPage);
+  }, [currentPage, sortBy]);
+  
+  return (
+    <div className="max-w-7xl mx-auto px-6 py-12">
+      <h1 className="text-4xl font-bold mb-8 text-cyan-400">All Casino Sites</h1>
+      
+      <div className="mb-6 flex gap-4">
+        <select 
+          value={sortBy} 
+          onChange={(e) => setSortBy(e.target.value)}
+          className="px-4 py-2 bg-gray-900 border border-gray-700 rounded text-white"
+        >
+          <option value="priority">Priority</option>
+          <option value="top_pick">Top Picks</option>
+          <option value="newest">Newest First</option>
+        </select>
+      </div>
+      
+      {loading ? (
+        <div className="text-center py-12"><p className="text-gray-400">Loading sites...</p></div>
+      ) : (
+        <>
+          <div className="grid md:grid-cols-3 gap-6 mb-8">
+            {sites.map(site => (
+              <div key={site.id} className="bg-gray-950 border border-gray-800 rounded-lg p-6 hover:shadow-lg hover:shadow-cyan-500/50 transition-all">
+                <h3 className="text-xl font-bold text-cyan-400 mb-2">{site.name}</h3>
+                <p className="text-sm text-gray-400 mb-4">{site.description}</p>
+                <button className="w-full px-4 py-2 bg-gradient-to-r from-cyan-400 to-purple-600 text-black font-bold rounded hover:shadow-lg">
+                  Visit Site →
+                </button>
+              </div>
+            ))}
+          </div>
+          
+          <div className="flex justify-center gap-2">
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+              <button
+                key={page}
+                onClick={() => setCurrentPage(page)}
+                className={`w-10 h-10 rounded ${page === currentPage ? 'bg-cyan-400 text-black' : 'bg-gray-900 border border-gray-700 text-cyan-400'}`}
+              >
+                {page}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+===== FILE: ./pages/CategoryPage.jsx =====
+import React, { useContext, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import { SitesContext } from '../context/SitesContext';
+
+export default function CategoryPage() {
+  const { category } = useParams();
+  const { sites, loading, fetchSites } = useContext(SitesContext);
+  
+  useEffect(() => {
+    fetchSites(category, 1);
+  }, [category]);
+  
+  return (
+    <div className="max-w-7xl mx-auto px-6 py-12">
+      <h1 className="text-4xl font-bold mb-8 text-cyan-400 capitalize">{category} Sites</h1>
+      {loading ? <p>Loading...</p> : <p className="text-gray-400">{sites.length} sites found</p>}
+    </div>
+  );
+}
+
+===== FILE: ./pages/Blacklist.jsx =====
+import React from 'react';
+
+export default function Blacklist() {
+  return (
+    <div className="max-w-7xl mx-auto px-6 py-12">
+      <div className="bg-red-950/30 border border-red-600 rounded-lg p-6 mb-8">
+        <h1 className="text-4xl font-bold text-red-500 mb-2">⚠️ BLACKLIST</h1>
+        <p className="text-gray-300">These sites have been reported as unsafe or fraudulent.</p>
+      </div>
+      <p className="text-gray-400">No blacklisted sites at this time.</p>
+    </div>
+  );
+}
+
+===== FILE: ./pages/Home.jsx =====
+import React from 'react';
+import { Link } from 'react-router-dom';
+
+export default function Home() {
+  return (
+    <div className="max-w-7xl mx-auto px-6 py-12">
+      <div className="text-center mb-16">
+        <div className="text-8xl mb-4 animate-bounce">👑</div>
+        <h2 className="text-5xl font-bold mb-4 bg-gradient-to-r from-cyan-400 to-purple-600 bg-clip-text text-transparent">
+          Welcome to GambleCodez
+        </h2>
+        <p className="text-2xl text-gray-400 mb-8">Redeem today, flex tomorrow.</p>
+        <Link to="/sites" className="px-8 py-4 bg-gradient-to-r from-cyan-400 to-purple-600 text-black font-bold rounded-lg hover:shadow-lg hover:shadow-cyan-500/50 inline-block">
+          Explore All Sites →
+        </Link>
+      </div>
+      
+      <div className="grid md:grid-cols-3 gap-6 mb-16">
+        <div className="bg-gray-950 border border-cyan-500/30 rounded-lg p-6 hover:shadow-lg hover:shadow-cyan-500/50 transition-all">
+          <div className="text-4xl mb-4">🎰</div>
+          <h3 className="text-xl font-bold text-cyan-400 mb-2">Best Sites</h3>
+          <p className="text-gray-400">Discover top-rated casinos and sweeps platforms.</p>
+        </div>
+        
+        <div className="bg-gray-950 border border-purple-600/30 rounded-lg p-6 hover:shadow-lg hover:shadow-purple-600/50 transition-all">
+          <div className="text-4xl mb-4">🎁</div>
+          <h3 className="text-xl font-bold text-purple-400 mb-2">Daily Raffles</h3>
+          <p className="text-gray-400">Enter raffles and win exclusive prizes daily.</p>
+        </div>
+        
+        <div className="bg-gray-950 border border-pink-500/30 rounded-lg p-6 hover:shadow-lg hover:shadow-pink-600/50 transition-all">
+          <div className="text-4xl mb-4">⚡</div>
+          <h3 className="text-xl font-bold text-pink-400 mb-2">Fast Payouts</h3>
+          <p className="text-gray-400">Claim your winnings instantly with verified sites.</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+===== FILE: ./pages/Raffles.jsx =====
+import React from 'react';
+
+export default function Raffles() {
+  return (
+    <div className="max-w-7xl mx-auto px-6 py-12">
+      <h1 className="text-4xl font-bold mb-8 text-cyan-400">🎁 Daily Raffles</h1>
+      <p className="text-gray-400">Active raffles will appear here. Subscribe to the newsletter to enter!</p>
+    </div>
+  );
+}
+
+===== FILE: ./pages/Newsletter.jsx =====
+import React, { useState } from 'react';
+import { apiClient } from '../utils/api';
+
+export default function Newsletter() {
+  const [email, setEmail] = useState('');
+  const [telegram, setTelegram] = useState('');
+  const [submitted, setSubmitted] = useState(false);
+  
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await apiClient.subscribeNewsletter(email, telegram, '');
+      localStorage.setItem('gcz_subscribed', 'true');
+      setSubmitted(true);
+    } catch (err) {
+      alert('Error: ' + err.message);
+    }
+  };
+  
+  return (
+    <div className="max-w-2xl mx-auto px-6 py-12">
+      <h1 className="text-4xl font-bold mb-8 text-cyan-400">Subscribe to Newsletter</h1>
+      
+      {submitted ? (
+        <div className="bg-green-950 border border-green-600 rounded-lg p-6 text-center">
+          <p className="text-green-400 font-bold text-xl">✅ Subscribed!</p>
+          <p className="text-gray-300 mt-2">Check your email for confirmation.</p>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit} className="bg-gray-950 border border-gray-800 rounded-lg p-6 space-y-4">
+          <div>
+            <label className="block text-sm font-bold text-cyan-400 mb-2">Email *</label>
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded text-white"
+              placeholder="your@email.com"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-bold text-purple-400 mb-2">Telegram Handle</label>
+            <input
+              type="text"
+              value={telegram}
+              onChange={(e) => setTelegram(e.target.value)}
+              className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded text-white"
+              placeholder="@username"
+            />
+          </div>
+          
+          <button type="submit" className="w-full px-6 py-3 bg-gradient-to-r from-cyan-400 to-purple-600 text-black font-bold rounded-lg hover:shadow-lg">
+            Subscribe
+          </button>
+        </form>
+      )}
+    </div>
+  );
+}
+
+===== FILE: ./pages/Contact.jsx =====
+import React, { useState } from 'react';
+import { apiClient } from '../utils/api';
+
+export default function Contact() {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [subject, setSubject] = useState('');
+  const [message, setMessage] = useState('');
+  const [submitted, setSubmitted] = useState(false);
+  
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await apiClient.submitContact(name, email, subject, message);
+      setSubmitted(true);
+      setName('');
+      setEmail('');
+      setSubject('');
+      setMessage('');
+    } catch (err) {
+      alert('Error: ' + err.message);
+    }
+  };
+  
+  return (
+    <div className="max-w-2xl mx-auto px-6 py-12">
+      <h1 className="text-4xl font-bold mb-8 text-cyan-400">📞 Contact Us</h1>
+      
+      {submitted && (
+        <div className="bg-green-950 border border-green-600 rounded-lg p-6 text-center mb-8">
+          <p className="text-green-400 font-bold">✅ Message sent!</p>
+        </div>
+      )}
+      
+      <form onSubmit={handleSubmit} className="bg-gray-950 border border-gray-800 rounded-lg p-6 space-y-4">
+        <div>
+          <label className="block text-sm font-bold text-cyan-400 mb-2">Name *</label>
+          <input type="text" required value={name} onChange={(e) => setName(e.target.value)} className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded text-white" />
+        </div>
+        
+        <div>
+          <label className="block text-sm font-bold text-cyan-400 mb-2">Email *</label>
+          <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded text-white" />
+        </div>
+        
+        <div>
+          <label className="block text-sm font-bold text-cyan-400 mb-2">Subject *</label>
+          <input type="text" required value={subject} onChange={(e) => setSubject(e.target.value)} className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded text-white" />
+        </div>
+        
+        <div>
+          <label className="block text-sm font-bold text-cyan-400 mb-2">Message *</label>
+          <textarea required value={message} onChange={(e) => setMessage(e.target.value)} rows="6" className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded text-white"></textarea>
+        </div>
+        
+        <button type="submit" className="w-full px-6 py-3 bg-gradient-to-r from-cyan-400 to-purple-600 text-black font-bold rounded-lg hover:shadow-lg">
+          Send Message
+        </button>
+      </form>
+    </div>
+  );
+}
+
+===== FILE: ./pages/NotFound.jsx =====
+import React from 'react';
+import { Link } from 'react-router-dom';
+
+export default function NotFound() {
+  return (
+    <div className="max-w-2xl mx-auto px-6 py-12 text-center">
+      <h1 className="text-6xl font-bold text-cyan-400 mb-4">404</h1>
+      <p className="text-2xl text-gray-300 mb-8">Page not found</p>
+      <Link to="/" className="px-6 py-3 bg-gradient-to-r from-cyan-400 to-purple-600 text-black font-bold rounded-lg inline-block">
+        Go Home
+      </Link>
+    </div>
+  );
+}
+
+===== FILE: ./App.jsx =====
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Header from './components/Layout/Header';
+import Footer from './components/Layout/Footer';
+import Navigation from './components/Layout/Navigation';
+import Home from './pages/Home';
+import AllSites from './pages/AllSites';
+import CategoryPage from './pages/CategoryPage';
+import Blacklist from './pages/Blacklist';
+import Newsletter from './pages/Newsletter';
+import Raffles from './pages/Raffles';
+import Contact from './pages/Contact';
+import NotFound from './pages/NotFound';
+import { SitesProvider } from './context/SitesContext';
+import { UserProvider } from './context/UserContext';
+import { AdsContext } from './context/AdsContext';
+import PromoPopup from './components/Ads/PromoPopup';
+import Toast from './components/UI/Toast';
+
+export default function App() {
+  const [toast, setToast] = useState(null);
+  const [ads] = useState({ currentAd: null, showAd: false });
+
+  return (
+    <SitesProvider>
+      <UserProvider>
+        <BrowserRouter>
+          <div className="min-h-screen bg-black text-white flex flex-col">
+            <Header />
+            <Navigation />
+            <main className="flex-1">
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/sites" element={<AllSites />} />
+                <Route path="/:category" element={<CategoryPage />} />
+                <Route path="/blacklist" element={<Blacklist />} />
+                <Route path="/newsletter" element={<Newsletter />} />
+                <Route path="/raffles" element={<Raffles />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </main>
+            <Footer />
+            {toast && <Toast {...toast} onClose={() => setToast(null)} />}
+            {ads.showAd && <PromoPopup />}
+          </div>
+        </BrowserRouter>
+      </UserProvider>
+    </SitesProvider>
+  );
+}
+
