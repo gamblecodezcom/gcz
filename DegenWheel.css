@@ -1,0 +1,132 @@
+.wheel-container {
+  text-align: center;
+  margin-top: 40px;
+  color: #00faff;
+}
+
+.wheel-tagline {
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  text-shadow: 0 0 8px rgba(0, 250, 255, 0.6);
+}
+
+.wheel-wrapper {
+  position: relative;
+  width: 320px;
+  height: 320px;
+  margin: 0 auto;
+}
+
+.wheel {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  position: relative;
+  border: 4px solid #00faff;
+  box-shadow: 0 0 20px #00faff;
+  overflow: hidden;
+}
+
+.segment {
+  position: absolute;
+  width: 50%;
+  height: 50%;
+  left: 50%;
+  top: 50%;
+  transform-origin: 0% 0%;
+  background: rgba(0, 250, 255, 0.1);
+  border: 1px solid rgba(0, 250, 255, 0.4);
+  box-shadow: inset 0 0 10px #00faff;
+}
+
+.segment span {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  transform: rotate(-90deg);
+  font-size: 1.2rem;
+  font-weight: bold;
+  text-shadow: 0 0 6px #00faff;
+}
+
+.jackpot {
+  background: rgba(255, 215, 0, 0.15);
+  border-color: gold;
+  animation: jackpotPulse 1.2s infinite alternate;
+}
+
+@keyframes jackpotPulse {
+  from { box-shadow: inset 0 0 10px gold; }
+  to { box-shadow: inset 0 0 25px red; }
+}
+
+.crown {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 48px;
+  text-shadow: 0 0 12px gold;
+}
+
+.spin-btn {
+  margin-top: 20px;
+  padding: 12px 28px;
+  font-size: 1.2rem;
+  background: #00faff;
+  color: #000;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 0 12px #00faff;
+  transition: 0.2s;
+}
+
+.spin-btn:hover {
+  box-shadow: 0 0 20px #00faff;
+}
+
+.spin-btn.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.result-popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.75);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.result-box {
+  background: #0a0a0a;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 0 20px #00faff;
+  text-align: center;
+}
+
+.reward-text {
+  font-size: 2rem;
+  color: #00faff;
+}
+
+.jackpot-text {
+  font-size: 2.2rem;
+  color: gold;
+  text-shadow: 0 0 12px red;
+}
+
+.close-btn {
+  margin-top: 20px;
+  padding: 10px 20px;
+  background: #00faff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
