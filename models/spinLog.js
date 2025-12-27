@@ -1,9 +1,7 @@
 import pkg from "pg";
 const { Pool } = pkg;
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL
-});
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 export async function logSpin({ user_id, reward, ip_address, user_agent }) {
   return pool.query(

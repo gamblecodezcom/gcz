@@ -1,10 +1,29 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { get } from '../utils/api';
 
-export default function Raffles() {
+const Raffles = () => {
+  const [raffles, setRaffles] = useState([]);
+
+  useEffect(() => {
+    const fetchRaffles = async () => {
+      const data = await get('/raffles');
+      setRaffles(data || []);
+    };
+    fetchRaffles();
+  }, []);
+
   return (
-    <div className="max-w-7xl mx-auto px-6 py-12">
-      <h1 className="text-4xl font-bold mb-8 text-cyan-400">🎁 Daily Raffles</h1>
-      <p className="text-gray-400">Active raffles will appear here. Subscribe to the newsletter to enter!</p>
+    <div className="page">
+      <h1>🎟️ Active Raffles</h1>
+      <ul>
+        {raffles.map((raffle) => (
+          <li key={raffle.id}>
+            <strong>{raffle.title}</strong> — Ends: {new Date(raffle.ends_at).toLocaleString()}
+          </li>
+        ))}
+      </ul>
     </div>
   );
-}
+};
+
+export default Raffles;

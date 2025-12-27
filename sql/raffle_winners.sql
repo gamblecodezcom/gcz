@@ -1,0 +1,8 @@
+CREATE TABLE IF NOT EXISTS raffle_winners (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  raffle_id INTEGER NOT NULL,
+  winner TEXT NOT NULL,
+  prize TEXT,
+  won_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (raffle_id) REFERENCES raffles(id)
+);

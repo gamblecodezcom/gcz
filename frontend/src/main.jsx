@@ -1,17 +1,20 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import App from './components/Layout/App.jsx';
-import './index.css';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import App from './App';
+import Raffles from './pages/Raffles';
+import DailySpin from './pages/DailySpin';
+import Admin from './pages/Admin';
+import './styles/global.css';
 
-ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(
+  <BrowserRouter>
+    <Routes>
+      <Route path="/" element={<App />} />
+      <Route path="/raffles" element={<Raffles />} />
+      <Route path="/spin" element={<DailySpin />} />
+      <Route path="/admin/*" element={<Admin />} />
+    </Routes>
+  </BrowserRouter>
 );
-
-// Register Service Worker
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW failed:', err));
-  });
-}
