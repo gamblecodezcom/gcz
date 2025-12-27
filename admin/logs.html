@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>System Logs</title>
+  <link rel="stylesheet" href="/admin/styles.css">
+</head>
+<body class="admin-dark">
+  <div class="admin-container">
+    <h1>📜 System Logs</h1>
+    <div class="filters">
+      <input id="levelFilter" placeholder="Level (info, warn, error)">
+      <input id="tagFilter" placeholder="Tag">
+      <button onclick="loadLogs()">Filter</button>
+    </div>
+    <table><thead>
+      <tr><th>Timestamp</th><th>Level</th><th>Tag</th><th>Message</th></tr>
+    </thead><tbody id="logRows"></tbody></table>
+  </div>
+  <script>
+    async function loadLogs() {
+      const level = document.getElementById("levelFilter").value;
+      const tag = document.getElementById("tagFilter").value;
+      const res = await fetch("/api/admin/syslogs?" + new URLSearchParams({ level, tag }));
+      const data = await res.json();
+      const tbody = document.getElementById("logRows");
+      tbody.innerHTML = "";
+      data.forEach(log => {
+        tbody.innerHTML += \`<tr><td>\${new Date(log.timestamp).toLocaleString()}</td><td>\${log.level}</td><td>\${log.tag}</td><td>\${log.message}</td></tr>\`;
+      });
+    }
+    loadLogs();
+  </script>
+</body>
+</html>

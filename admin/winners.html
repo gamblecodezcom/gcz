@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Raffle Winners</title>
+  <link rel="stylesheet" href="/admin/styles.css">
+</head>
+<body class="admin-dark">
+  <div class="admin-container">
+    <h1>🏆 Raffle Winners</h1>
+    <div class="filters">
+      <input id="raffleFilter" placeholder="Raffle ID">
+      <button onclick="loadWinners()">Search</button>
+    </div>
+    <table><thead>
+      <tr><th>Winner</th><th>Prize</th><th>Raffle ID</th><th>Timestamp</th></tr>
+    </thead><tbody id="winners"></tbody></table>
+  </div>
+  <script>
+    async function loadWinners() {
+      const raffleId = document.getElementById("raffleFilter").value;
+      const res = await fetch("/api/admin/winners?" + new URLSearchParams({ raffle: raffleId }));
+      const data = await res.json();
+      const tbody = document.getElementById("winners");
+      tbody.innerHTML = "";
+      data.forEach(w => {
+        tbody.innerHTML += \`<tr><td>\${w.winner_id}</td><td>\${w.prize}</td><td>\${w.raffle_id}</td><td>\${new Date(w.timestamp).toLocaleString()}</td></tr>\`;
+      });
+    }
+    loadWinners();
+  </script>
+</body>
+</html>
