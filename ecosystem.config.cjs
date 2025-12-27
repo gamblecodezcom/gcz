@@ -1,3 +1,4 @@
+// /var/www/html/gcz/ecosystem.config.cjs
 module.exports = {
   apps: [
     {
@@ -20,6 +21,14 @@ module.exports = {
       script: "watchdog.js",
       cwd: "/var/www/html/gcz",
     },
+    {
+      name: "gcz-bot",
+      script: "start-bot.js",
+      cwd: "/var/www/html/gcz",
+      watch: false,
+      env: {
+        NODE_ENV: "production",
+      },
+    },
   ],
 };
-
