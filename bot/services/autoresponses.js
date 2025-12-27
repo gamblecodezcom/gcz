@@ -1,0 +1,1 @@
+/* Auto-responses for groups */
