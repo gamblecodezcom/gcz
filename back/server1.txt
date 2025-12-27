@@ -1,0 +1,442 @@
+// server.js
+const express = require("express");
+const fs = require("fs");
+const path = require("path");
+const cors = require("cors");
+const morgan = require("morgan");
+
+require("dotenv").config();
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(morgan("combined"));
+
+// API Routes
+app.use("/api/daily-spin", require("./routes/dailySpin"));
+app.use("/api/raffles", require("./routes/raffles"));
+app.use("/api/stats", require("./routes/stats"));
+app.use("/api/affiliates", require("./routes/affiliates"));
+app.use("/api/newsletter", require("./routes/newsletter"));
+
+// Admin health endpoint
+app.get("/api/health", (_, res) => {
+  res.json({ status: "healthy", uptime: process.uptime() });
+});
+
+// Static frontend build
+const distPath = path.join(__dirname, "frontend", "dist");
+app.use(express.static(distPath));
+
+app.get("*", (req, res) => {
+  const indexPath = path.join(distPath, "index.html");
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.status(500).send("Frontend build missing.");
+  }
+});
+
+app.listen(PORT, () => {
+  console.log(`🚀 Server running at http://localhost:${PORT}`);
+});
+// routes/dailySpin.js
+const express = require("express");
+const router = express.Router();
+const controller = require("../controllers/dailySpinController");
+
+// Daily spin routes
+router.get("/eligibility", controller.checkEligibility);
+router.post("/", controller.spinWheel);
+
+module.exports = router;
+// controllers/dailySpinController.js
+const db = require("../models/spinLog");
+const moment = require("moment");
+
+exports.checkEligibility = async (req, res) => {
+  const { user_id } = req.query;
+  if (!user_id) return res.status(400).json({ error: "Missing user_id" });
+
+  const lastSpin = await db.getLastSpin(user_id);
+  const now = moment.utc();
+
+  if (lastSpin && moment.utc(lastSpin.timestamp).isAfter(now.subtract(24, "hours"))) {
+    const nextSpin = moment.utc(lastSpin.timestamp).add(24, "hours");
+    return res.json({ eligible: false, nextSpin: nextSpin.toISOString() });
+  }
+
+  res.json({ eligible: true });
+};
+
+exports.spinWheel = async (req, res) => {
+  const { user_id } = req.body;
+  if (!user_id) return res.status(400).json({ error: "Missing user_id" });
+
+  const lastSpin = await db.getLastSpin(user_id);
+  const now = moment.utc();
+
+  if (lastSpin && moment.utc(lastSpin.timestamp).isAfter(now.subtract(24, "hours"))) {
+    const nextSpin = moment.utc(lastSpin.timestamp).add(24, "hours");
+    return res.status(403).json({ error: "Already spun", nextSpin: nextSpin.toISOString() });
+  }
+
+  const reward = spinPrize(); // Random prize logic
+  await db.logSpin(user_id, reward);
+
+  res.json({ success: true, reward, message: `You won ${reward}!` });
+};
+
+function spinPrize() {
+  const rewards = ["1 SC", "5 SC", "Try Again", "10 SC", "Bonus Entry"];
+  return rewards[Math.floor(Math.random() * rewards.length)];
+}
+// models/spinLog.js
+const { Pool } = require("pg");
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+
+exports.getLastSpin = async (user_id) => {
+  const result = await pool.query(
+    "SELECT * FROM spin_logs WHERE user_id = $1 ORDER BY timestamp DESC LIMIT 1",
+    [user_id]
+  );
+  return result.rows[0];
+};
+
+exports.logSpin = async (user_id, result) => {
+  await pool.query(
+    "INSERT INTO spin_logs (user_id, result, timestamp) VALUES ($1, $2, NOW())",
+    [user_id, result]
+  );
+};
+// routes/raffles.js
+const express = require("express");
+const router = express.Router();
+const { Pool } = require("pg");
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+
+router.get("/", async (_, res) => {
+  const result = await pool.query("SELECT * FROM raffles WHERE active = true ORDER BY end_date ASC");
+  res.json(result.rows);
+});
+
+router.post("/enter", async (req, res) => {
+  const { user_id, raffle_id } = req.body;
+  if (!user_id || !raffle_id) return res.status(400).json({ error: "Missing params" });
+
+  const exists = await pool.query(
+    "SELECT * FROM raffle_entries WHERE user_id = $1 AND raffle_id = $2",
+    [user_id, raffle_id]
+  );
+
+  if (exists.rowCount > 0) {
+    return res.status(409).json({ error: "Already entered" });
+  }
+
+  await pool.query("INSERT INTO raffle_entries (user_id, raffle_id, timestamp) VALUES ($1, $2, NOW())", [user_id, raffle_id]);
+  res.json({ success: true, message: "Entry submitted" });
+});
+
+router.get("/winners/:raffle_id", async (req, res) => {
+  const { raffle_id } = req.params;
+  const result = await pool.query("SELECT * FROM raffle_winners WHERE raffle_id = $1", [raffle_id]);
+  res.json(result.rows);
+});
+
+router.get("/entries/:user_id", async (req, res) => {
+  const { user_id } = req.params;
+  const result = await pool.query("SELECT * FROM raffle_entries WHERE user_id = $1", [user_id]);
+  res.json(result.rows);
+});
+
+module.exports = router;
+
+-- sql/raffles.sql
+CREATE TABLE IF NOT EXISTS raffles (
+  id SERIAL PRIMARY KEY,
+  title TEXT NOT NULL,
+  description TEXT,
+  end_date TIMESTAMP NOT NULL,
+  active BOOLEAN DEFAULT TRUE
+);
+-- sql/raffle_entries.sql
+CREATE TABLE IF NOT EXISTS raffle_entries (
+  id SERIAL PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  raffle_id INT REFERENCES raffles(id),
+  timestamp TIMESTAMP DEFAULT NOW()
+);
+-- sql/raffle_winners.sql
+CREATE TABLE IF NOT EXISTS raffle_winners (
+  id SERIAL PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  raffle_id INT REFERENCES raffles(id),
+  reward TEXT,
+  timestamp TIMESTAMP DEFAULT NOW()
+);
+// routes/stats.js
+const express = require("express");
+const router = express.Router();
+const { Pool } = require("pg");
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+
+router.get("/", async (_, res) => {
+  const [spins, raffles] = await Promise.all([
+    pool.query("SELECT COUNT(*) FROM spin_logs"),
+    pool.query("SELECT COUNT(*) FROM raffle_entries"),
+  ]);
+
+  res.json({
+    total_spins: parseInt(spins.rows[0].count, 10),
+    total_raffle_entries: parseInt(raffles.rows[0].count, 10),
+  });
+});
+
+module.exports = router;
+// routes/affiliates.js
+const express = require("express");
+const router = express.Router();
+const fs = require("fs");
+const csv = require("csv-parser");
+
+const csvPath = process.env.AFFILIATESCSVPATH || "/var/www/html/gcz/master_affiliates.csv";
+
+router.get("/", (_, res) => {
+  const results = [];
+
+  fs.createReadStream(csvPath)
+    .pipe(csv())
+    .on("data", (data) => results.push(data))
+    .on("end", () => {
+      res.json(results);
+    })
+    .on("error", (err) => {
+      console.error("Affiliate CSV load failed:", err);
+      res.status(500).json({ error: "Failed to read affiliate list" });
+    });
+});
+
+module.exports = router;
+// routes/affiliates.js
+const express = require("express");
+const router = express.Router();
+const fs = require("fs");
+const csv = require("csv-parser");
+
+const csvPath = process.env.AFFILIATESCSVPATH || "/var/www/html/gcz/master_affiliates.csv";
+
+router.get("/", (_, res) => {
+  const results = [];
+
+  fs.createReadStream(csvPath)
+    .pipe(csv())
+    .on("data", (data) => results.push(data))
+    .on("end", () => {
+      res.json(results);
+    })
+    .on("error", (err) => {
+      console.error("Affiliate CSV load failed:", err);
+      res.status(500).json({ error: "Failed to read affiliate list" });
+    });
+});
+
+module.exports = router;
+// routes/newsletter.js
+const express = require("express");
+const router = express.Router();
+const MailerSend = require("mailersend");
+
+const mailer = new MailerSend({
+  api_key: process.env.MAILERSENDAPIKEY,
+});
+
+router.post("/subscribe", async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ error: "Email is required" });
+
+  try {
+    // This assumes mailing list already configured in MailerSend
+    await mailer.recipients.create({
+      email,
+      name: email,
+      subscribed: true,
+    });
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Subscription error:", err.message);
+    res.status(500).json({ error: "Subscription failed" });
+  }
+});
+
+module.exports = router;
+// utils/validateCsv.js
+const fs = require("fs");
+const csv = require("csv-parser");
+
+function validateCsv(path) {
+  return new Promise((resolve, reject) => {
+    const errors = [];
+    const rows = [];
+    fs.createReadStream(path)
+      .pipe(csv())
+      .on("data", (row) => {
+        const fields = Object.keys(row);
+        if (fields.length !== 14) {
+          errors.push(`Invalid field count: ${fields.length}`);
+        }
+        if (!row.name || !row.affiliate_url || !row.resolved_domain) {
+          errors.push(`Missing critical field in row: ${JSON.stringify(row)}`);
+        }
+        rows.push(row);
+      })
+      .on("end", () => {
+        if (errors.length > 0) {
+          reject(errors);
+        } else {
+          resolve(rows);
+        }
+      });
+  });
+}
+
+module.exports = validateCsv;
+<!-- admin/index.html -->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>GambleCodez Admin</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <h1>GambleCodez Admin Panel</h1>
+  <ul class="admin-nav">
+    <li><a href="health.html">Health</a></li>
+    <li><a href="spinlogs.html">Spin Logs</a></li>
+    <li><a href="winners.html">Raffle Winners</a></li>
+    <li><a href="logs.html">System Logs</a></li>
+  </ul>
+  <script src="app.js"></script>
+</body>
+</html>
+<!-- admin/health.html -->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Health Check</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <h2>System Health</h2>
+  <div id="health-status">Loading...</div>
+  <script src="js/health.js"></script>
+</body>
+</html><!-- admin/spinlogs.html -->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Spin Logs</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <h2>Recent Spins</h2>
+  <table id="spin-table">
+    <thead><tr><th>User ID</th><th>Result</th><th>Time</th></tr></thead>
+    <tbody></tbody>
+  </table>
+  <script>
+    fetch('/api/daily-spin/logs')
+      .then(res => res.json())
+      .then(data => {
+        const tbody = document.querySelector('#spin-table tbody');
+        data.forEach(row => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${row.user_id}</td><td>${row.result}</td><td>${row.timestamp}</td>`;
+          tbody.appendChild(tr);
+        });
+      });
+  </script>
+</body>
+</html>
+
+<!-- admin/winners.html -->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Raffle Winners</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <h2>Raffle Winners</h2>
+  <table id="winners-table">
+    <thead><tr><th>User ID</th><th>Reward</th><th>Raffle</th><th>Time</th></tr></thead>
+    <tbody></tbody>
+  </table>
+  <script>
+    fetch('/api/raffles/winners/1') // Example raffle_id
+      .then(res => res.json())
+      .then(data => {
+        const tbody = document.querySelector('#winners-table tbody');
+        data.forEach(row => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${row.user_id}</td><td>${row.reward}</td><td>${row.raffle_id}</td><td>${row.timestamp}</td>`;
+          tbody.appendChild(tr);
+        });
+      });
+  </script>
+</body>
+</html>
+<!-- admin/logs.html -->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>System Logs</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <h2>System Logs</h2>
+  <pre id="logs"></pre>
+  <script>
+    fetch('/logs/system.log') // If served via static log handler
+      .then(res => res.text())
+      .then(data => {
+        document.getElementById("logs").textContent = data;
+      });
+  </script>
+</body>
+</html>
+
+// admin/app.js
+console.log("Admin panel ready.");
+
+// admin/js/health.js
+fetch("/api/health")
+  .then((res) => res.json())
+  .then((data) => {
+    document.getElementById("health-status").innerHTML = `Status: ${data.status} | Uptime: ${Math.floor(data.uptime)}s`;
+  })
+  .catch(() => {
+    document.getElementById("health-status").innerHTML = "Failed to fetch health status.";
+  });
+
+/* admin/styles.css */
+body {
+  font-family: sans-serif;
+  background: #111;
+  color: #eee;
+}
+.admin-nav li {
+  margin: 8px 0;
+}
+table {
+  width: 100%;
+  background: #222;
+  border-collapse: collapse;
+}
+td, th {
+  padding: 10px;
+  border: 1px solid #444;
+}
+

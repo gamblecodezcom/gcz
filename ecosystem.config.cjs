@@ -3,35 +3,23 @@ module.exports = {
     {
       name: "gcz-api",
       script: "server.js",
-      cwd: "/root/gcz",
+      cwd: "/var/www/html/gcz",
       watch: false,
-      autorestart: true,
       env: {
         NODE_ENV: "production",
-        PORT: 3000
-      }
-    },
-    {
-      name: "gcz-bot",
-      script: "watchdog.js",
-      cwd: "/root/gcz",
-      watch: false,
-      autorestart: true,
-      env: {
-        NODE_ENV: "production"
-      }
+      },
     },
     {
       name: "gcz-redirect",
-      script: "/root/gcz/backend/redirect.py",
-      interpreter: "python3",
-      cwd: "/root/gcz/backend",
-      watch: false,
-      autorestart: true,
-      env: {
-        NODE_ENV: "production",
-        PYTHONUNBUFFERED: "1"
-      }
-    }
-  ]
+      script: "python3",
+      args: "backend/redirect.py",
+      cwd: "/var/www/html/gcz",
+    },
+    {
+      name: "gcz-watchdog",
+      script: "watchdog.js",
+      cwd: "/var/www/html/gcz",
+    },
+  ],
 };
+

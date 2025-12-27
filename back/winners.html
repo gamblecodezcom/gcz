@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Raffle Winners</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <h2>Raffle Winners</h2>
+  <table id="winners-table">
+    <thead><tr><th>User ID</th><th>Reward</th><th>Raffle</th><th>Time</th></tr></thead>
+    <tbody></tbody>
+  </table>
+  <script>
+    fetch('/api/raffles/winners/1') // Example raffle_id
+      .then(res => res.json())
+      .then(data => {
+        const tbody = document.querySelector('#winners-table tbody');
+        data.forEach(row => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${row.user_id}</td><td>${row.reward}</td><td>${row.raffle_id}</td><td>${row.timestamp}</td>`;
+          tbody.appendChild(tr);
+        });
+      });
+  </script>
+</body>
+</html>

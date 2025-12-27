@@ -1,0 +1,13 @@
+cd /var/www/html/gcz
+
+case "$1" in
+  restart-api) pm2 restart gcz-api ;;
+  restart-redirect) pm2 restart gcz-redirect ;;
+  restart-all) pm2 restart all ;;
+  status) pm2 list ;;
+  logs) pm2 logs ;;
+  *)
+    echo "Usage: $0 {restart-api|restart-redirect|restart-all|status|logs}"
+    ;;
+esac
+

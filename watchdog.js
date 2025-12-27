@@ -1,18 +1,18 @@
+const http = require("http");
 
-import fetch from "node-fetch";
-import { exec } from "child_process";
+function checkHealth(url, label) {
+  http.get(url, (res) => {
+    if (res.statusCode !== 200) {
+      console.error(`[${label}] Unhealthy, restarting...`);
+      require("child_process").execSync(`pm2 restart ${label}`);
+    } else {
+      console.log(`[${label}] OK`);
+    }
+  }).on("error", () => {
+    console.error(`[${label}] DOWN`);
+    require("child_process").execSync(`pm2 restart ${label}`);
+  });
+}
 
-setInterval(async () => {
-  try {
-    const r = await fetch("http://127.0.0.1:3000/health");
-    if (!r.ok) throw new Error("node down");
-  } catch {
-    exec("pm2 restart gcz-api");
-  }
-  try {
-    const r = await fetch("http://127.0.0.1:8000/health");
-    if (!r.ok) throw new Error("redirect down");
-  } catch {
-    exec("pm2 restart gcz-redirect");
-  }
-}, 300000);
+checkHealth("http://localhost:3000/api/health", "gcz-api");
+

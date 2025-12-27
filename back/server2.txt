@@ -1,0 +1,105 @@
+# backend/redirect.py
+from flask import Flask, redirect
+import csv
+import os
+
+app = Flask(__name__)
+csv_path = os.getenv("AFFILIATESCSVPATH", "/var/www/html/gcz/master_affiliates.csv")
+cache = {}
+
+def load_affiliates():
+    global cache
+    cache.clear()
+    try:
+        with open(csv_path, newline='') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                sitename = row["name"].strip().lower()
+                cache[sitename] = row["affiliate_url"]
+    except Exception as e:
+        print("Failed to load affiliates:", e)
+
+@app.route("/affiliates/redirect/<sitename>")
+def redirect_affiliate(sitename):
+    sitename = sitename.strip().lower()
+    if not cache:
+        load_affiliates()
+    url = cache.get(sitename)
+    if url:
+        print(f"Redirecting {sitename} -> {url}")
+        return redirect(url)
+    return redirect("https://gamblecodez.com")  # fallback
+
+if __name__ == "__main__":
+    load_affiliates()
+    app.run(host="0.0.0.0", port=8080)
+
+# backend/main.py
+from redirect import app
+
+if __name__ == "__main__":
+    app.run()
+
+# backend/__init__.py
+# Empty init to make backend a module
+
+// ecosystem.config.cjs
+module.exports = {
+  apps: [
+    {
+      name: "gcz-api",
+      script: "server.js",
+      cwd: "/var/www/html/gcz",
+      watch: false,
+      env: {
+        NODE_ENV: "production",
+      },
+    },
+    {
+      name: "gcz-redirect",
+      script: "python3",
+      args: "backend/redirect.py",
+      cwd: "/var/www/html/gcz",
+    },
+    {
+      name: "gcz-watchdog",
+      script: "watchdog.js",
+      cwd: "/var/www/html/gcz",
+    },
+  ],
+};
+
+// watchdog.js
+const http = require("http");
+
+function checkHealth(url, label) {
+  http.get(url, (res) => {
+    if (res.statusCode !== 200) {
+      console.error(`[${label}] Unhealthy, restarting...`);
+      require("child_process").execSync(`pm2 restart ${label}`);
+    } else {
+      console.log(`[${label}] OK`);
+    }
+  }).on("error", () => {
+    console.error(`[${label}] DOWN`);
+    require("child_process").execSync(`pm2 restart ${label}`);
+  });
+}
+
+checkHealth("http://localhost:3000/api/health", "gcz-api");
+
+# gcz-control.sh
+#!/bin/bash
+cd /var/www/html/gcz
+
+case "$1" in
+  restart-api) pm2 restart gcz-api ;;
+  restart-redirect) pm2 restart gcz-redirect ;;
+  restart-all) pm2 restart all ;;
+  status) pm2 list ;;
+  logs) pm2 logs ;;
+  *)
+    echo "Usage: $0 {restart-api|restart-redirect|restart-all|status|logs}"
+    ;;
+esac
+

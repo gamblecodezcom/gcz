@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>System Logs</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <h2>System Logs</h2>
+  <pre id="logs"></pre>
+  <script>
+    fetch('/logs/system.log') // If served via static log handler
+      .then(res => res.text())
+      .then(data => {
+        document.getElementById("logs").textContent = data;
+      });
+  </script>
+</body>
+</html>
+

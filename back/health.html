@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Health Check</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <h2>System Health</h2>
+  <div id="health-status">Loading...</div>
+  <script src="js/health.js"></script>
+</body>
+</html><!-- admin/spinlogs.html -->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Spin Logs</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <h2>Recent Spins</h2>
+  <table id="spin-table">
+    <thead><tr><th>User ID</th><th>Result</th><th>Time</th></tr></thead>
+    <tbody></tbody>
+  </table>
+  <script>
+    fetch('/api/daily-spin/logs')
+      .then(res => res.json())
+      .then(data => {
+        const tbody = document.querySelector('#spin-table tbody');
+        data.forEach(row => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${row.user_id}</td><td>${row.result}</td><td>${row.timestamp}</td>`;
+          tbody.appendChild(tr);
+        });
+      });
+  </script>
+</body>
+</html>
+

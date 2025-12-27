@@ -1,0 +1,6 @@
+app.use("/api/daily-spin", require("./routes/dailySpin"));
+app.use("/api/raffles", require("./routes/raffles"));
+app.use("/api/stats", require("./routes/stats"));
+app.use("/api/affiliates", require("./routes/affiliates"));
+app.use("/api/newsletter", require("./routes/newsletter"));
+

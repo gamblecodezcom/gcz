@@ -25,7 +25,6 @@ logs/
 Thumbs.db
 
 # Zip / chunk files
-*.zip
 chunk_*
 raffle_chunk_*
 daily_spin_chunk_*

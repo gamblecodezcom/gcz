@@ -1,0 +1,46 @@
+/* frontend/src/components/DegenWheel.css */
+.wheel-container {
+  margin-top: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.wheel {
+  width: 200px;
+  height: 200px;
+  border: 10px solid #0ff;
+  border-radius: 50%;
+  background: radial-gradient(circle, #111 30%, #0ff 100%);
+  animation-duration: 3s;
+  animation-fill-mode: forwards;
+}
+
+.spin {
+  animation-name: spinAnimation;
+}
+
+@keyframes spinAnimation {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(1440deg);
+  }
+}
+
+.reward-text {
+  margin-top: 20px;
+  font-size: 1.5rem;
+  color: #0ff;
+  animation: glow 1s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+  from {
+    text-shadow: 0 0 5px #0ff;
+  }
+  to {
+    text-shadow: 0 0 20px #0ff;
+  }
+}
