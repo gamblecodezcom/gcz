@@ -1,0 +1,46 @@
+goose:
+You will now execute the next phase of the GambleCodez frontend build.
+
+Perform ALL of the following tasks in order, with atomic, overwrite‑safe changes.  
+
+
+icons and icon svg and png images are in /gcz/public modify size and save as needed.
+
+2. Backend API endpoints: The admin pages expect these endpoints (create if missing):
+   - `/api/admin/users` (GET, POST, PUT, DELETE)
+   - `/api/admin/pin-reset` (POST)
+   - `/api/admin/raffles` (GET, POST, PUT, DELETE)
+   - `/api/admin/raffles/:id/pick-winner` (POST)
+   - `/api/admin/raffles/:id/notify-winner` (POST)
+   - `/api/admin/affiliates` (GET, POST, PUT, DELETE)
+   - `/api/admin/redirects` (GET, POST, PUT, DELETE)
+   - `/api/admin/warmup` (POST)
+   - `/api/admin/ads` (GET, POST, PUT, DELETE)
+   - `/api/admin/blacklist` (GET, POST, DELETE)
+   - `/api/admin/live-banner` (GET, POST, PUT, DELETE)
+   - `/api/admin/push/broadcast` (POST)
+   - `/api/admin/settings` (GET, PUT)
+   - `/api/admin/daily-drops` (GET, POST, PUT, DELETE)
+
+1. Admin authentication: Add admin login/authentication middleware
+2. Pagination: Implement pagination for large admin tables
+3. Search/filtering: Add advanced search and filtering to admin pages
+4. Audit logging: Log all admin actions for security
+5. Bulk operations: Add bulk edit/delete for affiliates and other entities
+6. Real-time updates: Use WebSockets for live updates in admin dashboard
+7. Export functionality: Add CSV/JSON export for admin data
+8. Image upload: Add image upload for ad logos instead of URL input
+9. Validation: Add client-side and server-side validation for all forms
+10. Error boundaries: Add React error boundaries for better error handling
+
+### Testing checklist
+- [ ] Test all API endpoints with real database
+- [ ] Validate PWA install prompt works
+- [ ] Test service worker offline functionality
+- [ ] Test redirects functionality
+- [ ] Test push notifications
+- [ ] Validate admin dashboard CRUD operations
+- [ ] Test raffle join flow with PIN
+- [ ] Verify blacklist filtering works
+- [ ] Test daily drops feed
+- [ ] Validate 110+ affiliate sites are listed

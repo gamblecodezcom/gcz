@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Site Push Notifications - GambleCodez Admin</title>
+  <link rel="stylesheet" href="/admin/styles.css" />
+  <style>
+    .push-form, .push-card {
+      background: #1a1a1a;
+      border: 1px solid #00fff7;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: #00fff7;
+      font-weight: bold;
+    }
+    .form-group input,
+    .form-group textarea {
+      width: 100%;
+      padding: 0.75rem;
+      background: #0a0a0a;
+      border: 1px solid #333;
+      border-radius: 4px;
+      color: #fff;
+    }
+    .btn {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      margin-right: 0.5rem;
+    }
+    .btn-primary { background: #00fff7; color: #000; }
+    .btn-danger { background: #ff0000; color: #fff; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📲 Site Push Notifications</h1>
+    <div style="margin-bottom: 1rem;">
+      <a href="/admin/index.html" style="color: #00fff7;">← Back to Admin Panel</a>
+    </div>
+
+    <button class="btn btn-primary" onclick="toggleForm()">+ Create Broadcast</button>
+
+    <div id="push-form-container" style="display: none;">
+      <div class="push-form">
+        <h2>Create Push Notification</h2>
+        <form onsubmit="sendPush(event)">
+          <div class="form-group">
+            <label>Title *</label>
+            <input type="text" id="push-title" required />
+          </div>
+          <div class="form-group">
+            <label>Message *</label>
+            <textarea id="push-message" required></textarea>
+          </div>
+          <div class="form-group">
+            <label>Link URL (optional)</label>
+            <input type="url" id="push-link" />
+          </div>
+          <div>
+            <button type="submit" class="btn btn-primary">Send Broadcast</button>
+            <button type="button" class="btn" onclick="toggleForm()">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div id="pushes-container">
+      <div class="loading">Loading notifications...</div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = window.location.origin;
+
+    function toggleForm() {
+      document.getElementById('push-form-container').style.display = 
+        document.getElementById('push-form-container').style.display === 'none' ? 'block' : 'none';
+    }
+
+    async function sendPush(e) {
+      e.preventDefault();
+      const data = {
+        title: document.getElementById('push-title').value,
+        message: document.getElementById('push-message').value,
+        link_url: document.getElementById('push-link').value || null,
+      };
+
+      try {
+        await fetch(`${API_BASE}/api/admin/push/broadcast`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        showToast('Broadcast sent', 'success');
+        toggleForm();
+        loadPushes();
+      } catch (error) {
+        showToast('Error', 'error');
+      }
+    }
+
+    async function loadPushes() {
+      const res = await fetch(`${API_BASE}/api/admin/push`);
+      const data = await res.json();
+      const container = document.getElementById('pushes-container');
+      container.innerHTML = (data.notifications || []).map(p => `
+        <div class="push-card">
+          <div>
+            <h3>${escapeHtml(p.title)}</h3>
+            <p>${escapeHtml(p.message)}</p>
+            <p>Sent: ${new Date(p.created_at).toLocaleString()}</p>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function showToast(msg, type) {
+      const toast = document.createElement('div');
+      toast.textContent = msg;
+      toast.style.cssText = `position: fixed; top: 20px; right: 20px; padding: 1rem; border-radius: 4px; color: #fff; background: ${type === 'success' ? '#00ff00' : '#ff0000'}; z-index: 1000;`;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    loadPushes();
+  </script>
+</body>
+</html>

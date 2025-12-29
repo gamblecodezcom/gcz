@@ -1,9 +1,13 @@
 import express from "express";
-import { handleDailySpin } from "../controllers/dailySpinController.js";
+import { handleDailySpin, checkEligibility } from "../controllers/dailySpinController.js";
 
 const router = express.Router();
 
-// POST /api/daily/spin
+// GET /api/daily-spin/eligibility
+router.get("/eligibility", checkEligibility);
+
+// POST /api/daily-spin
+router.post("/", handleDailySpin);
 router.post("/spin", handleDailySpin);
 
 export default router;

@@ -1,14 +1,14 @@
 {
-  "name": "GambleCodez - Casino Discovery Platform",
-  "short_name": "GambleCodez",
-  "description": "Discover and win at the best online casinos and sweeps sites.",
+  "name": "GambleCodez",
+  "short_name": "GCZ",
   "start_url": "/",
-  "scope": "/",
   "display": "standalone",
-  "theme_color": "#00eaff",
-  "background_color": "#000000",
+  "background_color": "#02040A",
+  "theme_color": "#00F5FF",
   "icons": [
-    {"src": "/icon-192.png", "sizes": "192x192", "type": "image/png"},
-    {"src": "/icon-512.png", "sizes": "512x512", "type": "image/png"}
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/maskable-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/maskable-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ]
 }

@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manage Users - GambleCodez Admin</title>
+  <link rel="stylesheet" href="/admin/styles.css" />
+  <style>
+    .search-bar {
+      margin-bottom: 1.5rem;
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+    .search-bar input {
+      flex: 1;
+      padding: 0.75rem;
+      background: #0a0a0a;
+      border: 1px solid #00fff7;
+      border-radius: 4px;
+      color: #fff;
+    }
+    .user-card {
+      background: #1a1a1a;
+      border: 1px solid #00fff7;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    .user-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 1rem;
+    }
+    .user-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .btn {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.2s;
+    }
+    .btn-lock {
+      background: #ff6600;
+      color: #fff;
+    }
+    .btn-unlock {
+      background: #00ff00;
+      color: #000;
+    }
+    .btn-reset-pin {
+      background: #0066ff;
+      color: #fff;
+    }
+    .status-locked {
+      color: #ff0000;
+      font-weight: bold;
+    }
+    .status-active {
+      color: #00ff00;
+      font-weight: bold;
+    }
+    .pagination {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+      margin-top: 2rem;
+    }
+    .pagination button {
+      padding: 0.5rem 1rem;
+      background: #1a1a1a;
+      border: 1px solid #00fff7;
+      color: #00fff7;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .pagination button.active {
+      background: #00fff7;
+      color: #000;
+    }
+    .toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 1rem 1.5rem;
+      border-radius: 4px;
+      color: #fff;
+      font-weight: bold;
+      z-index: 1000;
+      animation: slideIn 0.3s;
+    }
+    .toast.success {
+      background: #00ff00;
+      color: #000;
+    }
+    .toast.error {
+      background: #ff0000;
+    }
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>👥 Manage Users</h1>
+    <div style="margin-bottom: 1rem;">
+      <a href="/admin/index.html" style="color: #00fff7;">← Back to Admin Panel</a>
+    </div>
+
+    <div class="search-bar">
+      <input type="text" id="searchInput" placeholder="Search by username, email, or user ID..." />
+      <button class="btn" onclick="searchUsers()">Search</button>
+      <button class="btn" onclick="loadUsers()">Reset</button>
+    </div>
+
+    <div id="users-container">
+      <div class="loading">Loading users...</div>
+    </div>
+
+    <div class="pagination" id="pagination"></div>
+  </div>
+
+  <script>
+    const API_BASE = window.location.origin;
+    let currentPage = 1;
+    const pageSize = 20;
+
+    async function loadUsers(page = 1) {
+      currentPage = page;
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/users?page=${page}&limit=${pageSize}`);
+        const data = await res.json();
+        displayUsers(data.users || []);
+        updatePagination(data.total || 0, data.page || 1, data.totalPages || 1);
+      } catch (error) {
+        console.error('Failed to load users:', error);
+        showToast('Failed to load users', 'error');
+      }
+    }
+
+    async function searchUsers() {
+      const query = document.getElementById('searchInput').value.trim();
+      if (!query) {
+        loadUsers();
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/users/search?q=${encodeURIComponent(query)}`);
+        const data = await res.json();
+        displayUsers(data.users || []);
+        document.getElementById('pagination').innerHTML = '';
+      } catch (error) {
+        console.error('Search failed:', error);
+        showToast('Search failed', 'error');
+      }
+    }
+
+    function displayUsers(users) {
+      const container = document.getElementById('users-container');
+      
+      if (users.length === 0) {
+        container.innerHTML = '<div class="loading">No users found</div>';
+        return;
+      }
+
+      container.innerHTML = users.map(user => `
+        <div class="user-card">
+          <div class="user-header">
+            <div>
+              <h3>${escapeHtml(user.username || `User #${user.id}`)}</h3>
+              <p style="color: #888; margin: 0.5rem 0;">
+                ID: ${user.id} | Email: ${user.email || 'N/A'} | Cwallet: ${user.cwallet_id || 'N/A'}
+              </p>
+              <p style="margin: 0.5rem 0;">
+                Status: <span class="${user.locked ? 'status-locked' : 'status-active'}">
+                  ${user.locked ? '🔒 LOCKED' : '✓ ACTIVE'}
+                </span>
+              </p>
+              <p style="color: #888; font-size: 0.9rem; margin: 0.5rem 0;">
+                Joined: ${new Date(user.created_at).toLocaleString()}
+              </p>
+            </div>
+            <div class="user-actions">
+              ${user.locked ? 
+                `<button class="btn btn-unlock" onclick="toggleLock(${user.id}, false)">Unlock</button>` :
+                `<button class="btn btn-lock" onclick="toggleLock(${user.id}, true)">Lock</button>`
+              }
+              <button class="btn btn-reset-pin" onclick="resetPin(${user.id})">Reset PIN</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function toggleLock(userId, lock) {
+      if (!confirm(`Are you sure you want to ${lock ? 'lock' : 'unlock'} this user?`)) {
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/users/${userId}/lock`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ locked: lock })
+        });
+
+        if (!res.ok) {
+          throw new Error('Failed to update user lock status');
+        }
+
+        showToast(`User ${lock ? 'locked' : 'unlocked'} successfully`, 'success');
+        loadUsers(currentPage);
+      } catch (error) {
+        showToast(`Error: ${error.message}`, 'error');
+      }
+    }
+
+    async function resetPin(userId) {
+      if (!confirm('Are you sure you want to reset this user\'s PIN? This action cannot be undone.')) {
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/pin-reset`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: userId })
+        });
+
+        if (!res.ok) {
+          throw new Error('Failed to reset PIN');
+        }
+
+        showToast('PIN reset successfully', 'success');
+      } catch (error) {
+        showToast(`Error: ${error.message}`, 'error');
+      }
+    }
+
+    function updatePagination(total, page, totalPages) {
+      const container = document.getElementById('pagination');
+      if (totalPages <= 1) {
+        container.innerHTML = '';
+        return;
+      }
+
+      let html = '';
+      if (page > 1) {
+        html += `<button onclick="loadUsers(${page - 1})">Previous</button>`;
+      }
+      
+      for (let i = Math.max(1, page - 2); i <= Math.min(totalPages, page + 2); i++) {
+        html += `<button class="${i === page ? 'active' : ''}" onclick="loadUsers(${i})">${i}</button>`;
+      }
+      
+      if (page < totalPages) {
+        html += `<button onclick="loadUsers(${page + 1})">Next</button>`;
+      }
+
+      container.innerHTML = html;
+    }
+
+    function showToast(message, type) {
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Enter key search
+    document.getElementById('searchInput').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        searchUsers();
+      }
+    });
+
+    // Initialize
+    loadUsers();
+  </script>
+</body>
+</html>

@@ -1,0 +1,102 @@
+#!/usr/bin/env bash
+set -e
+
+GCZ_ROOT="/var/www/html/gcz"
+GOOSE_HOME="$GCZ_ROOT/goose"
+LOGS="$GOOSE_HOME/logs"
+SESSIONS="$GOOSE_HOME/sessions"
+mkdir -p "$GOOSE_HOME" "$LOGS" "$SESSIONS"
+
+timestamp() { date +"%Y-%m-%d %H:%M:%S"; }
+log() { echo "[$(timestamp)] $1"; }
+
+active_session() {
+  [ -f "$GOOSE_HOME/.active_session" ] && cat "$GOOSE_HOME/.active_session" || true
+}
+
+# ---------- INDEX ----------
+index_project() {
+  REPORT="$GOOSE_HOME/project_index.txt"
+  log "Indexing project structure..."
+  (
+    echo "=== GCZ PROJECT INDEX ==="
+    date
+    echo
+    tree -a -I "node_modules|.git|__pycache__" "$GCZ_ROOT" || find "$GCZ_ROOT" -maxdepth 5
+  ) > "$REPORT" 2>&1
+  log "Index saved → goose/project_index.txt"
+}
+
+# ---------- DIAGNOSE ----------
+diagnose_stack() {
+  REPORT="$GOOSE_HOME/diagnostics.txt"
+  log "Running diagnostics..."
+  {
+    echo "=== GCZ STACK DIAGNOSTICS ==="
+    date
+    echo
+    echo "--- PM2 STATUS ---"
+    pm2 list || true
+    echo
+    echo "--- NODE VERSION ---"
+    node -v || true
+    echo
+    echo "--- DISK USAGE ---"
+    df -h
+    echo
+    echo "--- MEMORY ---"
+    free -h
+    echo
+    echo "--- ENV CHECK ---"
+    env | grep -E 'NODE_ENV|DATABASE|TELEGRAM|PORT' || true
+  } > "$REPORT" 2>&1
+  log "Diagnostics saved → goose/diagnostics.txt"
+}
+
+# ---------- VIEW ----------
+view_result() {
+  target="$1"
+  case "$target" in
+    index) FILE="$GOOSE_HOME/project_index.txt" ;;
+    diagnostics) FILE="$GOOSE_HOME/diagnostics.txt" ;;
+    logs|log)
+      sid=$(active_session)
+      [ -n "$sid" ] && FILE="$LOGS/$sid.log" || FILE=""
+      ;;
+    *)
+      echo "Usage:"
+      echo "  gcz-goose view index"
+      echo "  gcz-goose view diagnostics"
+      echo "  gcz-goose view logs"
+      return
+      ;;
+  esac
+
+  if [ -f "$FILE" ]; then
+    log "Showing: $FILE"
+    echo "----------------------------------------"
+    cat "$FILE"
+    echo "----------------------------------------"
+  else
+    echo "File not found"
+  fi
+}
+
+# ---------- HELP ----------
+show_help() {
+  echo "GCZ Goose commands:"
+  echo "  gcz-goose index"
+  echo "  gcz-goose diagnose"
+  echo "  gcz-goose view <index|diagnostics|logs>"
+}
+
+cmd="$1"
+arg="$2"
+
+case "$cmd" in
+  index) index_project ;;
+  diagnose) diagnose_stack ;;
+  view) view_result "$arg" ;;
+  ""|help|--help|-h) show_help ;;
+  *) echo "Unknown command: $cmd"; show_help ;;
+esac

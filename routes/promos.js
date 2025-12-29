@@ -1,0 +1,243 @@
+import express from "express";
+import pkg from "pg";
+const { Pool } = pkg;
+
+const router = express.Router();
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+
+// POST /api/promos/intake - Discord bot submits promo ticket
+router.post("/intake", async (req, res) => {
+  try {
+    const { source = "discord", channel, content, submitted_by } = req.body;
+
+    if (!channel || !content || !submitted_by) {
+      return res.status(400).json({ 
+        error: "Missing required fields: channel, content, submitted_by" 
+      });
+    }
+
+    if (!["links", "codes"].includes(channel)) {
+      return res.status(400).json({ 
+        error: "Channel must be 'links' or 'codes'" 
+      });
+    }
+
+    // Validate URL for links channel
+    if (channel === "links") {
+      const urlPattern = /^https?:\/\/.+/i;
+      if (!urlPattern.test(content.trim())) {
+        return res.status(400).json({ 
+          error: "Links channel requires a valid URL" 
+        });
+      }
+    }
+
+    const result = await pool.query(
+      `INSERT INTO promos (source, channel, content, submitted_by, status)
+       VALUES ($1, $2, $3, $4, 'pending')
+       RETURNING *`,
+      [source, channel, content, submitted_by]
+    );
+
+    // Notify admins if configured
+    if (process.env.TELEGRAM_ADMIN_GROUP_ID) {
+      // This will be handled by the Telegram bot service
+      // For now, just log it
+      console.log(`[PROMO] New promo ticket #${result.rows[0].id} from ${channel} channel`);
+    }
+
+    res.status(201).json({ 
+      success: true, 
+      promo: result.rows[0] 
+    });
+  } catch (error) {
+    console.error("Error creating promo ticket:", error);
+    res.status(500).json({ error: "Failed to create promo ticket" });
+  }
+});
+
+// GET /api/promos/review - Get pending promos for admin review
+router.get("/review", async (req, res) => {
+  try {
+    const { status = "pending", limit = 50, offset = 0 } = req.query;
+
+    const result = await pool.query(
+      `SELECT p.*, 
+              a.name as affiliate_name, 
+              a.affiliate_url as affiliate_url
+       FROM promos p
+       LEFT JOIN affiliates_master a ON p.affiliate_id = a.id
+       WHERE p.status = $1
+       ORDER BY p.created_at DESC
+       LIMIT $2 OFFSET $3`,
+      [status, parseInt(limit), parseInt(offset)]
+    );
+
+    const countResult = await pool.query(
+      "SELECT COUNT(*) FROM promos WHERE status = $1",
+      [status]
+    );
+
+    res.json({
+      promos: result.rows,
+      total: parseInt(countResult.rows[0].count),
+      limit: parseInt(limit),
+      offset: parseInt(offset)
+    });
+  } catch (error) {
+    console.error("Error fetching promo review queue:", error);
+    res.status(500).json({ error: "Failed to fetch promo review queue" });
+  }
+});
+
+// POST /api/promos/review/:id - Admin reviews a promo (approve/deny)
+router.post("/review/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { action, affiliate_id, deny_reason, clean_text, reviewed_by } = req.body;
+
+    if (!["approve", "deny"].includes(action)) {
+      return res.status(400).json({ error: "Action must be 'approve' or 'deny'" });
+    }
+
+    if (action === "approve" && !affiliate_id) {
+      return res.status(400).json({ error: "affiliate_id required for approval" });
+    }
+
+    if (action === "deny" && !deny_reason) {
+      return res.status(400).json({ error: "deny_reason required for denial" });
+    }
+
+    // Get current promo
+    const promoResult = await pool.query("SELECT * FROM promos WHERE id = $1", [id]);
+    if (promoResult.rows.length === 0) {
+      return res.status(404).json({ error: "Promo not found" });
+    }
+
+    const promo = promoResult.rows[0];
+
+    // Update promo status
+    const status = action === "approve" ? "approved" : "denied";
+    const updateFields = ["status = $1", "reviewed_by = $2", "reviewed_at = CURRENT_TIMESTAMP"];
+    const updateValues = [status, reviewed_by || "admin"];
+    let paramIndex = 3;
+
+    if (action === "approve") {
+      updateFields.push(`affiliate_id = $${paramIndex++}`);
+      updateValues.push(affiliate_id);
+      if (clean_text) {
+        updateFields.push(`clean_text = $${paramIndex++}`);
+        updateValues.push(clean_text);
+      }
+    } else {
+      updateFields.push(`deny_reason = $${paramIndex++}`);
+      updateValues.push(deny_reason);
+    }
+
+    updateValues.push(id);
+
+    await pool.query(
+      `UPDATE promos 
+       SET ${updateFields.join(", ")}, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $${paramIndex}`,
+      updateValues
+    );
+
+    // Save decision for AI learning
+    await pool.query(
+      `INSERT INTO promo_decisions (promo_id, decision, affiliate_id, deny_reason, reviewed_by)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [
+        id,
+        status,
+        action === "approve" ? affiliate_id : null,
+        action === "deny" ? deny_reason : null,
+        reviewed_by || "admin"
+      ]
+    );
+
+    // If approved, trigger Telegram distribution
+    if (action === "approve") {
+      const updatedPromo = await pool.query(
+        `SELECT p.*, a.name as affiliate_name, a.affiliate_url 
+         FROM promos p
+         LEFT JOIN affiliates_master a ON p.affiliate_id = a.id
+         WHERE p.id = $1`,
+        [id]
+      );
+
+      // Trigger Telegram notification (this will be handled by a service)
+      // For now, emit an event or call a service function
+      console.log(`[PROMO] Approved promo #${id}, ready for Telegram distribution`);
+      
+      // You can emit an event here or call a Telegram service
+      if (global.promoApprovedHandler) {
+        global.promoApprovedHandler(updatedPromo.rows[0]);
+      }
+    }
+
+    res.json({ 
+      success: true, 
+      message: `Promo ${status}`,
+      promo: (await pool.query("SELECT * FROM promos WHERE id = $1", [id])).rows[0]
+    });
+  } catch (error) {
+    console.error("Error reviewing promo:", error);
+    res.status(500).json({ error: "Failed to review promo" });
+  }
+});
+
+// GET /api/promos/approved - Get approved promos for website feed
+router.get("/approved", async (req, res) => {
+  try {
+    const { limit = 20, offset = 0 } = req.query;
+
+    const result = await pool.query(
+      `SELECT p.*, 
+              a.name as affiliate_name, 
+              a.affiliate_url as affiliate_url
+       FROM promos p
+       LEFT JOIN affiliates_master a ON p.affiliate_id = a.id
+       WHERE p.status = 'approved'
+       ORDER BY p.reviewed_at DESC
+       LIMIT $1 OFFSET $2`,
+      [parseInt(limit), parseInt(offset)]
+    );
+
+    res.json({
+      promos: result.rows,
+      limit: parseInt(limit),
+      offset: parseInt(offset)
+    });
+  } catch (error) {
+    console.error("Error fetching approved promos:", error);
+    res.status(500).json({ error: "Failed to fetch approved promos" });
+  }
+});
+
+// GET /api/promos/:id - Get single promo
+router.get("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query(
+      `SELECT p.*, 
+              a.name as affiliate_name, 
+              a.affiliate_url as affiliate_url
+       FROM promos p
+       LEFT JOIN affiliates_master a ON p.affiliate_id = a.id
+       WHERE p.id = $1`,
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Promo not found" });
+    }
+
+    res.json({ promo: result.rows[0] });
+  } catch (error) {
+    console.error("Error fetching promo:", error);
+    res.status(500).json({ error: "Failed to fetch promo" });
+  }
+});
+
+export default router;

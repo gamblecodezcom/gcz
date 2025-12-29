@@ -1,0 +1,461 @@
+🧠 GAMBLECODEZ — FULL DEGEN PLAYER PROFILE & DASHBOARD SPEC
+“ONE IDENTITY. ONE PIN. ONE CWALLET. INFINITE DEGEN.”
+
+This file is the FINAL canonical spec for the GambleCodez Player Dashboard:
+- Visual layout (neon degen vibe)
+- Components
+- Data wiring (frontend → existing backend APIs)
+- Reward + account-link logic (manual tips, no casino APIs)
+- Raffle + secret code integration
+- Telegram + Cwallet + PIN security model
+
+No backend payout automation.  
+Admin manually tips from sites/wallets.  
+Dashboard = identity, tracking, logging, and UX.
+
+────────────────────────────────────────
+🌌 1. CORE VIBE & VISUAL LANGUAGE
+────────────────────────────────────────
+
+THEME:
+- Dark neon cyber-casino / degen lab.
+- Background: gradient #02040A → #050816.
+- Text: primary #F5F5F5, muted #9FA6B2.
+- Accent colors:
+  - Neon cyan:    #00F5FF
+  - Neon pink:    #FF007A
+  - Neon yellow:  #FFD600
+  - Neon green:   #00FF85
+  - Warning red:  #FF3B3B
+
+MOTIF:
+- Gold neon crown = core symbol.
+- Crown flip animation on hover / identity unlock.
+- Neon borders, soften with blur (no hard edges).
+- Animated gradients in hero and key panels.
+- Subtle pulsing glows on active components.
+
+ANIMATION:
+- On PIN unlock → Crown flips, neon ripple across header.
+- On secret code success → confetti burst + cyan/pink wave.
+- On linking a casino → card border surges neon green for 1s.
+- On raffle win → card pulses gold with crown sparkle.
+
+TYPOGRAPHY:
+- Headings: bold, slightly condensed, futuristic.
+- Body: clean sans-serif, legible on dark.
+
+────────────────────────────────────────
+🎮 2. PAGE LAYOUT — PLAYER DASHBOARD
+────────────────────────────────────────
+
+ROUTE:
+- /profile or /dashboard
+
+STACK ORDER (TOP → BOTTOM):
+1) Navbar (global, already spec’d)
+2) Live notification banner (global)
+3) PLAYER IDENTITY HEADER
+4) LINKED CASINO ACCOUNTS GRID
+5) GIVEAWAY & REWARDS PANEL
+6) RAFFLES PANEL (with secret code)
+7) DEGEN WHEEL PANEL
+8) ACTIVITY LOG
+9) SETTINGS PANEL
+
+────────────────────────────────────────
+👤 3. PLAYER IDENTITY HEADER (“DEGEN IDENTITY”)
+────────────────────────────────────────
+
+LOCATION:
+- Top of the dashboard, full-width, height ~260px.
+
+LAYOUT:
+- Left: Avatar & core identity
+- Right: Numbers & status
+
+LEFT SIDE CONTENT:
+- Neon Avatar:
+  - Circular or hex frame.
+  - Generated from username (color seed).
+  - Soft neon glow.
+
+- Username:
+  - Text: @DeGenName
+  - Button: [Update Username]
+    - Click → modal:
+      - New username input
+      - PIN confirmation
+      - Save → POST /api/profile/update
+
+- Jurisdiction Badge:
+  - US:      neon blue
+  - NON_US:  neon purple
+  - GLOBAL:  silver
+  - Pill-style chip.
+
+- Telegram:
+  - If linked:
+    - “Telegram: @username” with Telegram icon.
+  - If not linked:
+    - Button: [Link Telegram] → deep-link to bot.
+
+RIGHT SIDE CONTENT (STAT BLOCK):
+- Cwallet ID:
+  - Masked until PIN unlock.
+  - “••••••••••• (Unlock with PIN)”
+  - After unlock: show full or partially masked ID.
+
+- Quick Stats:
+  - Raffle Entries (total + today)
+  - Wheel Spins remaining today
+  - Giveaways received (count)
+  - Linked Casinos (count)
+
+PIN UNLOCK:
+- Large [Unlock with PIN] button.
+- On click → Neon keypad modal:
+  - 4–6 digit PIN
+  - On success:
+    - Animate crown flip & glow sweep.
+    - Reveal sensitive fields (Cwallet, addresses, IDs).
+
+────────────────────────────────────────
+🏷️ 4. LINKED CASINO ACCOUNTS GRID
+────────────────────────────────────────
+
+PURPOSE:
+- Let users declare:
+  - Which casino sites they joined via your links.
+  - Their identifier at each site (username / email / player ID).
+- Ties every account to:
+  - Their GambleCodez profile
+  - Their Cwallet
+  - Their Telegram
+  - Their PIN
+
+DATA SOURCE:
+- /api/sites (frontend-aggregated site list).
+- /api/profile/sites-linked (linked accounts per user).
+
+CARD CONTENT (PER SITE):
+- Logo
+- Name
+- Category chips (Sweeps / Crypto / Lootbox / Faucet / Instant ⚡ / KYC)
+- Jurisdiction badge
+- Top Pick Crown if applicable
+- Status:
+  - “Not linked”
+  - “Linked ✓”
+
+INTERACTION:
+- Click card → open modal: “Link your account”
+
+MODAL FIELDS:
+- Label: “How do you log into this site?”
+- Dropdown:
+  - Username
+  - Email
+  - Player ID
+- Input:
+  - Free text (required)
+- Secondary option:
+  - [I haven’t joined yet]
+    - Click → open redirect: /affiliates/redirect/:slug
+- Save:
+  - Requires PIN-unlocked session (or PIN prompt inline).
+  - POST /api/profile/site-link:
+    - { siteId, identifierType, identifierValue }
+
+AFTER SAVE:
+- Card border glows neon green.
+- Status: “Linked ✓”.
+- Hover tooltip:
+  - “Linked as: {identifierType}: {value}”
+  - “Last updated: {date}”
+  - Buttons:
+    - [Update info]
+    - [Unlink] (PIN required)
+
+RUNEWAGER SPECIAL:
+- Runewager card should show:
+  - “SC Tips available here”
+- Linked fields:
+  - Username (required)
+  - Email (optional, but recommended)
+  - Player ID (optional future-proof)
+
+────────────────────────────────────────
+🪙 5. GIVEAWAY & REWARDS PANEL (MANUAL ONLY)
+────────────────────────────────────────
+
+NO automatic payouts.  
+Admin tips manually from external sites or wallets.  
+Dashboard = visibility + logging + transparency.
+
+PANEL TABS:
+1) Runewager SC Tips
+2) Crypto Tips
+3) Lootbox Claims (Crypto Lootbox URLs)
+4) Telegram Notifications (win/claim alerts)
+
+TAB 1 — “Runewager SC Tips”:
+- Shows:
+  - RW username
+  - RW email
+- Reward history list:
+  - Date
+  - Amount of SC tipped
+  - Note (optional, from admin)
+- Status tags:
+  - “Logged by Admin”
+  - “Pending Manual Tip” / “Completed” (optional if you track)
+
+TAB 2 — “Crypto Tips”:
+- User-provided fields (PIN-locked to view/change):
+  - BTC address
+  - ETH address
+  - SOL address
+  - USDT (TRC20/ERC20) address
+  - Cwallet ID (primary)
+- Reward history:
+  - Date
+  - Asset (BTC/ETH/SOL/USDT)
+  - Amount
+  - “Delivered via: Direct wallet / Cwallet / Other”
+  - Optional: tx hash (if you log it manually)
+
+TAB 3 — “Lootbox Claim URLs”:
+- Table:
+  - Claim URL (masked, clickable only after PIN unlock)
+  - Site / Sponsor
+  - Prize type
+  - Status: Pending / Claimed / Expired
+  - Expiration countdown
+
+TAB 4 — “Telegram Notifications”:
+- List:
+  - Raffle wins
+  - Secret code confirmations
+  - Giveaway claim notifications
+- Each entry:
+  - Icon
+  - Title
+  - Body
+  - “Sent via Telegram @username”
+
+────────────────────────────────────────
+🎟️ 6. RAFFLES PANEL (WITH SECRET CODE)
+────────────────────────────────────────
+
+SECTION LAYOUT:
+- Left: Active raffles
+- Right: Secret code entry + summary
+
+ACTIVE RAFFLES:
+- Card for each live raffle:
+  - Title
+  - Partner/Site (if applicable)
+  - Prize
+  - Entries you have
+  - Time remaining
+  - Entry sources:
+    - Daily check-in
+    - Wheel
+    - Secret code
+    - Manual bonus
+- CTA:
+  - [View Details]
+  - [View Entries Breakdown]
+
+SECRET CODE PHRASE ENTRY:
+- Prominent glowing card:
+  - Title: “Secret Code Entry”
+  - Description:
+    “Enter the secret code phrase from my socials to unlock hidden raffles and extra entries.”
+
+- Input:
+  - Text field
+  - [Submit] button
+- On SUCCESS:
+  - Neon confetti
+  - Text: “Code accepted — +X entries added.”
+  - Add activity log entry: source = “secret_code”
+- On FAILURE:
+  - Shake animation, red border
+  - Text: “Invalid or expired code.”
+
+PAST RAFFLES:
+- Collapsible list:
+  - Raffle name
+  - Result: Won / Lost
+  - If won:
+    - Reward type:
+      - Runewager SC Tip
+      - Crypto Tip
+      - Lootbox URL
+    - Claim status: Pending / Completed / Expired
+
+────────────────────────────────────────
+🎡 7. DEGEN WHEEL PANEL
+────────────────────────────────────────
+
+Shows:
+- Spins remaining today
+- Next reset time
+- Last spin result
+- Entries gained from wheel
+
+UI:
+- Wheel graphic with neon segments.
+- Spin button:
+  - Glow ring
+  - On hover: subtle pulse.
+
+User flow:
+- Click [Spin]:
+  - Call backend: /api/wheel/spin
+  - Animate wheel with random stop.
+  - Show result:
+    - “+X raffle entries”
+    - “Better luck next time”
+- Log to activity feed.
+
+────────────────────────────────────────
+📊 8. ACTIVITY LOG
+────────────────────────────────────────
+
+Feed entries include:
+- Linked/unlinked casino account
+- Username change
+- Cwallet update
+- Raffle entries
+- Secret code submissions (success/failure)
+- Wheel spins
+- Rewards logged by admin (SC/Crypto/Lootbox)
+- Telegram link/unlink
+
+Each entry:
+- Icon (type-specific)
+- Title
+- Short description
+- Timestamp
+- Optional link (e.g., “View raffle”)
+
+Filter controls:
+- Filter by type:
+  - Raffles
+  - Rewards
+  - Accounts
+  - Security
+  - Wheel
+- Date range filter.
+
+────────────────────────────────────────
+⚙️ 9. SETTINGS PANEL
+────────────────────────────────────────
+
+Sections:
+
+1) Profile
+   - Username (with Update Username button)
+   - Email (if used for contact/newsletters)
+   - Jurisdiction (read-only, or user-set once)
+
+2) Security
+   - Change PIN:
+     - Enter old PIN
+     - Enter new PIN
+   - Trusted Devices (optional future feature)
+   - Logout All Sessions
+
+3) Notifications
+   - Email newsletter toggle
+   - Telegram alerts toggles:
+     - Raffle win alerts
+     - Giveaway alerts
+     - Secret code hints (optional)
+
+4) Linked Accounts
+   - Quick view of:
+     - Telegram link status
+     - Cwallet ID
+     - Linked casino count
+
+5) Danger Zone
+   - Delete account (requires PIN and confirmation prompt)
+
+────────────────────────────────────────
+🧠 10. SECURITY MODEL
+────────────────────────────────────────
+
+IDENTITY ANCHORS:
+- User account (ID + email/username)
+- PIN (4–6 digits, hashed)
+- Cwallet ID
+- Telegram username + ID
+
+SENSITIVE ACTIONS REQUIRE:
+- PIN-unlocked session, OR
+- On-the-spot PIN entry
+
+SENSITIVE ACTIONS:
+- Changing username
+- Changing Cwallet
+- Viewing crypto addresses / claim URLs
+- Linking/unlinking casino accounts
+- Deleting account
+
+SESSION:
+- Long-lived cookie/session for general browsing.
+- Extra PIN gate for sensitive data.
+
+────────────────────────────────────────
+📡 11. ADMIN DASHBOARD ALIGNMENT (HIGH LEVEL)
+────────────────────────────────────────
+
+Player dashboard is designed to give Admin:
+
+For each user:
+- Global identity (username, Telegram, Cwallet)
+- All linked casinos + identifiers
+- Raffle participation
+- Secret code usage
+- Wheel spin history
+- Logged rewards:
+  - Runewager SC tips
+  - Crypto tips
+  - Lootbox URLs
+
+Admin actions (done manually outside, but logged here):
+- “Log Runewager SC Tip”
+- “Log Crypto Tip”
+- “Log Lootbox Reward”
+- “Grant bonus entries”
+- “Flag user for review”
+
+No casino-side automation.  
+All real-world tips are executed manually.  
+System only tracks & exposes data to both admin and user.
+
+────────────────────────────────────────
+🧨 12. UI VIBE SNAPSHOT (MENTAL IMAGE)
+────────────────────────────────────────
+
+You open the dashboard:
+
+- A dark neon background with subtle moving gradient.
+- Your crown logo flipping slowly at the top-left.
+- Your profile header glows with cyan-pink edges.
+- A “DEGEN IDENTITY” panel shows your username, Telegram, jurisdiction, with encrypted Cwallet under a lock.
+- A grid of site logos pulses softly, some marked “Linked ✓”.
+- A big glowing “Secret Code” box sits right side, begging to be tried.
+- Raffle cards shimmer with time-left badges.
+- Wheel gleams in the corner with rotating neon segments.
+- A vertical activity log quietly tracks all the chaos.
+
+It feels like a **command center for your degen empire** — not a boring account settings page.
+
+────────────────────────────────────────
+END OF FULL DEGEN PLAYER PROFILE SPEC
+────────────────────────────────────────

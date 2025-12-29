@@ -1,16 +1,37 @@
-const http = require("http");
+import http from "http";
+import { execSync } from "child_process";
 
 function checkHealth(url, label) {
-  http.get(url, (res) => {
+  const req = http.get(url, { timeout: 5000 }, (res) => {
     if (res.statusCode !== 200) {
-      console.error(`[${label}] Unhealthy, restarting...`);
-      require("child_process").execSync(`pm2 restart ${label}`);
+      console.error(`[${new Date().toISOString()}] [${label}] Unhealthy (${res.statusCode}), restarting...`);
+      try {
+        execSync(`pm2 restart ${label}`, { stdio: 'inherit' });
+      } catch (err) {
+        console.error(`[${label}] Failed to restart:`, err.message);
+      }
     } else {
-      console.log(`[${label}] OK`);
+      console.log(`[${new Date().toISOString()}] [${label}] OK`);
     }
-  }).on("error", () => {
-    console.error(`[${label}] DOWN`);
-    require("child_process").execSync(`pm2 restart ${label}`);
+  });
+  
+  req.on("error", (err) => {
+    console.error(`[${new Date().toISOString()}] [${label}] DOWN: ${err.message}`);
+    try {
+      execSync(`pm2 restart ${label}`, { stdio: 'inherit' });
+    } catch (restartErr) {
+      console.error(`[${label}] Failed to restart:`, restartErr.message);
+    }
+  });
+  
+  req.on("timeout", () => {
+    console.error(`[${new Date().toISOString()}] [${label}] Timeout, restarting...`);
+    req.destroy();
+    try {
+      execSync(`pm2 restart ${label}`, { stdio: 'inherit' });
+    } catch (err) {
+      console.error(`[${label}] Failed to restart:`, err.message);
+    }
   });
 }
 

@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ads Dashboard - GambleCodez Admin</title>
+  <link rel="stylesheet" href="/admin/styles.css" />
+  <style>
+    body {
+      background: #0d0d0d;
+      color: #fff;
+      font-family: Inter, sans-serif;
+      margin: 0;
+      padding: 1rem;
+    }
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    .back-link {
+      display: inline-block;
+      margin-bottom: 1rem;
+      color: #00fff7;
+      text-decoration: none;
+    }
+    .back-link:hover {
+      text-decoration: underline;
+    }
+    .tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+      border-bottom: 2px solid #333;
+    }
+    .tab {
+      padding: 0.75rem 1.5rem;
+      background: transparent;
+      border: none;
+      color: #9FA6B2;
+      cursor: pointer;
+      font-size: 1rem;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      transition: all 0.2s;
+    }
+    .tab:hover {
+      color: #00F5FF;
+    }
+    .tab.active {
+      color: #00F5FF;
+      border-bottom-color: #00F5FF;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    .card {
+      background: #1a1a1a;
+      border: 1px solid #00fff7;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: #00fff7;
+      font-weight: bold;
+    }
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 0.75rem;
+      background: #0a0a0a;
+      border: 1px solid #333;
+      border-radius: 4px;
+      color: #fff;
+      font-family: inherit;
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    .btn {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      margin-right: 0.5rem;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: #00fff7;
+      color: #000;
+    }
+    .btn-primary:hover {
+      background: #00d9e0;
+    }
+    .btn-danger {
+      background: #ff0000;
+      color: #fff;
+    }
+    .btn-secondary {
+      background: #333;
+      color: #fff;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+    th, td {
+      padding: 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid #333;
+    }
+    th {
+      color: #00fff7;
+      font-weight: bold;
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 12px;
+      font-size: 0.875rem;
+      font-weight: bold;
+    }
+    .status-active { background: #00ff85; color: #000; }
+    .status-paused { background: #ffd600; color: #000; }
+    .status-draft { background: #666; color: #fff; }
+    .status-ended { background: #ff3b3b; color: #fff; }
+    .loading {
+      text-align: center;
+      padding: 2rem;
+      color: #9FA6B2;
+    }
+    .preview-box {
+      background: #0a0a0a;
+      border: 1px solid #333;
+      border-radius: 4px;
+      padding: 1rem;
+      margin-top: 1rem;
+      min-height: 200px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="/admin/index.html" class="back-link">← Back to Admin Panel</a>
+    <h1>🧲 Ads Dashboard</h1>
+
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('placements')">Placements</button>
+      <button class="tab" onclick="switchTab('campaigns')">Campaigns</button>
+      <button class="tab" onclick="switchTab('sponsored')">Sponsored Raffles</button>
+      <button class="tab" onclick="switchTab('performance')">Performance</button>
+    </div>
+
+    <!-- Placements Tab -->
+    <div id="placements" class="tab-content active">
+      <div style="margin-bottom: 1rem;">
+        <button class="btn btn-primary" onclick="togglePlacementForm()">+ Create Placement</button>
+      </div>
+
+      <div id="placement-form-container" style="display: none;">
+        <div class="card">
+          <h2 id="placement-form-title">Create Placement</h2>
+          <form onsubmit="savePlacement(event)">
+            <div class="form-group">
+              <label>Placement ID *</label>
+              <input type="text" id="placement-id" required placeholder="e.g., HOME_HERO" />
+            </div>
+            <div class="form-group">
+              <label>Location *</label>
+              <select id="placement-location" required>
+                <option value="">Select location...</option>
+                <option value="home-hero">Home page hero</option>
+                <option value="profile-sidebar">Profile sidebar</option>
+                <option value="wheel-footer">Below spin wheel</option>
+                <option value="site-cards">Between site cards</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Rotation Mode *</label>
+              <select id="placement-rotation" required>
+                <option value="single">Single campaign</option>
+                <option value="weighted">Weighted rotation</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Frequency Capping (impressions per user per day)</label>
+              <input type="number" id="placement-frequency" min="0" placeholder="0 = unlimited" />
+            </div>
+            <div>
+              <button type="submit" class="btn btn-primary">Save Placement</button>
+              <button type="button" class="btn btn-secondary" onclick="togglePlacementForm()">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div id="placements-container">
+        <div class="loading">Loading placements...</div>
+      </div>
+    </div>
+
+    <!-- Campaigns Tab -->
+    <div id="campaigns" class="tab-content">
+      <div style="margin-bottom: 1rem;">
+        <button class="btn btn-primary" onclick="toggleCampaignForm()">+ Create Campaign</button>
+      </div>
+
+      <div id="campaign-form-container" style="display: none;">
+        <div class="card">
+          <h2 id="campaign-form-title">Create Campaign</h2>
+          <form onsubmit="saveCampaign(event)">
+            <div class="form-group">
+              <label>Name *</label>
+              <input type="text" id="campaign-name" required />
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Type *</label>
+                <select id="campaign-type" required>
+                  <option value="internal">Internal Promo</option>
+                  <option value="affiliate">Affiliate Highlight</option>
+                  <option value="sponsored">Sponsored Campaign</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Linked Site (optional)</label>
+                <input type="text" id="campaign-site" placeholder="Site slug or ID" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Image URL *</label>
+              <input type="url" id="campaign-image" required />
+            </div>
+            <div class="form-group">
+              <label>Headline *</label>
+              <input type="text" id="campaign-headline" required />
+            </div>
+            <div class="form-group">
+              <label>Subtext</label>
+              <textarea id="campaign-subtext" rows="3"></textarea>
+            </div>
+            <div class="form-group">
+              <label>CTA Button Text *</label>
+              <input type="text" id="campaign-cta" required placeholder="e.g., Get Started" />
+            </div>
+            <div class="form-group">
+              <label>Target URL *</label>
+              <input type="url" id="campaign-url" required />
+            </div>
+            <div class="form-group">
+              <label>Target Placements</label>
+              <div id="placement-checkboxes"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Start Date</label>
+                <input type="datetime-local" id="campaign-start" />
+              </div>
+              <div class="form-group">
+                <label>End Date</label>
+                <input type="datetime-local" id="campaign-end" />
+              </div>
+            </div>
+            <div>
+              <button type="submit" class="btn btn-primary">Save Campaign</button>
+              <button type="button" class="btn btn-secondary" onclick="toggleCampaignForm()">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div id="campaigns-container">
+        <div class="loading">Loading campaigns...</div>
+      </div>
+    </div>
+
+    <!-- Sponsored Raffles Tab -->
+    <div id="sponsored" class="tab-content">
+      <div id="sponsored-container">
+        <div class="loading">Loading sponsored raffles...</div>
+      </div>
+    </div>
+
+    <!-- Performance Tab -->
+    <div id="performance" class="tab-content">
+      <div class="card">
+        <h3>Performance Metrics</h3>
+        <div style="margin-bottom: 1rem;">
+          <label>Date Range:</label>
+          <input type="date" id="perf-start" style="margin: 0 0.5rem; padding: 0.5rem;" />
+          <input type="date" id="perf-end" style="margin: 0 0.5rem; padding: 0.5rem;" />
+          <button class="btn btn-primary" onclick="loadPerformance()">Filter</button>
+        </div>
+        <div id="performance-container">
+          <div class="loading">Loading performance data...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = window.location.origin;
+    let editingPlacementId = null;
+    let editingCampaignId = null;
+
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      event.target.classList.add('active');
+      document.getElementById(tabName).classList.add('active');
+      
+      if (tabName === 'placements') loadPlacements();
+      if (tabName === 'campaigns') {
+        loadCampaigns();
+        loadPlacementsForCheckboxes();
+      }
+      if (tabName === 'sponsored') loadSponsoredRaffles();
+      if (tabName === 'performance') loadPerformance();
+    }
+
+    // Placements
+    function togglePlacementForm() {
+      const container = document.getElementById('placement-form-container');
+      container.style.display = container.style.display === 'none' ? 'block' : 'none';
+      if (container.style.display === 'none') {
+        editingPlacementId = null;
+        document.querySelector('#placement-form-container form').reset();
+        document.getElementById('placement-form-title').textContent = 'Create Placement';
+      }
+    }
+
+    async function savePlacement(e) {
+      e.preventDefault();
+      const data = {
+        placement_id: document.getElementById('placement-id').value,
+        location: document.getElementById('placement-location').value,
+        rotation_mode: document.getElementById('placement-rotation').value,
+        frequency_capping: parseInt(document.getElementById('placement-frequency').value) || null
+      };
+
+      try {
+        const url = editingPlacementId 
+          ? `${API_BASE}/api/admin/ads-dashboard/placements/${editingPlacementId}`
+          : `${API_BASE}/api/admin/ads-dashboard/placements`;
+        const method = editingPlacementId ? 'PUT' : 'POST';
+
+        const res = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        if (!res.ok) throw new Error('Failed');
+        showToast('Placement saved', 'success');
+        togglePlacementForm();
+        loadPlacements();
+      } catch (error) {
+        showToast('Error saving placement', 'error');
+      }
+    }
+
+    async function loadPlacements() {
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/ads-dashboard/placements`);
+        const data = await res.json();
+        const container = document.getElementById('placements-container');
+        if (data.placements && data.placements.length > 0) {
+          container.innerHTML = data.placements.map(p => `
+            <div class="card">
+              <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div>
+                  <h3>${escapeHtml(p.placement_id)}</h3>
+                  <p><strong>Location:</strong> ${escapeHtml(p.location)}</p>
+                  <p><strong>Rotation:</strong> ${escapeHtml(p.rotation_mode)}</p>
+                  <p><strong>Current Campaign:</strong> ${escapeHtml(p.current_campaign || 'None')}</p>
+                  <p><strong>Frequency Capping:</strong> ${p.frequency_capping || 'Unlimited'}</p>
+                  <span class="status-badge status-${p.status.toLowerCase()}">${p.status}</span>
+                </div>
+                <div>
+                  <button class="btn btn-primary" onclick="editPlacement(${p.id})">Edit</button>
+                  <button class="btn btn-danger" onclick="deletePlacement(${p.id})">Delete</button>
+                </div>
+              </div>
+              <div class="preview-box">
+                <p style="color: #9FA6B2;">Preview: ${escapeHtml(p.location)}</p>
+              </div>
+            </div>
+          `).join('');
+        } else {
+          container.innerHTML = '<div class="loading">No placements yet</div>';
+        }
+      } catch (error) {
+        document.getElementById('placements-container').innerHTML = '<div class="loading">Error loading placements</div>';
+      }
+    }
+
+    async function editPlacement(id) {
+      const res = await fetch(`${API_BASE}/api/admin/ads-dashboard/placements/${id}`);
+      const placement = await res.json();
+      document.getElementById('placement-id').value = placement.placement_id;
+      document.getElementById('placement-location').value = placement.location;
+      document.getElementById('placement-rotation').value = placement.rotation_mode;
+      document.getElementById('placement-frequency').value = placement.frequency_capping || '';
+      editingPlacementId = id;
+      document.getElementById('placement-form-title').textContent = 'Edit Placement';
+      document.getElementById('placement-form-container').style.display = 'block';
+    }
+
+    async function deletePlacement(id) {
+      if (!confirm('Delete this placement?')) return;
+      await fetch(`${API_BASE}/api/admin/ads-dashboard/placements/${id}`, { method: 'DELETE' });
+      showToast('Placement deleted', 'success');
+      loadPlacements();
+    }
+
+    // Campaigns
+    function toggleCampaignForm() {
+      const container = document.getElementById('campaign-form-container');
+      container.style.display = container.style.display === 'none' ? 'block' : 'none';
+      if (container.style.display === 'none') {
+        editingCampaignId = null;
+        document.querySelector('#campaign-form-container form').reset();
+        document.getElementById('campaign-form-title').textContent = 'Create Campaign';
+      }
+    }
+
+    async function loadPlacementsForCheckboxes() {
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/ads-dashboard/placements`);
+        const data = await res.json();
+        const container = document.getElementById('placement-checkboxes');
+        if (data.placements && data.placements.length > 0) {
+          container.innerHTML = data.placements.map(p => `
+            <label style="display: block; margin-bottom: 0.5rem;">
+              <input type="checkbox" value="${p.id}" class="placement-checkbox" />
+              ${escapeHtml(p.placement_id)} (${escapeHtml(p.location)})
+            </label>
+          `).join('');
+        }
+      } catch (error) {
+        console.error('Error loading placements for checkboxes:', error);
+      }
+    }
+
+    async function saveCampaign(e) {
+      e.preventDefault();
+      const selectedPlacements = Array.from(document.querySelectorAll('.placement-checkbox:checked'))
+        .map(cb => cb.value);
+
+      const data = {
+        name: document.getElementById('campaign-name').value,
+        type: document.getElementById('campaign-type').value,
+        linked_site: document.getElementById('campaign-site').value || null,
+        image_url: document.getElementById('campaign-image').value,
+        headline: document.getElementById('campaign-headline').value,
+        subtext: document.getElementById('campaign-subtext').value || null,
+        cta_text: document.getElementById('campaign-cta').value,
+        target_url: document.getElementById('campaign-url').value,
+        placement_ids: selectedPlacements,
+        start_date: document.getElementById('campaign-start').value || null,
+        end_date: document.getElementById('campaign-end').value || null
+      };
+
+      try {
+        const url = editingCampaignId 
+          ? `${API_BASE}/api/admin/ads-dashboard/campaigns/${editingCampaignId}`
+          : `${API_BASE}/api/admin/ads-dashboard/campaigns`;
+        const method = editingCampaignId ? 'PUT' : 'POST';
+
+        const res = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        if (!res.ok) throw new Error('Failed');
+        showToast('Campaign saved', 'success');
+        toggleCampaignForm();
+        loadCampaigns();
+      } catch (error) {
+        showToast('Error saving campaign', 'error');
+      }
+    }
+
+    async function loadCampaigns() {
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/ads-dashboard/campaigns`);
+        const data = await res.json();
+        const container = document.getElementById('campaigns-container');
+        if (data.campaigns && data.campaigns.length > 0) {
+          container.innerHTML = data.campaigns.map(c => `
+            <div class="card">
+              <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div>
+                  <h3>${escapeHtml(c.name)}</h3>
+                  <p><strong>Type:</strong> ${escapeHtml(c.type)}</p>
+                  <p><strong>Headline:</strong> ${escapeHtml(c.headline)}</p>
+                  <p><strong>Linked Site:</strong> ${escapeHtml(c.linked_site || 'None')}</p>
+                  <p><strong>Start:</strong> ${c.start_date ? new Date(c.start_date).toLocaleString() : 'Immediate'}</p>
+                  <p><strong>End:</strong> ${c.end_date ? new Date(c.end_date).toLocaleString() : 'No end date'}</p>
+                  <span class="status-badge status-${c.status.toLowerCase()}">${c.status}</span>
+                </div>
+                <div>
+                  <button class="btn btn-primary" onclick="editCampaign(${c.id})">Edit</button>
+                  <button class="btn btn-danger" onclick="deleteCampaign(${c.id})">Delete</button>
+                </div>
+              </div>
+            </div>
+          `).join('');
+        } else {
+          container.innerHTML = '<div class="loading">No campaigns yet</div>';
+        }
+      } catch (error) {
+        document.getElementById('campaigns-container').innerHTML = '<div class="loading">Error loading campaigns</div>';
+      }
+    }
+
+    async function editCampaign(id) {
+      const res = await fetch(`${API_BASE}/api/admin/ads-dashboard/campaigns/${id}`);
+      const campaign = await res.json();
+      document.getElementById('campaign-name').value = campaign.name;
+      document.getElementById('campaign-type').value = campaign.type;
+      document.getElementById('campaign-site').value = campaign.linked_site || '';
+      document.getElementById('campaign-image').value = campaign.image_url;
+      document.getElementById('campaign-headline').value = campaign.headline;
+      document.getElementById('campaign-subtext').value = campaign.subtext || '';
+      document.getElementById('campaign-cta').value = campaign.cta_text;
+      document.getElementById('campaign-url').value = campaign.target_url;
+      document.getElementById('campaign-start').value = campaign.start_date ? campaign.start_date.split('T')[0] + 'T' + campaign.start_date.split('T')[1].slice(0,5) : '';
+      document.getElementById('campaign-end').value = campaign.end_date ? campaign.end_date.split('T')[0] + 'T' + campaign.end_date.split('T')[1].slice(0,5) : '';
+      editingCampaignId = id;
+      document.getElementById('campaign-form-title').textContent = 'Edit Campaign';
+      document.getElementById('campaign-form-container').style.display = 'block';
+      // TODO: Load and check placement checkboxes
+    }
+
+    async function deleteCampaign(id) {
+      if (!confirm('Delete this campaign?')) return;
+      await fetch(`${API_BASE}/api/admin/ads-dashboard/campaigns/${id}`, { method: 'DELETE' });
+      showToast('Campaign deleted', 'success');
+      loadCampaigns();
+    }
+
+    // Sponsored Raffles
+    async function loadSponsoredRaffles() {
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/ads-dashboard/sponsored-raffles`);
+        const data = await res.json();
+        const container = document.getElementById('sponsored-container');
+        if (data.sponsored_raffles && data.sponsored_raffles.length > 0) {
+          container.innerHTML = data.sponsored_raffles.map(sr => `
+            <div class="card">
+              <h3>${escapeHtml(sr.raffle_name)}</h3>
+              <p><strong>Sponsor:</strong> ${escapeHtml(sr.sponsor_site)}</p>
+              <p><strong>Ad Campaign:</strong> ${escapeHtml(sr.ad_campaign || 'None')}</p>
+              <p><strong>Clicks:</strong> ${sr.clicks || 0} | <strong>Entries Attributed:</strong> ${sr.entries_attributed || 0}</p>
+            </div>
+          `).join('');
+        } else {
+          container.innerHTML = '<div class="loading">No sponsored raffles yet</div>';
+        }
+      } catch (error) {
+        document.getElementById('sponsored-container').innerHTML = '<div class="loading">Error loading sponsored raffles</div>';
+      }
+    }
+
+    // Performance
+    async function loadPerformance() {
+      try {
+        const start = document.getElementById('perf-start')?.value || '';
+        const end = document.getElementById('perf-end')?.value || '';
+        const params = new URLSearchParams();
+        if (start) params.append('start', start);
+        if (end) params.append('end', end);
+        
+        const res = await fetch(`${API_BASE}/api/admin/ads-dashboard/performance?${params}`);
+        const data = await res.json();
+        const container = document.getElementById('performance-container');
+        container.innerHTML = `
+          <h4>Impressions by Placement</h4>
+          <table>
+            <thead>
+              <tr>
+                <th>Placement</th>
+                <th>Impressions</th>
+                <th>Clicks</th>
+                <th>CTR</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${data.placement_stats ? data.placement_stats.map(p => `
+                <tr>
+                  <td>${escapeHtml(p.placement_id)}</td>
+                  <td>${p.impressions || 0}</td>
+                  <td>${p.clicks || 0}</td>
+                  <td>${p.ctr || '0%'}</td>
+                </tr>
+              `).join('') : '<tr><td colspan="4">No data</td></tr>'}
+            </tbody>
+          </table>
+          <h4 style="margin-top: 2rem;">Campaign Performance</h4>
+          <table>
+            <thead>
+              <tr>
+                <th>Campaign</th>
+                <th>Clicks</th>
+                <th>CTR</th>
+                <th>Lift in Linked Accounts</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${data.campaign_stats ? data.campaign_stats.map(c => `
+                <tr>
+                  <td>${escapeHtml(c.name)}</td>
+                  <td>${c.clicks || 0}</td>
+                  <td>${c.ctr || '0%'}</td>
+                  <td>${c.lift || 'N/A'}</td>
+                </tr>
+              `).join('') : '<tr><td colspan="4">No data</td></tr>'}
+            </tbody>
+          </table>
+        `;
+      } catch (error) {
+        document.getElementById('performance-container').innerHTML = '<div class="loading">Error loading performance data</div>';
+      }
+    }
+
+    function showToast(msg, type) {
+      const toast = document.createElement('div');
+      toast.textContent = msg;
+      toast.style.cssText = `position: fixed; top: 20px; right: 20px; padding: 1rem; border-radius: 4px; color: #fff; background: ${type === 'success' ? '#00ff00' : '#ff0000'}; z-index: 1000;`;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Initial load
+    loadPlacements();
+  </script>
+</body>
+</html>

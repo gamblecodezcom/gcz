@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Promo Review Queue - GambleCodez Admin</title>
+  <link rel="stylesheet" href="/admin/styles.css" />
+  <style>
+    .promo-card {
+      background: #1a1a1a;
+      border: 1px solid #00fff7;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 0 12px rgba(0, 255, 247, 0.2);
+    }
+    .promo-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 1rem;
+    }
+    .promo-id {
+      color: #00fff7;
+      font-weight: bold;
+    }
+    .promo-channel {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      margin-left: 0.5rem;
+    }
+    .channel-links { background: #0066ff; }
+    .channel-codes { background: #ff6600; }
+    .promo-content {
+      background: #0a0a0a;
+      padding: 1rem;
+      border-radius: 4px;
+      margin: 1rem 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .promo-meta {
+      font-size: 0.9rem;
+      color: #888;
+      margin: 0.5rem 0;
+    }
+    .review-form {
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid #333;
+    }
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: #00fff7;
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 0.75rem;
+      background: #0a0a0a;
+      border: 1px solid #333;
+      border-radius: 4px;
+      color: #fff;
+      font-family: inherit;
+    }
+    .form-group textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+    .btn-group {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.2s;
+    }
+    .btn-approve {
+      background: #00ff00;
+      color: #000;
+    }
+    .btn-approve:hover {
+      background: #00cc00;
+    }
+    .btn-deny {
+      background: #ff0000;
+      color: #fff;
+    }
+    .btn-deny:hover {
+      background: #cc0000;
+    }
+    .btn-save {
+      background: #0066ff;
+      color: #fff;
+    }
+    .btn-save:hover {
+      background: #0055cc;
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      font-weight: bold;
+    }
+    .status-pending { background: #ffaa00; color: #000; }
+    .status-approved { background: #00ff00; color: #000; }
+    .status-denied { background: #ff0000; color: #fff; }
+    .loading {
+      text-align: center;
+      padding: 2rem;
+      color: #888;
+    }
+    .error {
+      background: #ff0000;
+      color: #fff;
+      padding: 1rem;
+      border-radius: 4px;
+      margin: 1rem 0;
+    }
+    .success {
+      background: #00ff00;
+      color: #000;
+      padding: 1rem;
+      border-radius: 4px;
+      margin: 1rem 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎫 Promo Review Queue</h1>
+    <div style="margin-bottom: 1rem;">
+      <a href="/admin/index.html" style="color: #00fff7;">← Back to Admin Panel</a>
+    </div>
+
+    <div id="status-message"></div>
+
+    <div id="promos-container">
+      <div class="loading">Loading promos...</div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = window.location.origin;
+    let affiliates = [];
+
+    // Load affiliates for dropdown
+    async function loadAffiliates() {
+      try {
+        const res = await fetch(`${API_BASE}/api/affiliates`);
+        const data = await res.json();
+        affiliates = data.affiliates || [];
+      } catch (error) {
+        console.error('Failed to load affiliates:', error);
+      }
+    }
+
+    // Load pending promos
+    async function loadPromos() {
+      try {
+        const res = await fetch(`${API_BASE}/api/promos/review?status=pending&limit=100`);
+        const data = await res.json();
+        displayPromos(data.promos || []);
+      } catch (error) {
+        console.error('Failed to load promos:', error);
+        document.getElementById('promos-container').innerHTML = 
+          '<div class="error">Failed to load promos. Please refresh the page.</div>';
+      }
+    }
+
+    function displayPromos(promos) {
+      const container = document.getElementById('promos-container');
+      
+      if (promos.length === 0) {
+        container.innerHTML = '<div class="loading">No pending promos. All caught up! 🎉</div>';
+        return;
+      }
+
+      container.innerHTML = promos.map(promo => `
+        <div class="promo-card" id="promo-${promo.id}">
+          <div class="promo-header">
+            <div>
+              <span class="promo-id">#${promo.id}</span>
+              <span class="promo-channel channel-${promo.channel}">${promo.channel.toUpperCase()}</span>
+              <span class="status-badge status-${promo.status}">${promo.status.toUpperCase()}</span>
+            </div>
+            <div class="promo-meta">
+              Submitted: ${new Date(promo.created_at).toLocaleString()}
+            </div>
+          </div>
+          
+          <div class="promo-meta">
+            Source: ${promo.source} | Submitted by: ${promo.submitted_by}
+          </div>
+
+          <div class="promo-content">${escapeHtml(promo.content)}</div>
+
+          <div class="review-form">
+            <div class="form-group">
+              <label>Clean Text (optional - for approved promos)</label>
+              <textarea id="clean-text-${promo.id}" placeholder="Edit/clean the promo text...">${promo.clean_text || promo.content}</textarea>
+            </div>
+
+            <div class="form-group">
+              <label>Select Affiliate (required for approval)</label>
+              <select id="affiliate-${promo.id}">
+                <option value="">-- Select Affiliate --</option>
+                ${affiliates.map(a => `<option value="${a.id}">${a.name} (${a.level})</option>`).join('')}
+              </select>
+            </div>
+
+            <div class="form-group" id="deny-reason-group-${promo.id}" style="display: none;">
+              <label>Deny Reason (required for denial)</label>
+              <textarea id="deny-reason-${promo.id}" placeholder="Explain why this promo is being denied..."></textarea>
+            </div>
+
+            <div class="btn-group">
+              <button class="btn btn-approve" onclick="reviewPromo(${promo.id}, 'approve')">
+                ✅ Approve
+              </button>
+              <button class="btn btn-deny" onclick="toggleDenyReason(${promo.id})">
+                ❌ Deny
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function toggleDenyReason(promoId) {
+      const group = document.getElementById(`deny-reason-group-${promoId}`);
+      const isVisible = group.style.display !== 'none';
+      
+      if (isVisible) {
+        // Submit denial
+        const reason = document.getElementById(`deny-reason-${promoId}`).value.trim();
+        if (!reason) {
+          showMessage('Please provide a deny reason', 'error');
+          return;
+        }
+        reviewPromo(promoId, 'deny');
+      } else {
+        // Show deny form
+        group.style.display = 'block';
+      }
+    }
+
+    async function reviewPromo(promoId, action) {
+      const cleanText = document.getElementById(`clean-text-${promoId}`).value.trim();
+      const affiliateId = document.getElementById(`affiliate-${promoId}`).value;
+      const denyReason = document.getElementById(`deny-reason-${promoId}`)?.value.trim() || '';
+
+      if (action === 'approve' && !affiliateId) {
+        showMessage('Please select an affiliate to approve', 'error');
+        return;
+      }
+
+      if (action === 'deny' && !denyReason) {
+        showMessage('Please provide a deny reason', 'error');
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_BASE}/api/promos/review/${promoId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: action,
+            affiliate_id: affiliateId || null,
+            clean_text: cleanText || null,
+            deny_reason: denyReason || null,
+            reviewed_by: 'admin'
+          })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || 'Failed to review promo');
+        }
+
+        showMessage(`Promo ${action === 'approve' ? 'approved' : 'denied'} successfully!`, 'success');
+        
+        // Remove from view
+        setTimeout(() => {
+          document.getElementById(`promo-${promoId}`).remove();
+          loadPromos(); // Refresh list
+        }, 1500);
+      } catch (error) {
+        showMessage(`Error: ${error.message}`, 'error');
+      }
+    }
+
+    function showMessage(message, type) {
+      const container = document.getElementById('status-message');
+      container.innerHTML = `<div class="${type}">${escapeHtml(message)}</div>`;
+      setTimeout(() => {
+        container.innerHTML = '';
+      }, 5000);
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Initialize
+    loadAffiliates().then(() => loadPromos());
+    
+    // Auto-refresh every 30 seconds
+    setInterval(loadPromos, 30000);
+  </script>
+</body>
+</html>

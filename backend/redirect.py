@@ -8,7 +8,7 @@ from typing import Dict, Any
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import RedirectResponse, JSONResponse
 
-CSV_PATH = "/root/gcz/master_affiliates.csv"
+CSV_PATH = "/var/www/html/gcz/master_affiliates.csv"
 REFRESH_SECONDS = 60
 
 app = FastAPI(title="GambleCodez Redirect Engine")

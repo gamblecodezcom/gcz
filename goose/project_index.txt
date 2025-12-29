@@ -1,0 +1,279 @@
+=== GCZ PROJECT INDEX ===
+Sun Dec 28 15:41:07 UTC 2025
+
+/var/www/html/gcz
+├── .env
+├── .env.schema
+├── .gczignore
+├── .gitignore
+├── AIAGENT_MASTERCONTROL.txt
+├── DISCORD_PIPELINE_REPORT.md
+├── ENV_VARIABLES.md
+├── README.md
+├── REPAIR_REPORT.md
+├── admin
+│   ├── .env -> /var/www/html/gcz/.env
+│   ├── admin
+│   │   └── js
+│   ├── app.js
+│   ├── health.html
+│   ├── index.html
+│   ├── js
+│   │   └── health.js
+│   ├── logs.html
+│   ├── promos.html
+│   ├── spinlogs.html
+│   ├── styles.css
+│   └── winners.html
+├── archive
+├── back
+│   ├── API Routes
+│   ├── affiliates.js
+│   ├── app.js
+│   ├── bash
+│   ├── dailySpin.js
+│   ├── dailySpinController.js
+│   ├── health.html
+│   ├── health.js
+│   ├── index.html
+│   ├── logs.html
+│   ├── main.py
+│   ├── newsletter.js
+│   ├── raffles.js
+│   ├── redirect.py
+│   ├── serveFrontend.js
+│   ├── server1.txt
+│   ├── server2.txt
+│   ├── spinLog.js
+│   ├── stats.js
+│   ├── validateCsv.js
+│   └── winners.html
+├── backend
+│   ├── .env -> /var/www/html/gcz/.env
+│   ├── __init__.py
+│   ├── main.py
+│   └── redirect.py
+├── backups
+├── bot
+│   ├── .env -> /root/gcz/.env
+│   ├── client.js
+│   ├── config.js
+│   ├── routes
+│   │   ├── commands.admin.js
+│   │   ├── commands.help.js
+│   │   ├── commands.raffle.js
+│   │   ├── commands.user.js
+│   │   └── index.js
+│   ├── services
+│   │   ├── autoresponses.js
+│   │   ├── channel.js
+│   │   ├── commands.autoresponse.js
+│   │   ├── giveaways.js
+│   │   ├── messages.js
+│   │   ├── raffles.js
+│   │   └── scheduler.js
+│   ├── storage
+│   │   ├── autoresponses.json
+│   │   ├── config.json
+│   │   ├── raffles.json
+│   │   └── scheduled_posts.json
+│   └── utils
+│       ├── apiClient.js
+│       ├── formatters.js
+│       ├── logger.js
+│       ├── permissions.js
+│       └── storage.js
+├── bot.zip
+├── bot_fully_rebuilt_final.zip
+├── chelp.sh
+├── controllers
+│   └── dailySpinController.js
+├── discord
+│   ├── client.js
+│   ├── config.js
+│   ├── handlers
+│   │   └── messageHandler.js
+│   └── utils
+│       └── logger.js
+├── ecosystem.config.cjs
+├── front
+│   ├── App.jsx
+│   ├── DailySpin.jsx
+│   ├── DegenWheel.css
+│   ├── DegenWheel.jsx
+│   ├── Footer.jsx
+│   ├── Header.jsx
+│   ├── Home.jsx
+│   ├── Raffles.jsx
+│   ├── api.js
+│   ├── global.css
+│   ├── index.html
+│   ├── main.jsx
+│   ├── tailwind.config.js
+│   └── vite.config.js
+├── frontend
+│   ├── .gitignore
+│   ├── README.md
+│   ├── dist
+│   │   ├── assets
+│   │   │   ├── index-C-UsKd6h.js
+│   │   │   └── index-C8IqoEzb.css
+│   │   ├── index.html
+│   │   └── vite.svg
+│   ├── eslint.config.js
+│   ├── index.html
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── public
+│   │   └── vite.svg
+│   ├── src
+│   │   ├── App.css
+│   │   ├── App.jsx
+│   │   ├── assets
+│   │   │   └── react.svg
+│   │   ├── components
+│   │   │   ├── DegenWheel.css
+│   │   │   ├── DegenWheel.jsx
+│   │   │   ├── Footer.jsx
+│   │   │   └── Header.jsx
+│   │   ├── index.css
+│   │   ├── main.jsx
+│   │   ├── pages
+│   │   │   ├── DailySpin.jsx
+│   │   │   ├── Home.jsx
+│   │   │   ├── NotFound.jsx
+│   │   │   └── Raffles.jsx
+│   │   └── utils
+│   │       └── api.js
+│   └── vite.config.js
+├── frontend_broken_1766822338
+│   ├── .env -> /var/www/html/gcz/.env
+│   ├── .gitignore
+│   ├── README.md
+│   ├── app.js
+│   ├── index.html
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── postcss.config.js
+│   ├── public
+│   │   ├── icons
+│   │   ├── manifest.json
+│   │   ├── screenshots
+│   │   └── sw.js
+│   ├── src
+│   │   ├── App.jsx
+│   │   ├── api.js
+│   │   ├── assets
+│   │   │   ├── animations
+│   │   │   ├── icons
+│   │   │   └── images
+│   │   ├── chunk_aa
+│   │   ├── components
+│   │   │   ├── Ads
+│   │   │   │   └── PromoPopup.jsx
+│   │   │   ├── DegenWheel.css
+│   │   │   ├── DegenWheel.jsx
+│   │   │   ├── Footer.jsx
+│   │   │   ├── Forms
+│   │   │   ├── Header.jsx
+│   │   │   ├── Home
+│   │   │   ├── Layout
+│   │   │   │   ├── App.jsx
+│   │   │   │   ├── Footer.jsx
+│   │   │   │   ├── Header.jsx
+│   │   │   │   └── Navigation.jsx
+│   │   │   ├── PWA
+│   │   │   ├── Raffles
+│   │   │   ├── Sites
+│   │   │   └── UI
+│   │   │       ├── CategoryBadge.jsx
+│   │   │       ├── Modal.jsx
+│   │   │       ├── NeonButton.jsx
+│   │   │       ├── NeonCard.jsx
+│   │   │       └── Toast.jsx
+│   │   ├── context
+│   │   │   ├── AdsContext.jsx
+│   │   │   ├── SitesContext.jsx
+│   │   │   └── UserContext.jsx
+│   │   ├── hooks
+│   │   ├── index.css
+│   │   ├── main.jsx
+│   │   ├── pages
+│   │   │   ├── AllSites.jsx
+│   │   │   ├── Blacklist.jsx
+│   │   │   ├── CategoryPage.jsx
+│   │   │   ├── Contact.jsx
+│   │   │   ├── DailySpin.jsx
+│   │   │   ├── Home.jsx
+│   │   │   ├── Newsletter.jsx
+│   │   │   ├── NotFound.jsx
+│   │   │   ├── Raffles.jsx
+│   │   │   └── raffles
+│   │   ├── styles
+│   │   │   ├── DegenWheel.css
+│   │   │   └── global.css
+│   │   └── utils
+│   │       ├── api.js
+│   │       └── constants.js
+│   ├── styles.css
+│   ├── tailwind.config.js
+│   └── vite.config.js
+├── gcz-control.sh
+├── gcz-diagnose.sh
+├── goose
+│   ├── gcz-goose
+│   ├── goose
+│   ├── logs
+│   ├── project_index.txt
+│   └── sessions
+├── install-goose.sh
+├── jobs
+│   ├── daily.js
+│   ├── lock.js
+│   ├── reconcile.js
+│   └── warmup.js
+├── logs
+│   ├── auto_audit.log
+│   └── last_daily.txt
+├── master_affiliates.csv
+├── middleware
+│   └── auth.js
+├── models
+│   └── spinLog.js
+├── package-lock.json
+├── package.json
+├── public
+│   ├── assets
+│   │   ├── index-BaBB40Qq.js
+│   │   ├── index-COcDBgFa.css
+│   │   └── react-CHdo91hT.svg
+│   ├── index.html
+│   └── vite.svg
+├── raffle_chunk_aa
+├── rafflev2.zip
+├── routes
+│   ├── affiliates.js
+│   ├── dailySpin.js
+│   ├── newsletter.js
+│   ├── promos.js
+│   ├── raffles.js
+│   └── stats.js
+├── schema_rules.md
+├── server.js
+├── services
+│   └── promoTelegram.js
+├── sql
+│   ├── migrations.sql
+│   ├── migrations_promos.sql
+│   ├── promos.sql
+│   ├── raffle_entries.sql
+│   ├── raffle_winners.sql
+│   ├── raffles.sql
+│   └── spin_logs.sql
+├── start-bot.js
+├── start-discord.js
+├── utils
+│   └── validateCsv.js
+└── watchdog.js
+
+64 directories, 209 files

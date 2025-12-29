@@ -23,9 +23,46 @@ function weightedRandom() {
   }
 }
 
+export async function checkEligibility(req, res) {
+  try {
+    const userId = req.query.user_id || req.headers["x-user-id"] || "guest";
+    
+    const check = await pool.query(
+      `SELECT created_at FROM spin_logs 
+       WHERE user_id = $1 
+       ORDER BY created_at DESC 
+       LIMIT 1`,
+      [userId]
+    );
+
+    if (check.rows.length === 0) {
+      return res.json({ eligible: true });
+    }
+
+    const last = new Date(check.rows[0].created_at);
+    const now = new Date();
+    const diff = now - last;
+    const hoursUntilNext = 24 - (diff / (1000 * 60 * 60));
+    
+    if (diff < 24 * 60 * 60 * 1000) {
+      const nextSpin = new Date(last.getTime() + 24 * 60 * 60 * 1000);
+      return res.json({ 
+        eligible: false, 
+        nextSpin: nextSpin.toISOString(),
+        hoursUntilNext: Math.max(0, hoursUntilNext)
+      });
+    }
+
+    return res.json({ eligible: true });
+  } catch (err) {
+    console.error("Eligibility check error:", err);
+    return res.status(500).json({ error: "Server error" });
+  }
+}
+
 export async function handleDailySpin(req, res) {
   try {
-    const userId = req.headers["x-user-id"] || "guest";
+    const userId = req.body.user_id || req.headers["x-user-id"] || "guest";
     const ip = req.headers["x-forwarded-for"] || req.ip;
     const ua = req.headers["user-agent"] || "unknown";
 
