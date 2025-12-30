@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Users - GambleCodez</title>
+  <link rel="stylesheet" href="/admin/styles.css" />
+  <script src="/admin/js/admin-utils.js"></script>
+  <style>
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+    
+    .btn-primary {
+      padding: 0.75rem 1.5rem;
+      background: linear-gradient(45deg, #00c9ff, #9200ff);
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 20px rgba(146, 0, 255, 0.5);
+    }
+    
+    .search-bar {
+      margin-bottom: 1rem;
+    }
+    
+    .search-bar input {
+      width: 100%;
+      max-width: 400px;
+      padding: 0.75rem;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(0, 255, 247, 0.3);
+      border-radius: 8px;
+      color: #fff;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+    
+    th, td {
+      padding: 1rem;
+      text-align: left;
+      border-bottom: 1px solid rgba(0, 255, 247, 0.2);
+    }
+    
+    th {
+      background: rgba(0, 255, 247, 0.1);
+      color: #00fff7;
+      font-weight: bold;
+    }
+    
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      margin: 0.25rem;
+    }
+    
+    .badge-active {
+      background: rgba(0, 255, 0, 0.2);
+      color: #00ff00;
+      border: 1px solid rgba(0, 255, 0, 0.3);
+    }
+    
+    .badge-inactive {
+      background: rgba(255, 0, 0, 0.2);
+      color: #ff6b6b;
+      border: 1px solid rgba(255, 0, 0, 0.3);
+    }
+    
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(5px);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .modal.show {
+      display: flex;
+    }
+    
+    .modal-content {
+      background: rgba(10, 10, 10, 0.95);
+      border: 1px solid rgba(0, 255, 247, 0.3);
+      border-radius: 16px;
+      padding: 2rem;
+      max-width: 500px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: #00fff7;
+    }
+    
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 0.75rem;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(0, 255, 247, 0.3);
+      border-radius: 8px;
+      color: #fff;
+      box-sizing: border-box;
+    }
+    
+    .form-actions {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+    
+    .btn-secondary {
+      padding: 0.75rem 1.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      color: #fff;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="page-header">
+    <h1>👑 Admin Users Management</h1>
+    <button class="btn-primary" onclick="openCreateModal()">+ Create Admin User</button>
+  </div>
+  
+  <div class="search-bar">
+    <input type="text" id="searchInput" placeholder="Search by username, email, or name..." oninput="loadUsers()" />
+  </div>
+  
+  <div id="usersTable"></div>
+  
+  <!-- Create/Edit Modal -->
+  <div id="userModal" class="modal">
+    <div class="modal-content">
+      <h2 id="modalTitle">Create Admin User</h2>
+      <form id="userForm">
+        <input type="hidden" id="userId" />
+        
+        <div class="form-group">
+          <label>Username *</label>
+          <input type="text" id="username" required />
+        </div>
+        
+        <div class="form-group">
+          <label>Email *</label>
+          <input type="email" id="email" required />
+        </div>
+        
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" id="fullName" />
+        </div>
+        
+        <div class="form-group" id="passwordGroup">
+          <label>Password *</label>
+          <input type="password" id="password" required minlength="8" />
+        </div>
+        
+        <div class="form-group">
+          <label>Roles</label>
+          <select id="roles" multiple style="min-height: 100px;">
+            <!-- Populated by JavaScript -->
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="active" checked />
+            Active
+          </label>
+        </div>
+        
+        <div class="form-actions">
+          <button type="submit" class="btn-primary">Save</button>
+          <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+  <script>
+    const sessionToken = localStorage.getItem('admin_session');
+    let allRoles = [];
+    let currentPage = 1;
+    
+    if (!sessionToken) {
+      window.location.href = '/admin/login.html';
+    }
+    
+    async function loadRoles() {
+      try {
+        const response = await fetch('/api/admin/admin-users/roles/list', {
+          headers: { 'x-admin-session': sessionToken }
+        });
+        const data = await response.json();
+        allRoles = data.roles;
+        
+        const rolesSelect = document.getElementById('roles');
+        rolesSelect.innerHTML = allRoles.map(r => 
+          `<option value="${r.id}">${r.display_name}</option>`
+        ).join('');
+      } catch (error) {
+        console.error('Error loading roles:', error);
+      }
+    }
+    
+    async function loadUsers() {
+      try {
+        const search = document.getElementById('searchInput').value;
+        const params = new URLSearchParams({ page: currentPage, limit: 20 });
+        if (search) params.append('search', search);
+        
+        const response = await fetch(`/api/admin/admin-users?${params}`, {
+          headers: { 'x-admin-session': sessionToken }
+        });
+        const data = await response.json();
+        
+        renderUsersTable(data.users, data.pagination);
+      } catch (error) {
+        console.error('Error loading users:', error);
+      }
+    }
+    
+    function renderUsersTable(users, pagination) {
+      const table = document.getElementById('usersTable');
+      table.innerHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Username</th>
+              <th>Email</th>
+              <th>Full Name</th>
+              <th>Roles</th>
+              <th>Status</th>
+              <th>Last Login</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${users.map(user => `
+              <tr>
+                <td>${user.id}</td>
+                <td>${user.username}</td>
+                <td>${user.email}</td>
+                <td>${user.full_name || '-'}</td>
+                <td>${user.roles || '-'}</td>
+                <td>
+                  <span class="badge ${user.active ? 'badge-active' : 'badge-inactive'}">
+                    ${user.active ? 'Active' : 'Inactive'}
+                  </span>
+                </td>
+                <td>${user.last_login ? new Date(user.last_login).toLocaleString() : 'Never'}</td>
+                <td>
+                  <button onclick="editUser(${user.id})">Edit</button>
+                  <button onclick="resetPassword(${user.id})">Reset Password</button>
+                  ${user.active ? 
+                    `<button onclick="toggleActive(${user.id}, false)">Deactivate</button>` :
+                    `<button onclick="toggleActive(${user.id}, true)">Activate</button>`
+                  }
+                  <button onclick="deleteUser(${user.id})" style="color: #ff6b6b;">Delete</button>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+        <div style="margin-top: 1rem; text-align: center;">
+          Page ${pagination.page} of ${pagination.totalPages} (${pagination.total} total)
+        </div>
+      `;
+    }
+    
+    function openCreateModal() {
+      document.getElementById('modalTitle').textContent = 'Create Admin User';
+      document.getElementById('userForm').reset();
+      document.getElementById('userId').value = '';
+      document.getElementById('passwordGroup').style.display = 'block';
+      document.getElementById('password').required = true;
+      document.getElementById('userModal').classList.add('show');
+    }
+    
+    async function editUser(userId) {
+      try {
+        const response = await fetch(`/api/admin/admin-users/${userId}`, {
+          headers: { 'x-admin-session': sessionToken }
+        });
+        const user = await response.json();
+        
+        document.getElementById('modalTitle').textContent = 'Edit Admin User';
+        document.getElementById('userId').value = user.id;
+        document.getElementById('username').value = user.username;
+        document.getElementById('email').value = user.email;
+        document.getElementById('fullName').value = user.full_name || '';
+        document.getElementById('active').checked = user.active;
+        document.getElementById('passwordGroup').style.display = 'none';
+        document.getElementById('password').required = false;
+        
+        // Set selected roles
+        const rolesSelect = document.getElementById('roles');
+        user.roles.forEach(role => {
+          const option = Array.from(rolesSelect.options).find(opt => opt.textContent.includes(role.display_name));
+          if (option) option.selected = true;
+        });
+        
+        document.getElementById('userModal').classList.add('show');
+      } catch (error) {
+        console.error('Error loading user:', error);
+        alert('Failed to load user');
+      }
+    }
+    
+    function closeModal() {
+      document.getElementById('userModal').classList.remove('show');
+    }
+    
+    document.getElementById('userForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const userId = document.getElementById('userId').value;
+      const userData = {
+        username: document.getElementById('username').value,
+        email: document.getElementById('email').value,
+        full_name: document.getElementById('fullName').value,
+        active: document.getElementById('active').checked
+      };
+      
+      if (document.getElementById('password').value) {
+        userData.password = document.getElementById('password').value;
+      }
+      
+      const selectedRoles = Array.from(document.getElementById('roles').selectedOptions).map(opt => parseInt(opt.value));
+      
+      try {
+        if (userId) {
+          // Update
+          await fetch(`/api/admin/admin-users/${userId}`, {
+            method: 'PUT',
+            headers: {
+              'x-admin-session': sessionToken,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(userData)
+          });
+          
+          // Update roles
+          await fetch(`/api/admin/admin-users/${userId}/roles`, {
+            method: 'POST',
+            headers: {
+              'x-admin-session': sessionToken,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ role_ids: selectedRoles })
+          });
+        } else {
+          // Create
+          const response = await fetch('/api/admin/admin-users', {
+            method: 'POST',
+            headers: {
+              'x-admin-session': sessionToken,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              ...userData,
+              role_id: selectedRoles[0] || null
+            })
+          });
+          
+          if (selectedRoles.length > 1) {
+            const newUser = await response.json();
+            await fetch(`/api/admin/admin-users/${newUser.user.id}/roles`, {
+              method: 'POST',
+              headers: {
+                'x-admin-session': sessionToken,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ role_ids: selectedRoles })
+            });
+          }
+        }
+        
+        closeModal();
+        loadUsers();
+      } catch (error) {
+        console.error('Error saving user:', error);
+        alert('Failed to save user');
+      }
+    });
+    
+    async function resetPassword(userId) {
+      const newPassword = prompt('Enter new password (min 8 characters):');
+      if (!newPassword || newPassword.length < 8) {
+        alert('Password must be at least 8 characters');
+        return;
+      }
+      
+      try {
+        await fetch(`/api/admin/admin-users/${userId}/password`, {
+          method: 'POST',
+          headers: {
+            'x-admin-session': sessionToken,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ new_password: newPassword })
+        });
+        alert('Password reset successfully');
+      } catch (error) {
+        console.error('Error resetting password:', error);
+        alert('Failed to reset password');
+      }
+    }
+    
+    async function toggleActive(userId, active) {
+      try {
+        await fetch(`/api/admin/admin-users/${userId}`, {
+          method: 'PUT',
+          headers: {
+            'x-admin-session': sessionToken,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ active })
+        });
+        loadUsers();
+      } catch (error) {
+        console.error('Error toggling active:', error);
+        alert('Failed to update user');
+      }
+    }
+    
+    async function deleteUser(userId) {
+      if (!confirm('Are you sure you want to delete this admin user?')) return;
+      
+      try {
+        await fetch(`/api/admin/admin-users/${userId}`, {
+          method: 'DELETE',
+          headers: { 'x-admin-session': sessionToken }
+        });
+        loadUsers();
+      } catch (error) {
+        console.error('Error deleting user:', error);
+        alert('Failed to delete user');
+      }
+    }
+    
+    // Initialize
+    loadRoles();
+    loadUsers();
+  </script>
+</body>
+</html>

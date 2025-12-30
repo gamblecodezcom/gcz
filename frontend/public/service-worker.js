@@ -1,6 +1,7 @@
-const CACHE_NAME = 'gamblecodez-v2';
-const STATIC_CACHE = 'gamblecodez-static-v2';
-const API_CACHE = 'gamblecodez-api-v2';
+const CACHE_NAME = 'gamblecodez-v3';
+const STATIC_CACHE = 'gamblecodez-static-v3';
+const API_CACHE = 'gamblecodez-api-v3';
+const IMAGE_CACHE = 'gamblecodez-images-v3';
 
 // Static assets to cache (cache-first strategy)
 const STATIC_ASSETS = [
@@ -41,7 +42,7 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames
-          .filter((name) => name !== STATIC_CACHE && name !== API_CACHE && name !== CACHE_NAME)
+          .filter((name) => name !== STATIC_CACHE && name !== API_CACHE && name !== IMAGE_CACHE && name !== CACHE_NAME)
           .map((name) => caches.delete(name))
       );
     })
@@ -63,9 +64,6 @@ self.addEventListener('fetch', (event) => {
   if (
     url.pathname.endsWith('.css') ||
     url.pathname.endsWith('.js') ||
-    url.pathname.endsWith('.png') ||
-    url.pathname.endsWith('.jpg') ||
-    url.pathname.endsWith('.svg') ||
     url.pathname.endsWith('.woff') ||
     url.pathname.endsWith('.woff2') ||
     url.pathname === '/manifest.json' ||
@@ -85,6 +83,31 @@ self.addEventListener('fetch', (event) => {
             });
           }
           return response;
+        });
+      })
+    );
+    return;
+  }
+
+  // Image caching with stale-while-revalidate
+  if (
+    url.pathname.endsWith('.png') ||
+    url.pathname.endsWith('.jpg') ||
+    url.pathname.endsWith('.jpeg') ||
+    url.pathname.endsWith('.svg') ||
+    url.pathname.endsWith('.webp') ||
+    url.pathname.endsWith('.gif')
+  ) {
+    event.respondWith(
+      caches.open(IMAGE_CACHE).then((cache) => {
+        return cache.match(request).then((cachedResponse) => {
+          const fetchPromise = fetch(request).then((response) => {
+            if (response.status === 200) {
+              cache.put(request, response.clone());
+            }
+            return response;
+          });
+          return cachedResponse || fetchPromise;
         });
       })
     );
@@ -152,7 +175,7 @@ self.addEventListener('push', (event) => {
   if (event.data) {
     try {
       data = event.data.json();
-    } catch (e) {
+    } catch {
       data = { title: 'GambleCodez', body: event.data.text() || 'New update available' };
     }
   }
@@ -176,6 +199,6 @@ self.addEventListener('push', (event) => {
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   event.waitUntil(
-    clients.openWindow(event.notification.data || '/')
+    self.clients.openWindow(event.notification.data || '/')
   );
 });

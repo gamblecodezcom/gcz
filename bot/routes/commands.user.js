@@ -8,6 +8,8 @@ import {
   touchUser
 } from '../utils/storage.js';
 
+const SUPER_ADMIN_TELEGRAM_ID = 6668510825;
+
 /**
  * Setup user-facing commands
  */
@@ -113,6 +115,11 @@ Use the buttons below to join our community.`;
 
   // /join command for giveaways
   bot.command('join', async (ctx) => {
+    // Only Super Admin Telegram ID (6668510825) can join giveaways
+    if (ctx.from?.id !== SUPER_ADMIN_TELEGRAM_ID) {
+      return ctx.reply('This command is restricted to Super Admin only.');
+    }
+    
     try {
       // This will be handled by the giveaway service
       // Just acknowledge here if no active giveaway

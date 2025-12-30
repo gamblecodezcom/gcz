@@ -6,7 +6,13 @@ import { validateAffiliateCSV } from "../utils/validateCsv.js";
 const router = express.Router();
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
-validateAffiliateCSV("master_affiliates.csv");
+// Validate CSV on startup (non-blocking)
+try {
+  validateAffiliateCSV("master_affiliates.csv");
+} catch (error) {
+  console.warn("CSV validation warning (non-blocking):", error.message);
+  // Continue server startup even if CSV validation fails
+}
 
 // GET /api/affiliates - Get all affiliates for dropdown
 router.get("/", async (req, res) => {

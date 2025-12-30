@@ -1,7 +1,14 @@
-import { useState } from 'react';
-import { submitContact } from '../utils/api';
+import { useState, useEffect } from 'react';
+import { submitContact, getSocials, type Socials } from '../utils/api';
+import { SEOHead, pageSEO } from '../components/Common/SEOHead';
 
 export const Contact = () => {
+  const [socials, setSocials] = useState<Socials | null>(null);
+
+  useEffect(() => {
+    getSocials().then(setSocials).catch(() => {});
+  }, []);
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -21,15 +28,17 @@ export const Contact = () => {
       await submitContact(formData);
       setSuccess(true);
       setFormData({ name: '', email: '', message: '' });
-    } catch (err: any) {
-      setError(err.message || 'Failed to send message');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to send message');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen pt-24 px-4 pb-12">
+    <>
+      <SEOHead {...pageSEO.contact} />
+      <div className="min-h-screen pt-24 px-4 pb-12">
       <div className="container mx-auto max-w-2xl">
         <div className="mb-8 text-center">
           <h1 className="text-4xl font-bold font-orbitron mb-4 neon-glow-cyan">
@@ -38,6 +47,17 @@ export const Contact = () => {
           <p className="text-text-muted">
             Have a question or feedback? We'd love to hear from you.
           </p>
+          {socials && (
+            <div className="mt-4 text-sm text-text-muted">
+              <p>Or reach us directly:</p>
+              <p>
+                Email: <a href={`mailto:${socials.email}`} className="text-neon-cyan hover:underline">{socials.email}</a>
+              </p>
+              <p>
+                Telegram: <a href={socials.telegram.channel} target="_blank" rel="noopener noreferrer" className="text-neon-cyan hover:underline">@GambleCodezDrops</a>
+              </p>
+            </div>
+          )}
         </div>
 
         <form onSubmit={handleSubmit} className="bg-bg-dark-2 border-2 border-neon-cyan/30 rounded-lg p-8 space-y-6">
@@ -102,5 +122,6 @@ export const Contact = () => {
         </form>
       </div>
     </div>
+    </>
   );
 };

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { checkWheelEligibility, spinWheel, getWheelHistory } from '../../utils/api';
-import type { WheelEligibility, WheelSpinResult, WheelHistoryEntry } from '../../types';
+import type { WheelEligibility, WheelSpinResult } from '../../types';
 import '../DegenWheel.css';
 
 interface DegenWheelPanelProps {
@@ -12,7 +12,6 @@ export const DegenWheelPanel = ({ spinsRemaining, onSpinComplete }: DegenWheelPa
   const [eligibility, setEligibility] = useState<WheelEligibility>({ eligible: false });
   const [spinning, setSpinning] = useState(false);
   const [lastResult, setLastResult] = useState<WheelSpinResult | null>(null);
-  const [history, setHistory] = useState<WheelHistoryEntry[]>([]);
   const [nextResetTime, setNextResetTime] = useState<string | null>(null);
   const [entriesFromWheel, setEntriesFromWheel] = useState(0);
 
@@ -33,7 +32,6 @@ export const DegenWheelPanel = ({ spinsRemaining, onSpinComplete }: DegenWheelPa
       }
 
       if (Array.isArray(historyData) && historyData.length > 0) {
-        setHistory(historyData);
         const last = historyData[0];
         if (last.entriesAdded) {
           setEntriesFromWheel(last.entriesAdded);
@@ -65,7 +63,7 @@ export const DegenWheelPanel = ({ spinsRemaining, onSpinComplete }: DegenWheelPa
       if (onSpinComplete) {
         onSpinComplete();
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Spin failed:', error);
       setLastResult({
         reward: 'Error',
@@ -103,12 +101,16 @@ export const DegenWheelPanel = ({ spinsRemaining, onSpinComplete }: DegenWheelPa
   };
 
   return (
-    <div className="mt-8 bg-bg-dark-2 rounded-2xl border border-neon-cyan/30 p-6 shadow-lg shadow-neon-cyan/10">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-neon-cyan flex items-center gap-2">
-          <span className="text-3xl">🎡</span>
-          Degen Wheel
-        </h2>
+    <div className="mt-8 bg-bg-dark-2 rounded-2xl border-2 border-neon-cyan/30 p-6 shadow-lg shadow-neon-cyan/10 card-hover relative overflow-hidden">
+      {/* Animated gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-neon-yellow/5 via-neon-pink/5 to-neon-cyan/5 animate-pulse pointer-events-none" />
+      
+      <div className="relative z-10">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold text-neon-cyan flex items-center gap-2 neon-glow-cyan">
+            <span className="text-3xl">🎡</span>
+            Degen Wheel
+          </h2>
         <div className="text-sm text-text-muted">
           {eligibility.eligible ? (
             <span className="text-neon-green">Ready to spin!</span>
@@ -173,22 +175,34 @@ export const DegenWheelPanel = ({ spinsRemaining, onSpinComplete }: DegenWheelPa
           <button
             onClick={handleSpin}
             disabled={spinning || !eligibility.eligible}
-            className="relative px-8 py-4 bg-gradient-to-r from-neon-yellow to-neon-pink text-bg-dark font-bold text-lg rounded-xl hover:shadow-lg hover:shadow-neon-yellow/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden group"
+            className="btn-neon relative px-8 py-4 bg-gradient-to-r from-neon-yellow to-neon-pink text-bg-dark font-bold text-lg rounded-xl hover:shadow-lg hover:shadow-neon-yellow/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden group"
           >
-            <span className="relative z-10">{spinning ? 'Spinning...' : 'Spin Wheel'}</span>
+            <span className="relative z-10 flex items-center gap-2">
+              {spinning ? (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-bg-dark"></div>
+                  Spinning...
+                </>
+              ) : (
+                <>
+                  <span>🎡</span>
+                  Spin Wheel
+                </>
+              )}
+            </span>
             <div className="absolute inset-0 bg-gradient-to-r from-neon-cyan to-neon-pink opacity-0 group-hover:opacity-20 transition-opacity" />
           </button>
         </div>
 
         {/* Stats */}
         <div className="space-y-4">
-          <div className="bg-bg-dark rounded-xl p-4 border border-neon-cyan/20">
+          <div className="bg-bg-dark rounded-xl p-4 border-2 border-neon-cyan/20 card-hover">
             <div className="text-sm text-text-muted mb-1">Spins Remaining Today</div>
             <div className="text-3xl font-bold text-neon-cyan">{spinsRemaining}</div>
           </div>
 
           {nextResetTime && (
-            <div className="bg-bg-dark rounded-xl p-4 border border-neon-pink/20">
+            <div className="bg-bg-dark rounded-xl p-4 border-2 border-neon-pink/20 card-hover">
               <div className="text-sm text-text-muted mb-1">Next Reset</div>
               <div className="text-lg font-semibold text-neon-pink">
                 {formatTimeUntilReset(nextResetTime)}
@@ -197,9 +211,9 @@ export const DegenWheelPanel = ({ spinsRemaining, onSpinComplete }: DegenWheelPa
           )}
 
           {lastResult && (
-            <div className="bg-bg-dark rounded-xl p-4 border border-neon-green/20">
+            <div className={`bg-bg-dark rounded-xl p-4 border-2 ${lastResult.jackpot ? 'border-neon-gold/50 gold-pulse' : 'border-neon-green/20'} card-hover`}>
               <div className="text-sm text-text-muted mb-1">Last Spin Result</div>
-              <div className={`text-xl font-bold ${lastResult.jackpot ? 'text-neon-yellow' : 'text-neon-green'}`}>
+              <div className={`text-xl font-bold ${lastResult.jackpot ? 'text-neon-gold neon-glow-gold' : 'text-neon-green'}`}>
                 {getRewardDisplay(lastResult.reward)}
               </div>
               {lastResult.entriesAdded && (
@@ -211,12 +225,13 @@ export const DegenWheelPanel = ({ spinsRemaining, onSpinComplete }: DegenWheelPa
           )}
 
           {entriesFromWheel > 0 && (
-            <div className="bg-bg-dark rounded-xl p-4 border border-neon-cyan/20">
+            <div className="bg-bg-dark rounded-xl p-4 border-2 border-neon-cyan/20 card-hover">
               <div className="text-sm text-text-muted mb-1">Total Entries from Wheel</div>
-              <div className="text-2xl font-bold text-neon-cyan">{entriesFromWheel}</div>
+              <div className="text-2xl font-bold text-neon-cyan neon-glow-cyan">{entriesFromWheel}</div>
             </div>
           )}
         </div>
+      </div>
       </div>
     </div>
   );

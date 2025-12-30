@@ -1,6 +1,13 @@
+import { SEOHead } from '../components/Common/SEOHead';
+
 export const Leaderboard = () => {
   return (
-    <div className="min-h-screen pt-24 px-4 pb-12">
+    <>
+      <SEOHead
+        title="Leaderboard"
+        description="Top performers and raffle winners on GambleCodez."
+      />
+      <div className="min-h-screen pt-24 px-4 pb-12">
       <div className="container mx-auto max-w-4xl">
         <div className="mb-8 text-center">
           <h1 className="text-4xl font-bold font-orbitron mb-4 neon-glow-yellow">
@@ -18,5 +25,6 @@ export const Leaderboard = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };

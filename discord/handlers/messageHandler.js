@@ -32,8 +32,8 @@ export async function handleMessage(message, channel) {
     }
   }
 
-  // Submit to backend API
-  const apiUrl = `${config.PROMO_INTAKE_API_URL}/api/promos/intake`;
+  // Submit to backend API (new Drops ecosystem)
+  const apiUrl = `${config.PROMO_INTAKE_API_URL}/api/drops/intake`;
   
   try {
     const response = await fetch(apiUrl, {
@@ -43,9 +43,15 @@ export async function handleMessage(message, channel) {
       },
       body: JSON.stringify({
         source: 'discord',
-        channel: channel,
-        content: content,
-        submitted_by: submittedBy,
+        source_channel_id: message.channel.id,
+        source_user_id: submittedBy,
+        source_username: username,
+        raw_text: content,
+        metadata: {
+          discord_guild_id: message.guild?.id,
+          discord_channel_name: channelName,
+          discord_message_id: message.id
+        }
       }),
     });
 
@@ -55,7 +61,7 @@ export async function handleMessage(message, channel) {
     }
 
     const data = await response.json();
-    logger.info(`Successfully created promo ticket #${data.promo.id}`);
+    logger.info(`Successfully created raw drop #${data.raw_drop.id}`);
 
     // Optionally react to the message to confirm processing
     try {
@@ -65,7 +71,7 @@ export async function handleMessage(message, channel) {
     }
 
   } catch (error) {
-    logger.error(`Failed to submit promo ticket: ${error.message}`);
+    logger.error(`Failed to submit raw drop: ${error.message}`);
     
     // Optionally notify the user
     try {

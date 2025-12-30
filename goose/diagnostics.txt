@@ -1,15 +1,15 @@
 === GCZ STACK DIAGNOSTICS ===
-Sun Dec 28 15:41:12 UTC 2025
+Tue Dec 30 21:23:24 UTC 2025
 
 --- PM2 STATUS ---
 ┌────┬─────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
 │ id │ name            │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
 ├────┼─────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
-│ 0  │ gcz-api         │ default     │ N/A     │ fork    │ 991859   │ 40m    │ 239  │ online    │ 0%       │ 62.5mb   │ root     │ disabled │
-│ 3  │ gcz-bot         │ default     │ N/A     │ fork    │ 998788   │ 37m    │ 989  │ online    │ 0%       │ 54.7mb   │ root     │ disabled │
-│ 4  │ gcz-discord     │ default     │ N/A     │ fork    │ 1086244  │ 1s     │ 787  │ online    │ 0%       │ 86.7mb   │ root     │ disabled │
-│ 2  │ gcz-redirect    │ default     │ N/A     │ fork    │ 991841   │ 40m    │ 41   │ online    │ 0%       │ 43.3mb   │ root     │ disabled │
-│ 1  │ gcz-watchdog    │ default     │ N/A     │ fork    │ 991800   │ 40m    │ 39   │ online    │ 0%       │ 52.2mb   │ root     │ disabled │
+│ 0  │ gcz-api         │ default     │ N/A     │ fork    │ 2110225  │ 22m    │ 377  │ online    │ 0%       │ 63.2mb   │ root     │ disabled │
+│ 3  │ gcz-bot         │ default     │ N/A     │ fork    │ 2110120  │ 22m    │ 1050 │ online    │ 0%       │ 54.3mb   │ root     │ disabled │
+│ 4  │ gcz-discord     │ default     │ N/A     │ fork    │ 2131561  │ 0s     │ 630… │ online    │ 0%       │ 27.7mb   │ root     │ disabled │
+│ 2  │ gcz-redirect    │ default     │ N/A     │ fork    │ 2110202  │ 22m    │ 99   │ online    │ 0%       │ 41.9mb   │ root     │ disabled │
+│ 1  │ gcz-watchdog    │ default     │ N/A     │ fork    │ 2110081  │ 22m    │ 97   │ online    │ 0%       │ 52.5mb   │ root     │ disabled │
 └────┴─────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
 
 --- NODE VERSION ---
@@ -17,17 +17,17 @@ v20.19.6
 
 --- DISK USAGE ---
 Filesystem      Size  Used Avail Use% Mounted on
-tmpfs           392M  1.4M  390M   1% /run
-/dev/sda1        49G  9.1G   40G  19% /
+tmpfs           392M  1.2M  390M   1% /run
+/dev/sda1        49G   10G   39G  21% /
 tmpfs           2.0G   28K  2.0G   1% /dev/shm
 tmpfs           5.0M     0  5.0M   0% /run/lock
 /dev/sda15      105M  6.1M   99M   6% /boot/efi
-overlay          49G  9.1G   40G  19% /var/lib/docker/rootfs/overlayfs/a512078ca0c08c9b1962e3a35ccf7d2a7c7100476c406e57322823e24b0eb1ee
+overlay          49G   10G   39G  21% /var/lib/docker/rootfs/overlayfs/a512078ca0c08c9b1962e3a35ccf7d2a7c7100476c406e57322823e24b0eb1ee
 tmpfs           392M  4.0K  392M   1% /run/user/0
 
 --- MEMORY ---
                total        used        free      shared  buff/cache   available
-Mem:           3.8Gi       688Mi       982Mi        15Mi       2.2Gi       2.9Gi
+Mem:           3.8Gi       985Mi       562Mi        18Mi       2.3Gi       2.6Gi
 Swap:             0B          0B          0B
 
 --- ENV CHECK ---
@@ -35,6 +35,9 @@ DATABASE_URL=postgresql://gamblecodez:Dope-19881988@localhost:5432/gambledb
 PORT=3000
 NODE_ENV=production
 TELEGRAM_BOT_TOKEN=7556349865:AAHRhh78PDeiSfgThIU9HEK_3wZzte2XbC4
-TELEGRAM_WEBHOOK_URL=https://gamblecodez.com/webhook
+TELEGRAM_GROUP_ID=-1002400589513
+TELEGRAM_WEBHOOK_PORT=
+TELEGRAM_CHANNEL_ID=-1002648883359
+TELEGRAM_WEBHOOK_URL=
 TELEGRAM_BOT_USERNAME=@GambleCodezCasinoDrops_bot
 TELEGRAM_ADMIN_ID=6668510825

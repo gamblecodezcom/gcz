@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Promo Candidates Review - GambleCodez Admin</title>
+  <link rel="stylesheet" href="/admin/styles.css" />
+  <style>
+    .candidates-container {
+      display: grid;
+      gap: 1rem;
+    }
+    .candidate-card {
+      background: #1a1a1a;
+      border: 2px solid #00fff7;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    .candidate-card.pending {
+      border-color: #ffd700;
+    }
+    .candidate-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 1rem;
+    }
+    .candidate-title {
+      font-size: 1.25rem;
+      font-weight: bold;
+      color: #00fff7;
+      margin: 0;
+    }
+    .candidate-meta {
+      font-size: 0.875rem;
+      color: #999;
+      margin-top: 0.5rem;
+    }
+    .candidate-actions {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-top: 1rem;
+    }
+    .btn {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 0.875rem;
+    }
+    .btn-approve { background: #00ff00; color: #000; }
+    .btn-deny { background: #ff0000; color: #fff; }
+    .btn-skip { background: #666; color: #fff; }
+    .confidence-bar {
+      width: 100%;
+      height: 8px;
+      background: #333;
+      border-radius: 4px;
+      margin-top: 0.5rem;
+      overflow: hidden;
+    }
+    .confidence-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #ff0000, #ffd700, #00ff00);
+      transition: width 0.3s;
+    }
+    .filters {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    .filter-group label {
+      font-size: 0.875rem;
+      color: #00fff7;
+    }
+    .filter-group select {
+      padding: 0.5rem;
+      background: #0a0a0a;
+      border: 1px solid #333;
+      border-radius: 4px;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📋 Promo Candidates Review</h1>
+    <div style="margin-bottom: 1rem;">
+      <a href="/admin/index.html" style="color: #00fff7;">← Back to Admin Panel</a>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters">
+      <div class="filter-group">
+        <label>Status</label>
+        <select id="filter-status" onchange="loadCandidates()">
+          <option value="pending">Pending</option>
+          <option value="approved">Approved</option>
+          <option value="denied">Denied</option>
+          <option value="non_promo">Non-Promo</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Jurisdiction</label>
+        <select id="filter-jurisdiction" onchange="loadCandidates()">
+          <option value="">All</option>
+          <option value="USA Daily">USA Daily</option>
+          <option value="Crypto Daily">Crypto Daily</option>
+          <option value="Everywhere">Everywhere</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Candidates List -->
+    <div class="candidates-container" id="candidates-container">
+      <div class="loading">Loading candidates...</div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = window.location.origin;
+
+    async function loadCandidates() {
+      const status = document.getElementById('filter-status').value;
+      const jurisdiction = document.getElementById('filter-jurisdiction').value;
+
+      const params = new URLSearchParams();
+      params.append('status', status);
+      if (jurisdiction) params.append('jurisdiction', jurisdiction);
+
+      try {
+        const res = await fetch(`${API_BASE}/api/drops/promo-candidates?${params}`);
+        const data = await res.json();
+        
+        const container = document.getElementById('candidates-container');
+        container.innerHTML = (data.candidates || []).map(candidate => {
+          const confidence = (candidate.confidence_score || 0) * 100;
+          
+          return `
+            <div class="candidate-card ${candidate.status === 'pending' ? 'pending' : ''}">
+              <div class="candidate-header">
+                <div>
+                  <h3 class="candidate-title">${escapeHtml(candidate.headline || candidate.proposed_headline || 'No headline')}</h3>
+                  <div class="candidate-meta">
+                    <div>Source: ${candidate.source || 'unknown'} • ${candidate.source_username || 'anonymous'}</div>
+                    <div>Confidence: ${confidence.toFixed(0)}%</div>
+                    <div class="confidence-bar">
+                      <div class="confidence-fill" style="width: ${confidence}%"></div>
+                    </div>
+                    ${candidate.guessed_casino ? `<div>Casino: ${candidate.guessed_casino}</div>` : ''}
+                    ${candidate.guessed_jurisdiction ? `<div>Jurisdiction: ${candidate.guessed_jurisdiction}</div>` : ''}
+                    ${candidate.bonus_code ? `<div><strong>Code:</strong> <code>${escapeHtml(candidate.bonus_code)}</code></div>` : ''}
+                    ${candidate.promo_url ? `<div><strong>URL:</strong> <a href="${escapeHtml(candidate.promo_url)}" target="_blank">${escapeHtml(candidate.promo_url)}</a></div>` : ''}
+                  </div>
+                  <div style="margin-top: 1rem; padding: 1rem; background: #0a0a0a; border-radius: 4px;">
+                    <strong>Original Text:</strong>
+                    <p style="color: #999; margin-top: 0.5rem;">${escapeHtml(candidate.raw_text || '')}</p>
+                  </div>
+                </div>
+              </div>
+              ${candidate.status === 'pending' ? `
+                <div class="candidate-actions">
+                  <button class="btn btn-approve" onclick="approveCandidate(${candidate.id})">✓ Approve</button>
+                  <button class="btn btn-deny" onclick="denyCandidate(${candidate.id})">✗ Deny</button>
+                  <button class="btn btn-skip" onclick="markNonPromo(${candidate.id})">Skip (Not a Promo)</button>
+                </div>
+              ` : `
+                <div style="color: #999; margin-top: 1rem;">
+                  Status: <strong>${candidate.status}</strong>
+                  ${candidate.reviewed_at ? ` • Reviewed: ${new Date(candidate.reviewed_at).toLocaleString()}` : ''}
+                </div>
+              `}
+            </div>
+          `;
+        }).join('');
+      } catch (error) {
+        console.error('Failed to load candidates:', error);
+        document.getElementById('candidates-container').innerHTML = '<div class="error">Error loading candidates</div>';
+      }
+    }
+
+    async function approveCandidate(id) {
+      if (!confirm('Approve this candidate and publish as a drop?')) return;
+      
+      try {
+        const res = await fetch(`${API_BASE}/api/drops/promo-candidates/${id}/approve`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({})
+        });
+
+        if (!res.ok) throw new Error('Failed');
+        
+        showToast('Approved and published!', 'success');
+        loadCandidates();
+      } catch (error) {
+        showToast('Error approving', 'error');
+      }
+    }
+
+    async function denyCandidate(id) {
+      const reason = prompt('Reason for denial (optional):');
+      
+      try {
+        const res = await fetch(`${API_BASE}/api/drops/promo-candidates/${id}/deny`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reason: reason || 'No reason provided' })
+        });
+
+        if (!res.ok) throw new Error('Failed');
+        
+        showToast('Denied', 'success');
+        loadCandidates();
+      } catch (error) {
+        showToast('Error denying', 'error');
+      }
+    }
+
+    async function markNonPromo(id) {
+      if (!confirm('Mark as non-promo?')) return;
+      
+      try {
+        const res = await fetch(`${API_BASE}/api/drops/promo-candidates/${id}/mark-non-promo`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+
+        if (!res.ok) throw new Error('Failed');
+        
+        showToast('Marked as non-promo', 'success');
+        loadCandidates();
+      } catch (error) {
+        showToast('Error', 'error');
+      }
+    }
+
+    function showToast(msg, type) {
+      const toast = document.createElement('div');
+      toast.textContent = msg;
+      toast.style.cssText = `position: fixed; top: 20px; right: 20px; padding: 1rem; border-radius: 4px; color: #fff; background: ${type === 'success' ? '#00ff00' : '#ff0000'}; z-index: 1001;`;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Initial load
+    loadCandidates();
+  </script>
+</body>
+</html>

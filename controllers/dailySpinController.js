@@ -1,8 +1,5 @@
 import { logSpin } from "../models/spinLog.js";
-import pkg from "pg";
-const { Pool } = pkg;
-
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+import pool from "../utils/db.js";
 
 // Weighted rewards: [value, chance out of 10,000]
 const rewards = [

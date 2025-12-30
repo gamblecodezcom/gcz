@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { getRecentSites } from '../utils/api';
 import { SiteCardGrid } from '../components/Sites/SiteCardGrid';
 import { FiltersBar } from '../components/Filters/FiltersBar';
+import { SEOHead } from '../components/Common/SEOHead';
 import type { SiteCard, Jurisdiction, SiteType } from '../types';
 
 export const RecentSites = () => {
@@ -14,7 +15,10 @@ export const RecentSites = () => {
     const fetchSites = async () => {
       setLoading(true);
       try {
-        const params: any = {};
+        const params: {
+          jurisdiction?: Jurisdiction;
+          category?: string;
+        } = {};
         if (selectedJurisdiction !== 'ALL') {
           params.jurisdiction = selectedJurisdiction;
         }
@@ -41,7 +45,12 @@ export const RecentSites = () => {
   };
 
   return (
-    <div className="min-h-screen pt-24 px-4 pb-12">
+    <>
+      <SEOHead
+        title="Recently Added Sites"
+        description="Browse the latest casino sites added to GambleCodez. Fresh degen listings, newest first."
+      />
+      <div className="min-h-screen pt-24 px-4 pb-12">
       <div className="container mx-auto">
         <div className="mb-8">
           <h1 className="text-4xl font-bold font-orbitron mb-4 neon-glow-cyan">
@@ -69,5 +78,6 @@ export const RecentSites = () => {
         <SiteCardGrid sites={sites} loading={loading} />
       </div>
     </div>
+    </>
   );
 };

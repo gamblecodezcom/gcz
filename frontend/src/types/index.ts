@@ -241,4 +241,34 @@ export interface NotificationSettings {
   telegramRaffleAlerts: boolean;
   telegramGiveawayAlerts: boolean;
   telegramSecretCodeHints: boolean;
+  telegramDropsAlerts?: boolean;
+  emailDropsAlerts?: boolean;
+  pushDropsAlerts?: boolean;
+}
+
+// Drops Ecosystem
+export interface DropPromo {
+  id: string;
+  headline: string;
+  description?: string;
+  promo_type: 'code' | 'url' | 'hybrid' | 'info_only';
+  bonus_code?: string;
+  promo_url?: string;
+  resolved_domain?: string;
+  mapped_casino_id?: number;
+  casino_name?: string;
+  casino_logo?: string;
+  casino_slug?: string;
+  jurisdiction_tags: string[];
+  quick_signup_url?: string;
+  validity_flags?: {
+    verified?: boolean;
+    community_submitted?: boolean;
+    admin_edited?: boolean;
+  };
+  featured: boolean;
+  view_count: number;
+  click_count: number;
+  created_at: string;
+  expires_at?: string;
 }

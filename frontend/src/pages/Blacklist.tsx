@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getBlacklist } from '../utils/api';
+import { SEOHead } from '../components/Common/SEOHead';
 
 interface BlacklistEntry {
   id: string;
@@ -29,7 +30,12 @@ export const Blacklist = () => {
   }, []);
 
   return (
-    <div className="min-h-screen pt-24 px-4 pb-12">
+    <>
+      <SEOHead
+        title="Blacklist Safety Board"
+        description="Sites flagged for safety concerns on GambleCodez. Avoid these domains."
+      />
+      <div className="min-h-screen pt-24 px-4 pb-12">
       <div className="container mx-auto max-w-4xl">
         <div className="mb-8 text-center">
           <h1 className="text-4xl font-bold font-orbitron mb-4 text-red-400">
@@ -71,5 +77,6 @@ export const Blacklist = () => {
         )}
       </div>
     </div>
+    </>
   );
 };

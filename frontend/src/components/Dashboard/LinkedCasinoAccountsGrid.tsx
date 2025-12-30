@@ -46,6 +46,83 @@ export const LinkedCasinoAccountsGrid = ({
     return linkedSites.find((ls) => ls.siteId === siteId);
   };
 
+  // Normalized casino detection - uses slug or name fallback, case-insensitive
+  const getNormalizedSlug = (site: SiteCard): string => {
+    return (site.slug?.toLowerCase() || site.name?.toLowerCase() || '').trim();
+  };
+
+  // Normalized casino detection functions
+  const isRunewager = (site: SiteCard): boolean => {
+    const slug = getNormalizedSlug(site);
+    return slug === 'runewager' || slug.includes('runewager');
+  };
+
+  const isStakeCom = (site: SiteCard): boolean => {
+    const slug = getNormalizedSlug(site);
+    return slug === 'stake.com' || slug === 'stake';
+  };
+
+  const isStakeUs = (site: SiteCard): boolean => {
+    const slug = getNormalizedSlug(site);
+    return slug === 'stake.us';
+  };
+
+  const isGoated = (site: SiteCard): boolean => {
+    const slug = getNormalizedSlug(site);
+    return slug === 'goated';
+  };
+
+  const isRoobet = (site: SiteCard): boolean => {
+    const slug = getNormalizedSlug(site);
+    return slug === 'roobet';
+  };
+
+  const isWinna = (site: SiteCard): boolean => {
+    const slug = getNormalizedSlug(site);
+    return slug === 'winna';
+  };
+
+  const isShuffleCom = (site: SiteCard): boolean => {
+    const slug = getNormalizedSlug(site);
+    return slug === 'shuffle.com' || slug === 'shuffle';
+  };
+
+  const isShuffleUs = (site: SiteCard): boolean => {
+    const slug = getNormalizedSlug(site);
+    return slug === 'shuffle.us';
+  };
+
+  const isCwallet = (site: SiteCard): boolean => {
+    const slug = getNormalizedSlug(site);
+    return slug === 'cwallet';
+  };
+
+  // Tip eligibility logic using normalized slugs
+  // Returns: true (eligible), "rare" (rarely eligible), false (not eligible)
+  const getTipEligibility = (site: SiteCard, linked: LinkedSite | undefined): { tipEligible: boolean | 'rare'; label: string } => {
+    if (!linked) {
+      return { tipEligible: false, label: 'Not Tip Eligible' };
+    }
+
+    // Always eligible: Runewager, Winna, Cwallet
+    if (isRunewager(site) || isWinna(site) || isCwallet(site)) {
+      return { tipEligible: true, label: 'Tip Eligible' };
+    }
+
+    // Rarely eligible: Stake.com, Goated, Roobet, Shuffle.com
+    if (isStakeCom(site) || isGoated(site) || isRoobet(site) || isShuffleCom(site)) {
+      return { tipEligible: 'rare', label: 'Rarely Tip Eligible' };
+    }
+
+    // Not eligible: Stake.us, Shuffle.us, and all unknown sites
+    if (isStakeUs(site) || isShuffleUs(site)) {
+      return { tipEligible: false, label: 'Not Tip Eligible' };
+    }
+
+    // Fallback for unknown sites
+    return { tipEligible: false, label: 'Not Tip Eligible' };
+  };
+
   const handleCardClick = (site: SiteCard) => {
     if (!isPinUnlocked) {
       onPinRequired();
@@ -85,12 +162,22 @@ export const LinkedCasinoAccountsGrid = ({
       // Refresh linked sites
       const updated = await getLinkedSites();
       setLinkedSites(updated);
+      
+      // Trigger border surge animation on the linked card
+      const cardElement = document.querySelector(`[data-site-id="${selectedSite.id}"]`);
+      if (cardElement) {
+        cardElement.classList.add('border-surge-green');
+        setTimeout(() => {
+          cardElement.classList.remove('border-surge-green');
+        }, 1000);
+      }
+      
       setShowLinkModal(false);
       setSelectedSite(null);
       setIdentifierValue('');
       onLinkSuccess();
-    } catch (error: any) {
-      setLinkError(error.message || 'Failed to link account');
+    } catch (error) {
+      setLinkError(error instanceof Error ? error.message : 'Failed to link account');
     } finally {
       setLinking(false);
     }
@@ -109,8 +196,8 @@ export const LinkedCasinoAccountsGrid = ({
       const updated = await getLinkedSites();
       setLinkedSites(updated);
       onLinkSuccess();
-    } catch (error: any) {
-      alert(error.message || 'Failed to unlink account');
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Failed to unlink account');
     }
   };
 
@@ -139,22 +226,33 @@ export const LinkedCasinoAccountsGrid = ({
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
         {activeSites.map((site) => {
           const linked = getLinkedSite(site.id);
           const categories = site.category.split(',').map((c) => c.trim());
           const jurisdictionConfig = JURISDICTION_CONFIG[site.jurisdiction] || JURISDICTION_CONFIG.GLOBAL;
-          const isRunewager = site.slug.toLowerCase().includes('runewager');
+          const tipEligibility = getTipEligibility(site, linked);
+          const isRunewagerSite = isRunewager(site);
 
           return (
             <div
               key={site.id}
-              className={`group relative bg-bg-dark-2 border-2 rounded-xl p-4 cursor-pointer transition-all duration-300 ${
+              data-site-id={site.id}
+              role="button"
+              tabIndex={0}
+              aria-label={`${site.name} casino account${linked ? ' - Linked' : ' - Not linked'}`}
+              className={`group relative bg-bg-dark-2 border-2 rounded-xl p-4 sm:p-5 cursor-pointer transition-all duration-300 card-hover ${
                 linked
-                  ? 'border-neon-green/50 hover:border-neon-green hover:shadow-neon-green'
-                  : 'border-neon-cyan/30 hover:border-neon-cyan/50 hover:shadow-neon-cyan'
+                  ? 'border-neon-green/50 hover:border-neon-green hover:shadow-neon-green focus-visible:border-neon-green focus-visible:shadow-neon-green'
+                  : 'border-neon-cyan/30 hover:border-neon-cyan/50 hover:shadow-neon-cyan focus-visible:border-neon-cyan focus-visible:shadow-neon-cyan'
               }`}
               onClick={() => handleCardClick(site)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleCardClick(site);
+                }
+              }}
             >
               {/* Linked Badge */}
               {linked && (
@@ -172,11 +270,11 @@ export const LinkedCasinoAccountsGrid = ({
                 </div>
               )}
 
-              {/* Runewager Special Badge */}
-              {isRunewager && (
+              {/* Tip Eligibility Badge - Show for eligible casinos when not linked */}
+              {!linked && (isRunewagerSite || isWinna(site) || isCwallet(site)) && (
                 <div className="absolute bottom-2 left-2 z-10">
                   <span className="px-2 py-1 bg-yellow-500/20 border border-yellow-400/50 rounded-full text-xs font-bold text-yellow-400">
-                    SC Tips
+                    SC Tips Available
                   </span>
                 </div>
               )}
@@ -221,18 +319,61 @@ export const LinkedCasinoAccountsGrid = ({
                 {site.jurisdiction}
               </div>
 
-              {/* Status */}
-              <div className="text-center text-sm mt-2">
+              {/* Status & Quick Actions */}
+              <div className="mt-2 space-y-2">
                 {linked ? (
-                  <span className="text-neon-green">Linked ✓</span>
+                  <div className="text-center">
+                    <span className="text-neon-green text-sm font-semibold">Linked ✓</span>
+                    <div className="mt-1 text-xs text-text-muted">
+                      {isPinUnlocked ? (
+                        <span>
+                          {linked.identifierType}: {linked.identifierValue.substring(0, 8)}...
+                        </span>
+                      ) : (
+                        <span>Unlock PIN to view</span>
+                      )}
+                    </div>
+                  </div>
                 ) : (
-                  <span className="text-text-muted">Not linked</span>
+                  <div className="space-y-2">
+                    <span className="text-text-muted text-sm block text-center">Not linked</span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRedirect(site);
+                      }}
+                      aria-label={`Quick join ${site.name}`}
+                      className="w-full px-3 py-2 bg-gradient-to-r from-neon-pink to-neon-cyan text-white text-xs font-bold rounded-lg hover:shadow-neon-pink focus-visible:outline-3 focus-visible:outline-neon-cyan focus-visible:outline-offset-2 transition-all relative overflow-hidden group"
+                    >
+                      <span className="relative z-10 flex items-center justify-center gap-1">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                        </svg>
+                        Quick Join
+                      </span>
+                      <div className="absolute inset-0 bg-gradient-to-r from-neon-cyan to-neon-pink opacity-0 group-hover:opacity-20 transition-opacity" />
+                    </button>
+                  </div>
                 )}
               </div>
 
-              {/* Hover Glow Effect */}
+              {/* Hover Tooltip for Linked Sites */}
               {linked && (
                 <div className="absolute inset-0 border-2 border-neon-green/0 group-hover:border-neon-green/50 rounded-xl transition-all duration-500 pointer-events-none" />
+              )}
+              
+              {/* Tip Eligibility Badge - Show for linked accounts with tip eligibility */}
+              {linked && tipEligibility.tipEligible && (
+                <div className="absolute bottom-2 right-2 z-10">
+                  <div className={`px-2 py-1 rounded-full text-xs font-semibold flex items-center gap-1 ${
+                    tipEligibility.tipEligible === true
+                      ? 'bg-neon-yellow/20 border border-neon-yellow/50 text-yellow-400'
+                      : 'bg-orange-500/20 border border-orange-400/50 text-orange-400'
+                  }`}>
+                    <span>💎</span>
+                    <span>{tipEligibility.label}</span>
+                  </div>
+                </div>
               )}
             </div>
           );
@@ -255,7 +396,7 @@ export const LinkedCasinoAccountsGrid = ({
                 </label>
                 <select
                   value={identifierType}
-                  onChange={(e) => setIdentifierType(e.target.value as any)}
+                  onChange={(e) => setIdentifierType(e.target.value as 'username' | 'email' | 'player_id')}
                   className="w-full bg-bg-dark border border-neon-cyan/30 rounded-lg px-4 py-2 text-text-primary focus:outline-none focus:border-neon-cyan"
                 >
                   <option value="username">Username</option>
@@ -276,7 +417,7 @@ export const LinkedCasinoAccountsGrid = ({
                   className="w-full bg-bg-dark border border-neon-cyan/30 rounded-lg px-4 py-2 text-text-primary focus:outline-none focus:border-neon-cyan"
                   required
                 />
-                {selectedSite.slug.toLowerCase().includes('runewager') && (
+                {isRunewager(selectedSite) && (
                   <p className="text-xs text-text-muted mt-1">
                     Runewager: Username required, email optional but recommended
                   </p>

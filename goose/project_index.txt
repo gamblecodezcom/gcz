@@ -1,29 +1,61 @@
 === GCZ PROJECT INDEX ===
-Sun Dec 28 15:41:07 UTC 2025
+Tue Dec 30 21:23:24 UTC 2025
 
 /var/www/html/gcz
 ├── .env
 ├── .env.schema
 ├── .gczignore
 ├── .gitignore
+├── ADMIN_DASH.txt
 ├── AIAGENT_MASTERCONTROL.txt
+├── AUDIT_REPORT.md
+├── BACKEND_API_IMPLEMENTATION_REPORT.md
+├── BACKEND_API_SUMMARY.md
+├── BOT_UPGRADE_AUDIT_REPORT.md
+├── DEGENPAN_ADMINDASH.txt
 ├── DISCORD_PIPELINE_REPORT.md
+├── Degen_Profile.txt
 ├── ENV_VARIABLES.md
+├── FULL_PHASE_IMPLEMENTATION_SUMMARY.md
+├── GAMBLECODEZ_DROPS_IMPLEMENTATION_SUMMARY.md
+├── GCZ_DEPLOY_PLAN.md
+├── GambleCodez_socials.txt
+├── IMPLEMENTATION_COMPLETE_SUMMARY.md
+├── IMPLEMENTATION_SUMMARY.md
+├── NEXT_PHASE_IMPLEMENTATION_SUMMARY.md
 ├── README.md
 ├── REPAIR_REPORT.md
+├── SEO_UX_DEPLOYMENT_SUMMARY.md
 ├── admin
 │   ├── .env -> /var/www/html/gcz/.env
 │   ├── admin
 │   │   └── js
+│   ├── ads-dashboard.html
+│   ├── ads.html
+│   ├── affiliates.html
 │   ├── app.js
+│   ├── blacklist.html
+│   ├── daily-drops.html
+│   ├── drops.html
 │   ├── health.html
 │   ├── index.html
 │   ├── js
+│   │   ├── admin-utils.js
 │   │   └── health.js
+│   ├── live-banner.html
 │   ├── logs.html
+│   ├── newsletter.html
 │   ├── promos.html
+│   ├── raffles-wheel.html
+│   ├── raffles.html
+│   ├── redirects.html
+│   ├── settings.html
+│   ├── site-push.html
+│   ├── sites.html
 │   ├── spinlogs.html
 │   ├── styles.css
+│   ├── telegram-bot.html
+│   ├── users.html
 │   └── winners.html
 ├── archive
 ├── back
@@ -60,18 +92,27 @@ Sun Dec 28 15:41:07 UTC 2025
 │   ├── config.js
 │   ├── routes
 │   │   ├── commands.admin.js
+│   │   ├── commands.autoresponse.js
+│   │   ├── commands.drops.js
+│   │   ├── commands.giveaway.js
 │   │   ├── commands.help.js
 │   │   ├── commands.raffle.js
+│   │   ├── commands.stats.js
 │   │   ├── commands.user.js
+│   │   ├── commands.wheel.js
 │   │   └── index.js
 │   ├── services
 │   │   ├── autoresponses.js
 │   │   ├── channel.js
 │   │   ├── commands.autoresponse.js
 │   │   ├── giveaways.js
+│   │   ├── giveawaysBackend.js
 │   │   ├── messages.js
+│   │   ├── notifications.js
 │   │   ├── raffles.js
-│   │   └── scheduler.js
+│   │   ├── scheduler.js
+│   │   ├── stats.js
+│   │   └── wheel.js
 │   ├── storage
 │   │   ├── autoresponses.json
 │   │   ├── config.json
@@ -88,6 +129,7 @@ Sun Dec 28 15:41:07 UTC 2025
 ├── chelp.sh
 ├── controllers
 │   └── dailySpinController.js
+├── deploy.sh
 ├── discord
 │   ├── client.js
 │   ├── config.js
@@ -115,36 +157,134 @@ Sun Dec 28 15:41:07 UTC 2025
 │   ├── .gitignore
 │   ├── README.md
 │   ├── dist
+│   │   ├── ICONS_NEEDED.txt
+│   │   ├── ICONS_README.md
 │   │   ├── assets
-│   │   │   ├── index-C-UsKd6h.js
-│   │   │   └── index-C8IqoEzb.css
+│   │   │   ├── css
+│   │   │   │   └── index-CDkvKJ1m.css
+│   │   │   └── js
+│   │   │       ├── index-C4psV_zo.js
+│   │   │       ├── react-vendor-DdG2JpbZ.js
+│   │   │       └── utils-DNtZt6Xd.js
+│   │   ├── icon-192.png
+│   │   ├── icon-512.png
 │   │   ├── index.html
+│   │   ├── manifest.json
+│   │   ├── maskable-icon-192.png
+│   │   ├── maskable-icon-512.png
+│   │   ├── robots.txt
+│   │   ├── service-worker.js
+│   │   ├── sitemap.xml
+│   │   ├── sw.js
 │   │   └── vite.svg
 │   ├── eslint.config.js
 │   ├── index.html
+│   ├── jest.config.js
 │   ├── package-lock.json
 │   ├── package.json
+│   ├── postcss.config.js
 │   ├── public
+│   │   ├── ICONS_NEEDED.txt
+│   │   ├── ICONS_README.md
+│   │   ├── icon-192.png
+│   │   ├── icon-512.png
+│   │   ├── manifest.json
+│   │   ├── maskable-icon-192.png
+│   │   ├── maskable-icon-512.png
+│   │   ├── robots.txt
+│   │   ├── service-worker.js
+│   │   ├── sitemap.xml
+│   │   ├── sw.js
 │   │   └── vite.svg
 │   ├── src
-│   │   ├── App.css
-│   │   ├── App.jsx
+│   │   ├── App.tsx
+│   │   ├── __tests__
+│   │   │   ├── pinChange.test.ts
+│   │   │   └── wheel.test.ts
 │   │   ├── assets
 │   │   │   └── react.svg
 │   │   ├── components
+│   │   │   ├── Admin
+│   │   │   │   └── AnalyticsCharts.tsx
+│   │   │   ├── Ads
+│   │   │   │   └── AdSystem.tsx
+│   │   │   ├── Animations
+│   │   │   │   ├── AnimatedDice.tsx
+│   │   │   │   ├── CrownAnimation.tsx
+│   │   │   │   └── RainbowFlash.tsx
+│   │   │   ├── Common
+│   │   │   │   ├── BrandedBadge.tsx
+│   │   │   │   ├── ErrorBoundary.tsx
+│   │   │   │   ├── FallbackUI.tsx
+│   │   │   │   ├── LoadingState.tsx
+│   │   │   │   ├── SEOHead.tsx
+│   │   │   │   └── Tooltip.tsx
+│   │   │   ├── Dashboard
+│   │   │   │   ├── AchievementsPanel.tsx
+│   │   │   │   ├── ActivityLog.tsx
+│   │   │   │   ├── DegenWheelPanel.tsx
+│   │   │   │   ├── GiveawayRewardsPanel.tsx
+│   │   │   │   ├── LinkedCasinoAccountsGrid.tsx
+│   │   │   │   ├── LiveDashboard.tsx
+│   │   │   │   ├── MissionsPanel.tsx
+│   │   │   │   ├── PinUnlockModal.tsx
+│   │   │   │   ├── PlayerIdentityHeader.tsx
+│   │   │   │   ├── RafflesPanel.tsx
+│   │   │   │   ├── SettingsPanel.tsx
+│   │   │   │   └── XPLevelPanel.tsx
 │   │   │   ├── DegenWheel.css
-│   │   │   ├── DegenWheel.jsx
-│   │   │   ├── Footer.jsx
-│   │   │   └── Header.jsx
+│   │   │   ├── Drops
+│   │   │   │   └── DropsBoard.tsx
+│   │   │   ├── ErrorBoundary.tsx
+│   │   │   ├── Filters
+│   │   │   │   └── FiltersBar.tsx
+│   │   │   ├── Layout
+│   │   │   │   ├── Footer.tsx
+│   │   │   │   └── Navbar.tsx
+│   │   │   ├── Notifications
+│   │   │   │   ├── LiveBanner.tsx
+│   │   │   │   └── PushNotificationBell.tsx
+│   │   │   ├── PWA
+│   │   │   │   ├── NotificationPermissionPrompt.tsx
+│   │   │   │   └── PWAInstallPrompt.tsx
+│   │   │   ├── Raffles
+│   │   │   │   └── RaffleJoinModal.tsx
+│   │   │   ├── Sites
+│   │   │   │   ├── SiteCard.tsx
+│   │   │   │   └── SiteCardGrid.tsx
+│   │   │   └── UI
+│   │   ├── context
+│   │   ├── hooks
+│   │   │   └── useRealtime.ts
 │   │   ├── index.css
-│   │   ├── main.jsx
+│   │   ├── main.tsx
 │   │   ├── pages
-│   │   │   ├── DailySpin.jsx
-│   │   │   ├── Home.jsx
-│   │   │   ├── NotFound.jsx
-│   │   │   └── Raffles.jsx
-│   │   └── utils
-│   │       └── api.js
+│   │   │   ├── Affiliates.tsx
+│   │   │   ├── Blacklist.tsx
+│   │   │   ├── Contact.tsx
+│   │   │   ├── Dashboard.tsx
+│   │   │   ├── Drops.tsx
+│   │   │   ├── Home.tsx
+│   │   │   ├── Leaderboard.tsx
+│   │   │   ├── Privacy.tsx
+│   │   │   ├── Profile.tsx
+│   │   │   ├── Raffles.tsx
+│   │   │   ├── RecentSites.tsx
+│   │   │   ├── Terms.tsx
+│   │   │   └── Wheel.tsx
+│   │   ├── setupTests.ts
+│   │   ├── styles
+│   │   ├── types
+│   │   │   └── index.ts
+│   │   ├── utils
+│   │   │   ├── api.ts
+│   │   │   ├── categoryColors.ts
+│   │   │   ├── constants.ts
+│   │   │   └── errorHandler.ts
+│   │   └── vite-env.d.ts
+│   ├── tailwind.config.js
+│   ├── tsconfig.json
+│   ├── tsconfig.node.json
 │   └── vite.config.js
 ├── frontend_broken_1766822338
 │   ├── .env -> /var/www/html/gcz/.env
@@ -221,11 +361,15 @@ Sun Dec 28 15:41:07 UTC 2025
 ├── gcz-control.sh
 ├── gcz-diagnose.sh
 ├── goose
+│   ├── .active_session
+│   ├── diagnostics.txt
 │   ├── gcz-goose
-│   ├── goose
 │   ├── logs
+│   │   ├── 20251229_1.log
+│   │   └── 20251229_180520_107.log
 │   ├── project_index.txt
 │   └── sessions
+│       └── 20251229_180520_107
 ├── install-goose.sh
 ├── jobs
 │   ├── daily.js
@@ -233,13 +377,18 @@ Sun Dec 28 15:41:07 UTC 2025
 │   ├── reconcile.js
 │   └── warmup.js
 ├── logs
+│   ├── README.md
 │   ├── auto_audit.log
 │   └── last_daily.txt
 ├── master_affiliates.csv
 ├── middleware
-│   └── auth.js
+│   ├── auth.js
+│   ├── rateLimit.js
+│   ├── security.js
+│   └── userAuth.js
 ├── models
 │   └── spinLog.js
+├── nginx.conf
 ├── package-lock.json
 ├── package.json
 ├── public
@@ -247,33 +396,76 @@ Sun Dec 28 15:41:07 UTC 2025
 │   │   ├── index-BaBB40Qq.js
 │   │   ├── index-COcDBgFa.css
 │   │   └── react-CHdo91hT.svg
+│   ├── badge-96.png
+│   ├── icon-192.png
+│   ├── icon.svg
 │   ├── index.html
+│   ├── uploads
+│   │   └── ads
 │   └── vite.svg
 ├── raffle_chunk_aa
 ├── rafflev2.zip
 ├── routes
+│   ├── activity.js
+│   ├── admin
+│   │   ├── ads.js
+│   │   ├── adsDashboard.js
+│   │   ├── affiliateAnalytics.js
+│   │   ├── affiliates.js
+│   │   ├── blacklist.js
+│   │   ├── dailyDrops.js
+│   │   ├── giveaways.js
+│   │   ├── liveBanner.js
+│   │   ├── newsletter.js
+│   │   ├── overrides.js
+│   │   ├── push.js
+│   │   ├── raffles.js
+│   │   ├── redirects.js
+│   │   ├── settings.js
+│   │   ├── telegramBot.js
+│   │   ├── users.js
+│   │   └── wheel.js
+│   ├── admin.js
+│   ├── ads.js
 │   ├── affiliates.js
+│   ├── analytics.js
+│   ├── blacklist.js
+│   ├── contact.js
 │   ├── dailySpin.js
+│   ├── dashboard.js
+│   ├── drops.js
+│   ├── gamification.js
+│   ├── giveaways.js
+│   ├── liveDashboard.js
 │   ├── newsletter.js
+│   ├── notifications.js
+│   ├── profile.js
 │   ├── promos.js
+│   ├── push.js
 │   ├── raffles.js
+│   ├── rafflesExtended.js
+│   ├── realtime.js
+│   ├── sites.js
+│   ├── socials.js
 │   └── stats.js
 ├── schema_rules.md
+├── scripts
+│   ├── load-test.js
+│   └── stress-test.sh
 ├── server.js
 ├── services
+│   ├── dropsAI.js
 │   └── promoTelegram.js
 ├── sql
-│   ├── migrations.sql
-│   ├── migrations_promos.sql
-│   ├── promos.sql
-│   ├── raffle_entries.sql
-│   ├── raffle_winners.sql
-│   ├── raffles.sql
-│   └── spin_logs.sql
+│   ├── base_schema.sql
+│   └── migrations
+│       └── add_drops_ecosystem.sql
 ├── start-bot.js
 ├── start-discord.js
 ├── utils
+│   ├── db.js
+│   ├── socials.js
 │   └── validateCsv.js
 └── watchdog.js
 
-64 directories, 209 files
+90 directories, 375 files

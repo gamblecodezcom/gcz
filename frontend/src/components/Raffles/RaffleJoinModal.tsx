@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { CWALLET_AFFILIATE_URL } from '../../utils/constants';
+import { Tooltip, InlineHelper } from '../Common/Tooltip';
 
 interface RaffleJoinModalProps {
   isOpen: boolean;
@@ -50,8 +51,8 @@ export const RaffleJoinModal = ({ isOpen, onClose, onJoin, hasCwallet }: RaffleJ
       setPin('');
       setConfirmPin('');
       setNewsletterAgreed(false);
-    } catch (err: any) {
-      setError(err.message || 'Failed to join raffles');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to join raffles');
     } finally {
       setLoading(false);
     }
@@ -76,6 +77,7 @@ export const RaffleJoinModal = ({ isOpen, onClose, onJoin, hasCwallet }: RaffleJ
         <div className="bg-yellow-500/20 border border-yellow-400/50 rounded-lg p-3 mb-4 text-sm text-yellow-200">
           <strong>⚠️ Important:</strong> Your Raffle PIN cannot be reset automatically. If you forget it, you may lose access to your entries. Choose something memorable and keep it safe.
         </div>
+        <InlineHelper text="Your PIN is used to verify your identity when entering raffles. It's encrypted and cannot be recovered if forgotten." />
 
         {!hasCwallet && (
           <div className="bg-cyan-500/20 border border-cyan-400/50 rounded-lg p-3 mb-4">
@@ -147,6 +149,9 @@ export const RaffleJoinModal = ({ isOpen, onClose, onJoin, hasCwallet }: RaffleJ
             />
             <label htmlFor="newsletter" className="text-sm text-text-muted">
               I agree to join the GambleCodez Newsletter and receive raffle updates *
+              <Tooltip content="Newsletter subscription is required to participate in raffles. You'll receive updates about new raffles, winners, and exclusive opportunities.">
+                <span className="ml-1 text-neon-cyan cursor-help">ℹ️</span>
+              </Tooltip>
             </label>
           </div>
 

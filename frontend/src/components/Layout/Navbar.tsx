@@ -78,8 +78,8 @@ export const Navbar = () => {
   return (
     <>
       <nav
-        className={`fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-bg-dark/95 to-bg-dark-2/95 backdrop-blur-md border-b border-neon-cyan/20 transition-transform duration-300 ${
-          isVisible ? 'translate-y-0' : '-translate-y-full'
+        className={`fixed top-0 left-0 right-0 z-50 glass-strong border-b border-neon-cyan/30 transition-all duration-300 ${
+          isVisible ? 'translate-y-0 shadow-glow-cyan' : '-translate-y-full opacity-0'
         }`}
       >
         <div className="container mx-auto px-4">
@@ -91,15 +91,21 @@ export const Navbar = () => {
                 <Link
                   key={link.path}
                   to={link.path}
-                  className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 relative group ${
+                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 relative group ${
                     location.pathname === link.path
-                      ? 'text-neon-cyan neon-glow-cyan'
-                      : 'text-text-muted hover:text-neon-cyan'
+                      ? 'text-neon-cyan neon-glow-cyan bg-neon-cyan/10'
+                      : 'text-text-muted hover:text-neon-cyan hover:bg-neon-cyan/5'
                   }`}
                 >
-                  {link.label}
+                  <span className="relative z-10">{link.label}</span>
                   {location.pathname === link.path && (
-                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-neon-cyan shadow-neon-cyan" />
+                    <>
+                      <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-neon-cyan shadow-glow-cyan" />
+                      <span className="absolute inset-0 bg-neon-cyan/10 rounded-lg -z-0" />
+                    </>
+                  )}
+                  {!location.pathname.includes(link.path) && (
+                    <span className="absolute inset-0 bg-neon-cyan/0 rounded-lg transition-all duration-300 group-hover:bg-neon-cyan/5 -z-0" />
                   )}
                 </Link>
               ))}
@@ -129,7 +135,7 @@ export const Navbar = () => {
 
       {/* Mobile Menu */}
       <div
-        className={`fixed top-16 left-0 right-0 z-40 bg-bg-dark-2 border-b border-neon-cyan/20 backdrop-blur-md transition-all duration-300 md:hidden ${
+        className={`fixed top-16 left-0 right-0 z-40 glass-strong border-b border-neon-cyan/30 shadow-glow-cyan transition-all duration-300 md:hidden ${
           mobileMenuOpen ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-full pointer-events-none'
         }`}
       >
@@ -140,10 +146,10 @@ export const Navbar = () => {
                 key={link.path}
                 to={link.path}
                 onClick={() => setMobileMenuOpen(false)}
-                className={`px-4 py-3 rounded-md text-sm font-medium transition-all duration-200 ${
+                className={`px-4 py-3 rounded-lg text-sm font-semibold transition-all duration-300 ${
                   location.pathname === link.path
-                    ? 'text-neon-cyan neon-glow-cyan bg-neon-cyan/10 border border-neon-cyan/30'
-                    : 'text-text-muted hover:text-neon-cyan hover:bg-bg-dark'
+                    ? 'text-neon-cyan neon-glow-cyan bg-neon-cyan/15 border border-neon-cyan/50 shadow-glow-cyan'
+                    : 'text-text-muted hover:text-neon-cyan hover:bg-neon-cyan/10 border border-transparent hover:border-neon-cyan/30'
                 }`}
               >
                 {link.label}

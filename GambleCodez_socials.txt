@@ -1,0 +1,16 @@
+# GambleCodez Official Socials & Links
+# This file is the single source of truth for all official GambleCodez social media links and important URLs.
+# Update this file to keep all references across the site, bots, and admin panels in sync.
+
+# Social Media
+TELEGRAM_BOT=https://t.me/GambleCodezCasinoDrops_bot
+TELEGRAM_CHANNEL=https://t.me/GambleCodezDrops
+TELEGRAM_GROUP=https://t.me/GambleCodezPrizeHub
+TWITTER=https://x.com/GambleCodez
+EMAIL=GambleCodez@gmail.com
+
+# Cwallet Affiliate
+CWALLET_AFFILIATE_URL=https://cwallet.com/referral/Nwnah81L
+
+# Website
+WEBSITE_URL=https://gamblecodez.com

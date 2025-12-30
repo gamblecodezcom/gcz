@@ -1,6 +1,7 @@
 import express from "express";
 import pkg from "pg";
 const { Pool } = pkg;
+import superAdminOnly from "../../middleware/superAdminOnly.js";
 
 const router = express.Router();
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
@@ -44,8 +45,8 @@ router.get("/", async (req, res) => {
   }
 });
 
-// POST /api/admin/raffles - Create raffle
-router.post("/", async (req, res) => {
+// POST /api/admin/raffles - Create raffle (Super Admin only)
+router.post("/", superAdminOnly, async (req, res) => {
   try {
     const { 
       title, description, start_date, end_date, active, secret, hidden, 
@@ -94,8 +95,8 @@ router.post("/", async (req, res) => {
   }
 });
 
-// PUT /api/admin/raffles/:id - Update raffle
-router.put("/:id", async (req, res) => {
+// PUT /api/admin/raffles/:id - Update raffle (Super Admin only)
+router.put("/:id", superAdminOnly, async (req, res) => {
   try {
     const { id } = req.params;
     const { 
@@ -151,8 +152,8 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-// DELETE /api/admin/raffles/:id - Delete raffle
-router.delete("/:id", async (req, res) => {
+// DELETE /api/admin/raffles/:id - Delete raffle (Super Admin only)
+router.delete("/:id", superAdminOnly, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -170,8 +171,8 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
-// POST /api/admin/raffles/:id/pick-winner - Pick a random winner
-router.post("/:id/pick-winner", async (req, res) => {
+// POST /api/admin/raffles/:id/pick-winner - Pick a random winner (Super Admin only)
+router.post("/:id/pick-winner", superAdminOnly, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -222,8 +223,8 @@ router.post("/:id/pick-winner", async (req, res) => {
   }
 });
 
-// POST /api/admin/raffles/:id/notify-winner - Send notification to winner
-router.post("/:id/notify-winner", async (req, res) => {
+// POST /api/admin/raffles/:id/notify-winner - Send notification to winner (Super Admin only)
+router.post("/:id/notify-winner", superAdminOnly, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -340,8 +341,8 @@ router.get("/:id/entries", async (req, res) => {
   }
 });
 
-// POST /api/admin/raffles/:id/draw-winners - Draw multiple winners
-router.post("/:id/draw-winners", async (req, res) => {
+// POST /api/admin/raffles/:id/draw-winners - Draw multiple winners (Super Admin only)
+router.post("/:id/draw-winners", superAdminOnly, async (req, res) => {
   try {
     const { id } = req.params;
     const { num_winners, selection_method = 'random', allow_repeat = false } = req.body;
@@ -400,8 +401,8 @@ router.post("/:id/draw-winners", async (req, res) => {
   }
 });
 
-// POST /api/admin/raffles/:id/duplicate - Duplicate raffle
-router.post("/:id/duplicate", async (req, res) => {
+// POST /api/admin/raffles/:id/duplicate - Duplicate raffle (Super Admin only)
+router.post("/:id/duplicate", superAdminOnly, async (req, res) => {
   try {
     const { id } = req.params;
     const original = await pool.query("SELECT * FROM raffles WHERE id = $1", [id]);
@@ -445,8 +446,8 @@ router.post("/:id/duplicate", async (req, res) => {
   }
 });
 
-// POST /api/admin/raffles/:id/end - End raffle
-router.post("/:id/end", async (req, res) => {
+// POST /api/admin/raffles/:id/end - End raffle (Super Admin only)
+router.post("/:id/end", superAdminOnly, async (req, res) => {
   try {
     const { id } = req.params;
     const result = await pool.query(

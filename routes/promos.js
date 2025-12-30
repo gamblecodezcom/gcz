@@ -1,11 +1,13 @@
 import express from "express";
 import pkg from "pg";
 const { Pool } = pkg;
+import fetch from 'node-fetch';
 
 const router = express.Router();
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
-// POST /api/promos/intake - Discord bot submits promo ticket
+// POST /api/promos/intake - Legacy endpoint, redirects to unified drops system
+// DEPRECATED: Use /api/drops/intake instead
 router.post("/intake", async (req, res) => {
   try {
     const { source = "discord", channel, content, submitted_by } = req.body;
@@ -32,27 +34,50 @@ router.post("/intake", async (req, res) => {
       }
     }
 
-    const result = await pool.query(
-      `INSERT INTO promos (source, channel, content, submitted_by, status)
-       VALUES ($1, $2, $3, $4, 'pending')
-       RETURNING *`,
-      [source, channel, content, submitted_by]
-    );
+    // Redirect to unified drops intake system
+    const apiBaseUrl = process.env.API_BASE_URL || 'http://localhost:3000';
+    try {
+      const response = await fetch(`${apiBaseUrl}/api/drops/intake`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          source: source === 'discord' ? 'discord' : 'site_form',
+          source_channel_id: channel, // Map channel to channel_id
+          source_user_id: submitted_by,
+          source_username: null,
+          raw_text: content,
+          metadata: {
+            legacy_channel: channel,
+            legacy_source: source
+          }
+        }),
+      });
 
-    // Notify admins if configured
-    if (process.env.TELEGRAM_ADMIN_GROUP_ID) {
-      // This will be handled by the Telegram bot service
-      // For now, just log it
-      console.log(`[PROMO] New promo ticket #${result.rows[0].id} from ${channel} channel`);
+      if (response.ok) {
+        const data = await response.json();
+        return res.status(201).json({ 
+          success: true,
+          message: "Promo submitted to unified drops system",
+          raw_drop: data.raw_drop,
+          deprecated: true,
+          migration_note: "This endpoint is deprecated. Use /api/drops/intake instead."
+        });
+      } else {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        return res.status(response.status).json(errorData);
+      }
+    } catch (fetchError) {
+      console.error("Error forwarding to drops system:", fetchError);
+      return res.status(500).json({ 
+        error: "Failed to forward to drops system",
+        details: fetchError.message 
+      });
     }
-
-    res.status(201).json({ 
-      success: true, 
-      promo: result.rows[0] 
-    });
   } catch (error) {
-    console.error("Error creating promo ticket:", error);
-    res.status(500).json({ error: "Failed to create promo ticket" });
+    console.error("Error processing legacy promo intake:", error);
+    res.status(500).json({ error: "Failed to process promo intake" });
   }
 });
 

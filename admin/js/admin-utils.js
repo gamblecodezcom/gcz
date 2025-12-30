@@ -169,6 +169,55 @@ function updateBulkActions() {
   });
 }
 
+// Permission checking helpers
+let userPermissions = [];
+let userRoles = [];
+
+async function loadUserPermissions() {
+  const sessionToken = localStorage.getItem('admin_session');
+  if (!sessionToken) return;
+  
+  try {
+    const response = await fetch('/api/admin/auth/me', {
+      headers: { 'x-admin-session': sessionToken }
+    });
+    if (response.ok) {
+      const data = await response.json();
+      userPermissions = data.user.permissions || [];
+      userRoles = data.user.roles || [];
+    }
+  } catch (error) {
+    console.error('Error loading permissions:', error);
+  }
+}
+
+function hasPermission(resource, action) {
+  const permission = `${resource}:${action}`;
+  return userPermissions.includes(permission);
+}
+
+function hasAnyPermission(permissions) {
+  return permissions.some(perm => {
+    if (typeof perm === 'string') {
+      return userPermissions.includes(perm);
+    }
+    return hasPermission(perm.resource, perm.action);
+  });
+}
+
+function hasRole(roleName) {
+  return userRoles.some(role => role.name === roleName);
+}
+
+function isSuperAdmin() {
+  return hasRole('super_admin');
+}
+
+// Auto-load permissions on page load
+if (typeof window !== 'undefined') {
+  loadUserPermissions();
+}
+
 // Make functions available globally
 window.adminUtils = {
   exportToCSV,
@@ -180,5 +229,12 @@ window.adminUtils = {
   validateNumber,
   initBulkSelection,
   getSelectedIds,
-  updateBulkActions
+  updateBulkActions,
+  hasPermission,
+  hasAnyPermission,
+  hasRole,
+  isSuperAdmin,
+  loadUserPermissions,
+  getPermissions: () => userPermissions,
+  getRoles: () => userRoles
 };

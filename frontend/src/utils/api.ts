@@ -139,6 +139,29 @@ export const unlinkSite = async (siteId: string): Promise<void> => {
   await api.delete(`/api/profile/site-link/${siteId}`);
 };
 
+export interface TipEligibility {
+  runewager: boolean;
+  runewagerDetails: {
+    identifierType: string;
+    identifierValue: string;
+  } | null;
+  otherSites: Array<{
+    siteId: string;
+    siteName: string;
+    siteSlug: string;
+    identifierType: string;
+    identifierValue: string;
+    scEligible: boolean;
+    cryptoEligible: boolean;
+    tipEligible: boolean;
+  }>;
+}
+
+export const getTipEligibility = async (): Promise<TipEligibility> => {
+  const response = await api.get('/api/profile/tip-eligibility');
+  return response.data;
+};
+
 // Rewards & Giveaways
 export const getRewards = async (): Promise<Reward[]> => {
   try {
@@ -216,6 +239,21 @@ export const getPastRaffles = async (): Promise<Raffle[]> => {
     return Array.isArray(response.data) ? response.data : response.data?.raffles || [];
   } catch (error) {
     return [];
+  }
+};
+
+export interface EndlessRaffleResponse {
+  raffle: Raffle | null;
+  userEntries: number;
+  totalEntries: number;
+}
+
+export const getEndlessRaffle = async (): Promise<EndlessRaffleResponse> => {
+  try {
+    const response = await api.get('/api/raffles/endless');
+    return response.data;
+  } catch (error) {
+    return { raffle: null, userEntries: 0, totalEntries: 0 };
   }
 };
 
@@ -343,6 +381,60 @@ export const submitContact = async (data: {
 export const getBlacklist = async (): Promise<any[]> => {
   const response = await api.get('/api/blacklist');
   return response.data;
+};
+
+// Drops
+import type { DropPromo } from '../types';
+
+export const getDrops = async (params?: {
+  jurisdiction?: string;
+  casino_id?: string;
+  featured?: boolean;
+  limit?: number;
+  offset?: number;
+}): Promise<{ promos: DropPromo[]; total: number; limit: number; offset: number }> => {
+  const response = await api.get('/api/drops/public', { params });
+  return response.data;
+};
+
+export const reportDrop = async (dropId: string, data: {
+  report_type: 'invalid_promo' | 'spam' | 'duplicate' | 'expired' | 'other';
+  report_text?: string;
+}): Promise<void> => {
+  await api.post(`/api/drops/public/${dropId}/report`, data);
+};
+
+// Socials
+export interface Socials {
+  telegram: {
+    bot: string;
+    channel: string;
+    group: string;
+  };
+  twitter: string;
+  email: string;
+  cwalletAffiliateUrl: string;
+  websiteUrl: string;
+}
+
+export const getSocials = async (): Promise<Socials> => {
+  try {
+    const response = await api.get('/api/socials');
+    return response.data;
+  } catch (error) {
+    // Return defaults if API fails
+    return {
+      telegram: {
+        bot: 'https://t.me/GambleCodezCasinoDrops_bot',
+        channel: 'https://t.me/GambleCodezDrops',
+        group: 'https://t.me/GambleCodezPrizeHub',
+      },
+      twitter: 'https://x.com/GambleCodez',
+      email: 'GambleCodez@gmail.com',
+      cwalletAffiliateUrl: 'https://cwallet.com/referral/Nwnah81L',
+      websiteUrl: 'https://gamblecodez.com',
+    };
+  }
 };
 
 export default api;

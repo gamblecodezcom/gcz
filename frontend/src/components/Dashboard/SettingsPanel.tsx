@@ -20,6 +20,9 @@ export const SettingsPanel = ({ user, onUpdate }: SettingsPanelProps) => {
     telegramRaffleAlerts: true,
     telegramGiveawayAlerts: true,
     telegramSecretCodeHints: false,
+    telegramDropsAlerts: true,
+    emailDropsAlerts: false,
+    pushDropsAlerts: true,
   });
   const [linkedSites, setLinkedSites] = useState<LinkedSite[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,8 +64,8 @@ export const SettingsPanel = ({ user, onUpdate }: SettingsPanelProps) => {
       setNotifications(updated);
       setSuccess('Settings updated successfully');
       setTimeout(() => setSuccess(null), 3000);
-    } catch (error: any) {
-      setError(error.message || 'Failed to update settings');
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Failed to update settings');
     } finally {
       setSaving(false);
     }
@@ -94,8 +97,12 @@ export const SettingsPanel = ({ user, onUpdate }: SettingsPanelProps) => {
       setConfirmPin('');
       setPinAction(null);
       setTimeout(() => setSuccess(null), 3000);
-    } catch (error: any) {
-      setError(error.message || 'Failed to change PIN');
+      // Refresh dashboard data after PIN change
+      if (onUpdate) {
+        onUpdate();
+      }
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Failed to change PIN');
     } finally {
       setSaving(false);
     }
@@ -123,8 +130,8 @@ export const SettingsPanel = ({ user, onUpdate }: SettingsPanelProps) => {
       setTimeout(() => {
         window.location.href = '/';
       }, 2000);
-    } catch (error: any) {
-      setError(error.message || 'Failed to delete account');
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Failed to delete account');
       setDeletePin('');
     } finally {
       setSaving(false);
@@ -144,8 +151,8 @@ export const SettingsPanel = ({ user, onUpdate }: SettingsPanelProps) => {
       setTimeout(() => {
         window.location.href = '/';
       }, 2000);
-    } catch (error: any) {
-      setError(error.message || 'Failed to logout');
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Failed to logout');
     } finally {
       setSaving(false);
     }
@@ -163,11 +170,15 @@ export const SettingsPanel = ({ user, onUpdate }: SettingsPanelProps) => {
 
   return (
     <>
-      <div className="mt-8 bg-bg-dark-2 rounded-2xl border border-neon-cyan/30 p-6 shadow-lg shadow-neon-cyan/10">
-        <h2 className="text-2xl font-bold text-neon-cyan flex items-center gap-2 mb-6">
-          <span className="text-3xl">⚙️</span>
-          Settings
-        </h2>
+      <div className="mt-8 bg-bg-dark-2 rounded-2xl border-2 border-neon-cyan/30 p-6 shadow-lg shadow-neon-cyan/10 card-hover relative overflow-hidden">
+        {/* Animated gradient background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-neon-cyan/5 via-neon-pink/5 to-neon-yellow/5 animate-pulse pointer-events-none" />
+        
+        <div className="relative z-10">
+          <h2 className="text-2xl font-bold text-neon-cyan flex items-center gap-2 mb-6 neon-glow-cyan">
+            <span className="text-3xl">⚙️</span>
+            Settings
+          </h2>
 
         {error && (
           <div className="mb-4 p-4 bg-red-500/20 border border-red-500/50 rounded-lg text-red-400">
@@ -250,6 +261,14 @@ export const SettingsPanel = ({ user, onUpdate }: SettingsPanelProps) => {
                       maxLength={6}
                     />
                   </div>
+                  <div className="p-3 bg-neon-yellow/20 border border-neon-yellow/50 rounded-lg text-sm">
+                    <div className="flex items-start gap-2">
+                      <span className="text-sm">⚠️</span>
+                      <p className="text-text-muted">
+                        <strong className="text-neon-yellow">Warning:</strong> Your PIN cannot be recovered or reset. Keep it safe.
+                      </p>
+                    </div>
+                  </div>
                   <div className="flex gap-2">
                     <button
                       onClick={handleChangePin}
@@ -330,6 +349,36 @@ export const SettingsPanel = ({ user, onUpdate }: SettingsPanelProps) => {
                   className="w-5 h-5 rounded bg-bg-dark-2 border-neon-cyan/30 text-neon-cyan focus:ring-neon-cyan"
                 />
               </label>
+              <div className="pt-3 mt-3 border-t border-neon-cyan/20">
+                <div className="text-sm text-text-muted mb-2 font-semibold">Drops Notifications</div>
+                <label className="flex items-center justify-between cursor-pointer">
+                  <span className="text-text-primary">Telegram Drops Alerts</span>
+                  <input
+                    type="checkbox"
+                    checked={notifications.telegramDropsAlerts !== false}
+                    onChange={(e) => handleNotificationChange('telegramDropsAlerts', e.target.checked)}
+                    className="w-5 h-5 rounded bg-bg-dark-2 border-neon-cyan/30 text-neon-cyan focus:ring-neon-cyan"
+                  />
+                </label>
+                <label className="flex items-center justify-between cursor-pointer">
+                  <span className="text-text-primary">Email Drops Alerts</span>
+                  <input
+                    type="checkbox"
+                    checked={notifications.emailDropsAlerts || false}
+                    onChange={(e) => handleNotificationChange('emailDropsAlerts', e.target.checked)}
+                    className="w-5 h-5 rounded bg-bg-dark-2 border-neon-cyan/30 text-neon-cyan focus:ring-neon-cyan"
+                  />
+                </label>
+                <label className="flex items-center justify-between cursor-pointer">
+                  <span className="text-text-primary">Push Drops Alerts</span>
+                  <input
+                    type="checkbox"
+                    checked={notifications.pushDropsAlerts !== false}
+                    onChange={(e) => handleNotificationChange('pushDropsAlerts', e.target.checked)}
+                    className="w-5 h-5 rounded bg-bg-dark-2 border-neon-cyan/30 text-neon-cyan focus:ring-neon-cyan"
+                  />
+                </label>
+              </div>
             </div>
           </section>
 
@@ -410,6 +459,7 @@ export const SettingsPanel = ({ user, onUpdate }: SettingsPanelProps) => {
               )}
             </div>
           </section>
+        </div>
         </div>
       </div>
 

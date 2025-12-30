@@ -19,7 +19,11 @@ export const ActivityLog = ({ limit = 50 }: ActivityLogProps) => {
   const loadActivities = async () => {
     setLoading(true);
     try {
-      const params: any = { limit };
+      const params: {
+        limit: number;
+        type?: ActivityType;
+        startDate?: string;
+      } = { limit };
       
       if (selectedType !== 'all') {
         params.type = selectedType;
@@ -121,13 +125,17 @@ export const ActivityLog = ({ limit = 50 }: ActivityLogProps) => {
   }
 
   return (
-    <div className="mt-8 bg-bg-dark-2 rounded-2xl border border-neon-cyan/30 p-6 shadow-lg shadow-neon-cyan/10">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-neon-cyan flex items-center gap-2">
-          <span className="text-3xl">📊</span>
-          Activity Log
-        </h2>
-      </div>
+    <div className="mt-8 bg-bg-dark-2 rounded-2xl border-2 border-neon-cyan/30 p-6 shadow-lg shadow-neon-cyan/10 card-hover relative overflow-hidden">
+      {/* Animated gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-neon-cyan/5 via-neon-pink/5 to-neon-yellow/5 animate-pulse pointer-events-none" />
+      
+      <div className="relative z-10">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold text-neon-cyan flex items-center gap-2 neon-glow-cyan">
+            <span className="text-3xl">📊</span>
+            Activity Log
+          </h2>
+        </div>
 
       {/* Filters */}
       <div className="flex flex-wrap gap-4 mb-6">
@@ -172,7 +180,7 @@ export const ActivityLog = ({ limit = 50 }: ActivityLogProps) => {
           activities.map((activity) => (
             <div
               key={activity.id}
-              className={`bg-bg-dark rounded-xl p-4 border-l-4 ${getActivityColor(activity.type)} hover:bg-bg-dark-2 transition-colors`}
+              className={`bg-bg-dark rounded-xl p-4 border-l-4 ${getActivityColor(activity.type)} hover:bg-bg-dark-2 transition-all card-hover`}
             >
               <div className="flex items-start gap-3">
                 <div className="text-2xl flex-shrink-0">
@@ -205,6 +213,7 @@ export const ActivityLog = ({ limit = 50 }: ActivityLogProps) => {
             </div>
           ))
         )}
+      </div>
       </div>
     </div>
   );

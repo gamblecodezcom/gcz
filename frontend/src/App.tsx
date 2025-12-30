@@ -21,18 +21,27 @@ import { Profile } from './pages/Profile';
 import { Dashboard } from './pages/Dashboard';
 import { Terms } from './pages/Terms';
 import { Privacy } from './pages/Privacy';
+import { Casino } from './pages/Casino';
+import { SEOHead } from './components/Common/SEOHead';
 
 const NotFound = () => {
   return (
-    <div className="min-h-screen pt-24 flex items-center justify-center">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4 neon-glow-cyan">404</h1>
-        <p className="text-text-muted mb-4">Page not found</p>
-        <a href="/" className="text-neon-cyan hover:underline">
-          Go home →
-        </a>
+    <>
+      <SEOHead
+        title="404 - Page Not Found"
+        description="The page you're looking for doesn't exist."
+        noindex={true}
+      />
+      <div className="min-h-screen pt-24 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold mb-4 neon-glow-cyan">404</h1>
+          <p className="text-text-muted mb-4">Page not found</p>
+          <a href="/" className="text-neon-cyan hover:underline">
+            Go home →
+          </a>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
@@ -60,6 +69,7 @@ function App() {
               <Route path="/dashboard" element={<ErrorBoundary><Dashboard /></ErrorBoundary>} />
               <Route path="/terms" element={<ErrorBoundary><Terms /></ErrorBoundary>} />
               <Route path="/privacy" element={<ErrorBoundary><Privacy /></ErrorBoundary>} />
+              <Route path="/casino/:slug" element={<ErrorBoundary><Casino /></ErrorBoundary>} />
               <Route path="*" element={<ErrorBoundary><NotFound /></ErrorBoundary>} />
             </Routes>
           </main>

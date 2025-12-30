@@ -10,6 +10,7 @@ import {
 import { getAllUsers, getUserProfile } from '../utils/storage.js';
 
 const ADMIN_ID = config.TELEGRAM_ADMIN_ID ? parseInt(config.TELEGRAM_ADMIN_ID) : null;
+const SUPER_ADMIN_TELEGRAM_ID = 6668510825; // Super Admin Telegram ID
 
 /**
  * Setup admin-only commands
@@ -17,8 +18,9 @@ const ADMIN_ID = config.TELEGRAM_ADMIN_ID ? parseInt(config.TELEGRAM_ADMIN_ID) :
 export function setupAdminCommands(bot) {
   // /giveaway start <type> <winners> <value> <minutes>
   bot.command('giveaway', async (ctx) => {
-    if (!isAdmin(ctx, [ADMIN_ID])) {
-      return ctx.reply('❌ Admin access required.');
+    // Only Super Admin Telegram ID (6668510825) can manage giveaways
+    if (ctx.from?.id !== SUPER_ADMIN_TELEGRAM_ID) {
+      return ctx.reply('This command is restricted to Super Admin only.');
     }
 
     const parts = ctx.message.text.split(' ').filter(p => p);
@@ -108,6 +110,10 @@ export function setupAdminCommands(bot) {
 
   // /join command (handled here to check for giveaways)
   bot.command('join', async (ctx) => {
+    // Only Super Admin Telegram ID (6668510825) can join giveaways
+    if (ctx.from?.id !== SUPER_ADMIN_TELEGRAM_ID) {
+      return ctx.reply('This command is restricted to Super Admin only.');
+    }
     await joinGiveaway(ctx, bot);
   });
 

@@ -57,9 +57,9 @@ export const PlayerIdentityHeader = ({ user, stats, onUpdate }: PlayerIdentityHe
       setShowUsernameModal(false);
       setNewUsername('');
       onUpdate();
-    } catch (error: any) {
+    } catch (error) {
       console.error('Failed to update username:', error);
-      alert(error.message || 'Failed to update username');
+      alert(error instanceof Error ? error.message : 'Failed to update username');
     } finally {
       setUpdatingUsername(false);
     }
@@ -71,21 +71,43 @@ export const PlayerIdentityHeader = ({ user, stats, onUpdate }: PlayerIdentityHe
 
   return (
     <>
-      <div className="bg-bg-dark-2 border-2 border-neon-cyan/30 rounded-xl p-6 mb-6 relative overflow-hidden">
+      <div className="bg-bg-dark-2 border-2 border-neon-cyan/30 rounded-xl p-6 mb-6 relative overflow-hidden card-hover">
         {/* Animated gradient background */}
         <div className="absolute inset-0 bg-gradient-to-br from-neon-cyan/5 via-neon-pink/5 to-neon-yellow/5 animate-pulse" />
+        
+        {/* Crown Logo - Top Left */}
+        <div className="absolute top-4 left-4 opacity-20 hover:opacity-40 transition-opacity crown-animation">
+          <svg
+            className="w-8 h-8"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M5 16L3 5L8.5 10L12 4L15.5 10L21 5L19 16H5Z"
+              fill="url(#crownGradientHeader)"
+              className="drop-shadow-[0_0_10px_rgba(255,215,0,0.8)]"
+            />
+            <defs>
+              <linearGradient id="crownGradientHeader" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#FFD600" />
+                <stop offset="100%" stopColor="#FFA500" />
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
 
         <div className="relative z-10">
           <div className="flex flex-col md:flex-row gap-6">
             {/* Left Side - Avatar & Identity */}
             <div className="flex items-start gap-4">
-              {/* Neon Avatar */}
-              <div className="relative">
+              {/* Neon Avatar with Hex Frame Option */}
+              <div className="relative group">
                 <div
-                  className="w-20 h-20 rounded-full flex items-center justify-center text-2xl font-bold text-white relative overflow-hidden"
+                  className="w-24 h-24 rounded-full flex items-center justify-center text-2xl font-bold text-white relative overflow-hidden border-2 border-neon-cyan/50"
                   style={{
                     background: `linear-gradient(135deg, ${avatarColor}, ${avatarColor}dd)`,
-                    boxShadow: `0 0 20px ${avatarColor}80, 0 0 40px ${avatarColor}40`,
+                    boxShadow: `0 0 20px ${avatarColor}80, 0 0 40px ${avatarColor}40, inset 0 0 20px rgba(0, 245, 255, 0.2)`,
                   }}
                 >
                   <span className="relative z-10">{getInitials(user.username)}</span>
@@ -96,10 +118,17 @@ export const PlayerIdentityHeader = ({ user, stats, onUpdate }: PlayerIdentityHe
                     }}
                   />
                 </div>
+                {/* Pulsing glow ring */}
                 <div
-                  className="absolute inset-0 rounded-full animate-pulse"
+                  className="absolute inset-0 rounded-full animate-pulse pointer-events-none"
                   style={{
                     boxShadow: `0 0 30px ${avatarColor}60`,
+                  }}
+                />
+                {/* Hover glow effect */}
+                <div className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+                  style={{
+                    boxShadow: `0 0 50px ${avatarColor}, 0 0 100px ${avatarColor}80`,
                   }}
                 />
               </div>
@@ -130,18 +159,35 @@ export const PlayerIdentityHeader = ({ user, stats, onUpdate }: PlayerIdentityHe
                 {/* Telegram */}
                 <div className="flex items-center gap-2 mb-2">
                   {user.telegram_username ? (
-                    <div className="flex items-center gap-2 text-text-primary">
-                      <span className="text-lg">📱</span>
-                      <span>Telegram: @{user.telegram_username}</span>
+                    <div className="flex items-center gap-2">
+                      <a
+                        href={SOCIAL_LINKS.telegram.bot}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 text-text-primary hover:text-neon-cyan transition-colors group"
+                      >
+                        <span className="text-lg group-hover:scale-110 transition-transform">📱</span>
+                        <span>Telegram: <span className="text-neon-cyan font-semibold">@{user.telegram_username}</span></span>
+                        <svg className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                      </a>
+                      <span className="px-2 py-0.5 bg-neon-green/20 border border-neon-green/50 rounded-full text-xs font-semibold text-neon-green">
+                        ✓ Linked
+                      </span>
                     </div>
                   ) : (
                     <a
                       href={SOCIAL_LINKS.telegram.bot}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="px-3 py-1 text-xs font-semibold bg-neon-pink/20 border border-neon-pink/50 rounded-lg text-neon-pink hover:bg-neon-pink/30 hover:shadow-neon-pink transition-all inline-flex items-center gap-1"
+                      className="px-4 py-2 text-sm font-semibold bg-gradient-to-r from-neon-pink to-neon-cyan text-white rounded-lg hover:shadow-neon-pink transition-all inline-flex items-center gap-2 group"
                     >
-                      Link Telegram
+                      <span className="text-lg">📱</span>
+                      <span>Link Telegram Bot</span>
+                      <svg className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                      </svg>
                     </a>
                   )}
                 </div>
@@ -196,13 +242,29 @@ export const PlayerIdentityHeader = ({ user, stats, onUpdate }: PlayerIdentityHe
 
           {/* PIN Unlock Button */}
           {!isPinUnlocked && (
-            <div className="mt-4 flex justify-center">
+            <div className="mt-6 flex justify-center">
               <button
                 onClick={() => setShowPinModal(true)}
-                className="btn-neon px-6 py-3 bg-neon-cyan text-bg-dark rounded-xl font-bold hover:shadow-neon-cyan transition-all"
+                className="btn-neon px-8 py-4 bg-gradient-to-r from-neon-cyan to-neon-pink text-bg-dark rounded-xl font-bold text-lg hover:shadow-neon-cyan transition-all relative overflow-hidden group"
               >
-                Unlock with PIN
+                <span className="relative z-10 flex items-center gap-2">
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 1L3 5V11C3 16.55 6.84 21.74 12 23C17.16 21.74 21 16.55 21 11V5L12 1M12 7C13.4 7 14.8 8.6 14.8 10V11.5C15.4 11.5 16 12.1 16 12.7V16.2C16 16.8 15.4 17.3 14.8 17.3H9.2C8.6 17.3 8 16.7 8 16.1V12.6C8 12 8.6 11.5 9.2 11.5V10C9.2 8.6 10.6 7 12 7M12 8.2C11.2 8.2 10.5 8.7 10.5 10V11.5H13.5V10C13.5 8.7 12.8 8.2 12 8.2Z" />
+                  </svg>
+                  Unlock with PIN
+                </span>
+                <div className="absolute inset-0 bg-gradient-to-r from-neon-pink to-neon-cyan opacity-0 group-hover:opacity-20 transition-opacity" />
               </button>
+            </div>
+          )}
+          
+          {/* Unlock Success Indicator */}
+          {isPinUnlocked && (
+            <div className="mt-4 flex items-center justify-center gap-2 text-neon-green text-sm">
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              <span>Identity Unlocked</span>
             </div>
           )}
         </div>

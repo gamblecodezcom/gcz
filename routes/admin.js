@@ -1,5 +1,5 @@
 import express from "express";
-import auth from "../middleware/auth.js";
+import adminAuth from "../middleware/adminAuth.js";
 import adminUsers from "./admin/users.js";
 import adminRaffles from "./admin/raffles.js";
 import adminAffiliates from "./admin/affiliates.js";
@@ -14,11 +14,20 @@ import adminWheel from "./admin/wheel.js";
 import adminNewsletter from "./admin/newsletter.js";
 import adminAdsDashboard from "./admin/adsDashboard.js";
 import adminTelegramBot from "./admin/telegramBot.js";
+import adminOverrides from "./admin/overrides.js";
+import adminGiveaways from "./admin/giveaways.js";
+import adminAffiliateAnalytics from "./admin/affiliateAnalytics.js";
+import adminAuthRoutes from "./admin/auth.js";
+import adminAdminUsers from "./admin/adminUsers.js";
+import adminHealth from "./admin/health.js";
 
 const router = express.Router();
 
-// All admin routes require authentication
-router.use(auth);
+// Auth routes (no auth required for login)
+router.use("/auth", adminAuthRoutes);
+
+// All other admin routes require authentication
+router.use(adminAuth);
 
 // Mount admin sub-routes
 router.use("/users", adminUsers);
@@ -36,6 +45,11 @@ router.use("/wheel", adminWheel);
 router.use("/newsletter", adminNewsletter);
 router.use("/ads-dashboard", adminAdsDashboard);
 router.use("/telegram-bot", adminTelegramBot);
+router.use("/overrides", adminOverrides);
+router.use("/giveaways", adminGiveaways);
+router.use("/affiliate-analytics", adminAffiliateAnalytics);
+router.use("/admin-users", adminAdminUsers);
+router.use("/health", adminHealth);
 
 // Warmup endpoint (moved from redirects sub-router)
 router.post("/warmup", async (req, res) => {

@@ -8,6 +8,11 @@ import { DegenWheelPanel } from '../components/Dashboard/DegenWheelPanel';
 import { ActivityLog } from '../components/Dashboard/ActivityLog';
 import { SettingsPanel } from '../components/Dashboard/SettingsPanel';
 import { PinUnlockModal } from '../components/Dashboard/PinUnlockModal';
+import { XPLevelPanel } from '../components/Dashboard/XPLevelPanel';
+import { AchievementsPanel } from '../components/Dashboard/AchievementsPanel';
+import { MissionsPanel } from '../components/Dashboard/MissionsPanel';
+import { useRealtime } from '../hooks/useRealtime';
+import { SEOHead, pageSEO } from '../components/Common/SEOHead';
 import type { User, DashboardStats as DashboardStatsType } from '../types';
 
 export const Dashboard = () => {
@@ -42,6 +47,19 @@ export const Dashboard = () => {
     };
     fetchData();
   }, []);
+
+  // Real-time updates
+  useRealtime({
+    userId: user?.id,
+    eventTypes: ['wheel:spin', 'giveaway:entry', 'raffle:entry', 'reward:received'],
+    onEvent: (event) => {
+      console.log('Real-time event received:', event);
+      // Refresh dashboard data on relevant events
+      if (['wheel:spin', 'giveaway:entry', 'raffle:entry', 'reward:received'].includes(event.type)) {
+        handleUpdate();
+      }
+    },
+  });
 
   const handlePinSuccess = () => {
     setIsPinUnlocked(true);
@@ -88,51 +106,73 @@ export const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen pt-24 px-4 pb-12">
-      <div className="container mx-auto max-w-6xl">
-        {/* Player Identity Header */}
-        <PlayerIdentityHeader
-          user={user}
-          stats={stats}
-          onUpdate={handleUpdate}
+    <>
+      <SEOHead {...pageSEO.dashboard} />
+      <div className="min-h-screen pt-20 sm:pt-24 px-4 sm:px-6 lg:px-8 pb-12">
+        <div className="container mx-auto max-w-7xl">
+          {/* Player Identity Header */}
+          <div className="mb-6 sm:mb-8">
+            <PlayerIdentityHeader
+              user={user}
+              stats={stats}
+              onUpdate={handleUpdate}
+            />
+          </div>
+
+          {/* Main Content Grid - Responsive Layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            {/* Left Column - Main Features */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Linked Casino Accounts Grid */}
+              <LinkedCasinoAccountsGrid
+                isPinUnlocked={isPinUnlocked}
+                onPinRequired={handlePinRequired}
+                onLinkSuccess={handleUpdate}
+              />
+
+              {/* Giveaway & Rewards Panel */}
+              <GiveawayRewardsPanel
+                user={user}
+                isPinUnlocked={isPinUnlocked}
+                onPinRequired={handlePinRequired}
+              />
+
+              {/* Raffles Panel */}
+              <RafflesPanel onEntryAdded={handleUpdate} />
+
+              {/* Degen Wheel Panel */}
+              <DegenWheelPanel
+                spinsRemaining={stats.wheelSpinsRemaining}
+                onSpinComplete={handleUpdate}
+              />
+            </div>
+
+            {/* Right Column - Sidebar */}
+            <div className="lg:col-span-1 space-y-6">
+              {/* Gamification Panels */}
+              <XPLevelPanel />
+              <MissionsPanel />
+              <AchievementsPanel />
+            </div>
+          </div>
+
+          {/* Full Width Sections */}
+          <div className="space-y-6">
+            {/* Activity Log */}
+            <ActivityLog limit={50} />
+
+            {/* Settings Panel */}
+            <SettingsPanel user={user} onUpdate={handleUpdate} />
+          </div>
+        </div>
+
+        {/* PIN Modal for required actions */}
+        <PinUnlockModal
+          isOpen={showPinModal}
+          onClose={() => setShowPinModal(false)}
+          onSuccess={handlePinSuccess}
         />
-
-        {/* Linked Casino Accounts Grid */}
-        <LinkedCasinoAccountsGrid
-          isPinUnlocked={isPinUnlocked}
-          onPinRequired={handlePinRequired}
-          onLinkSuccess={handleUpdate}
-        />
-
-        {/* Giveaway & Rewards Panel */}
-        <GiveawayRewardsPanel
-          user={user}
-          isPinUnlocked={isPinUnlocked}
-          onPinRequired={handlePinRequired}
-        />
-
-        {/* Raffles Panel */}
-        <RafflesPanel onEntryAdded={handleUpdate} />
-
-        {/* Degen Wheel Panel */}
-        <DegenWheelPanel
-          spinsRemaining={stats.wheelSpinsRemaining}
-          onSpinComplete={handleUpdate}
-        />
-
-        {/* Activity Log */}
-        <ActivityLog limit={50} />
-
-        {/* Settings Panel */}
-        <SettingsPanel user={user} onUpdate={handleUpdate} />
       </div>
-
-      {/* PIN Modal for required actions */}
-      <PinUnlockModal
-        isOpen={showPinModal}
-        onClose={() => setShowPinModal(false)}
-        onSuccess={handlePinSuccess}
-      />
-    </div>
+    </>
   );
 };

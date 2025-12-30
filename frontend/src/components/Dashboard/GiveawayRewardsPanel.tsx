@@ -5,8 +5,10 @@ import {
   getLootboxRewards,
   getTelegramNotifications,
   updateCryptoAddresses,
+  getTipEligibility,
 } from '../../utils/api';
 import { PinUnlockModal } from './PinUnlockModal';
+import { Tooltip } from '../Common/Tooltip';
 import type {
   RunewagerTip,
   CryptoTip,
@@ -14,6 +16,7 @@ import type {
   TelegramNotification,
   User,
 } from '../../types';
+import type { TipEligibility } from '../../utils/api';
 
 interface GiveawayRewardsPanelProps {
   user: User;
@@ -43,21 +46,24 @@ export const GiveawayRewardsPanel = ({
   });
   const [editingCrypto, setEditingCrypto] = useState(false);
   const [savingCrypto, setSavingCrypto] = useState(false);
+  const [tipEligibility, setTipEligibility] = useState<TipEligibility | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [rwTips, crypto, lootbox, telegram] = await Promise.allSettled([
+        const [rwTips, crypto, lootbox, telegram, eligibility] = await Promise.allSettled([
           getRunewagerTips(),
           getCryptoTips(),
           getLootboxRewards(),
           getTelegramNotifications(),
+          getTipEligibility(),
         ]);
         setRunewagerTips(rwTips.status === 'fulfilled' ? rwTips.value : []);
         setCryptoTips(crypto.status === 'fulfilled' ? crypto.value : []);
         setLootboxRewards(lootbox.status === 'fulfilled' ? lootbox.value : []);
         setTelegramNotifications(telegram.status === 'fulfilled' ? telegram.value : []);
+        setTipEligibility(eligibility.status === 'fulfilled' ? eligibility.value : null);
       } catch (error) {
         console.error('Failed to fetch rewards:', error);
       } finally {
@@ -65,7 +71,7 @@ export const GiveawayRewardsPanel = ({
       }
     };
     fetchData();
-  }, []);
+  }, [user, isPinUnlocked]);
 
   const handlePinSuccess = () => {
     setShowPinModal(false);
@@ -153,31 +159,34 @@ export const GiveawayRewardsPanel = ({
 
   return (
     <div className="mt-12">
-      <h2 className="text-2xl font-bold text-neon-cyan mb-6 flex items-center gap-2">
+      <h2 className="text-2xl font-bold text-neon-cyan mb-6 flex items-center gap-2 neon-glow-cyan">
         <span className="text-3xl">🎁</span>
         Giveaway & Rewards
       </h2>
 
       {/* Tabs */}
-      <div className="flex gap-2 mb-6 border-b border-neon-cyan/20 pb-2">
+      <div className="flex gap-2 mb-6 border-b-2 border-neon-cyan/20 pb-2 overflow-x-auto">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`px-4 py-2 rounded-t-lg font-semibold transition-all ${
+            className={`px-6 py-3 rounded-t-xl font-semibold transition-all relative ${
               activeTab === tab.id
-                ? 'bg-neon-cyan/20 text-neon-cyan border-t border-x border-neon-cyan/50'
-                : 'text-text-muted hover:text-neon-cyan/70'
+                ? 'bg-neon-cyan/20 text-neon-cyan border-t-2 border-x-2 border-neon-cyan/50 shadow-neon-cyan'
+                : 'text-text-muted hover:text-neon-cyan/70 hover:bg-neon-cyan/10'
             }`}
           >
             <span className="mr-2">{tab.icon}</span>
             {tab.label}
+            {activeTab === tab.id && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-neon-cyan via-neon-pink to-neon-cyan" />
+            )}
           </button>
         ))}
       </div>
 
       {/* Tab Content */}
-      <div className="bg-gradient-to-br from-gray-900/50 to-gray-800/30 rounded-lg border border-neon-cyan/20 p-6">
+      <div className="bg-gradient-to-br from-bg-dark-2 to-bg-dark-3 rounded-xl border-2 border-neon-cyan/20 p-6 card-hover">
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-neon-cyan"></div>
@@ -187,28 +196,71 @@ export const GiveawayRewardsPanel = ({
             {/* Runewager SC Tips Tab */}
             {activeTab === 'runewager' && (
               <div>
-                <div className="mb-6 p-4 bg-neon-cyan/10 rounded-lg border border-neon-cyan/30">
-                  <h3 className="text-lg font-bold text-neon-cyan mb-2">Linked Account Info</h3>
-                  <div className="space-y-2 text-sm">
-                    <div>
-                      <span className="text-text-muted">Username: </span>
-                      <span className="text-neon-cyan font-mono">
-                        {isPinUnlocked ? (user.username || 'Not set') : '••••••••'}
-                      </span>
+                <div className="mb-6 p-4 bg-neon-cyan/10 rounded-xl border-2 border-neon-cyan/30 relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-r from-neon-cyan/5 via-transparent to-neon-pink/5 animate-pulse" />
+                  <div className="relative z-10">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-lg font-bold text-neon-cyan flex items-center gap-2">
+                        <span>🎰</span>
+                        Linked Account Info
+                      </h3>
+                      {tipEligibility && (
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-semibold border ${
+                            tipEligibility.runewager
+                              ? 'bg-neon-green/20 text-neon-green border-neon-green/50'
+                              : 'bg-yellow-500/20 text-yellow-400 border-yellow-400/50'
+                          }`}
+                        >
+                          {tipEligibility.runewager ? '✓ Tip Eligible' : '⚠ Link Account'}
+                        </span>
+                      )}
                     </div>
-                    <div>
-                      <span className="text-text-muted">Email: </span>
-                      <span className="text-neon-cyan font-mono">
-                        {isPinUnlocked ? (user.email || 'Not set') : '••••••••'}
-                      </span>
-                    </div>
-                    {!isPinUnlocked && (
-                      <button
-                        onClick={() => setShowPinModal(true)}
-                        className="mt-2 text-xs text-neon-cyan hover:text-neon-cyan/70 underline"
-                      >
-                        Unlock with PIN to view
-                      </button>
+                    {tipEligibility?.runewager && tipEligibility.runewagerDetails ? (
+                      <div className="space-y-2 text-sm">
+                        <div>
+                          <span className="text-text-muted">{tipEligibility.runewagerDetails.identifierType}: </span>
+                          <span className="text-neon-cyan font-mono">
+                            {isPinUnlocked
+                              ? tipEligibility.runewagerDetails.identifierValue
+                              : '••••••••'}
+                          </span>
+                        </div>
+                        <div className="text-xs text-neon-green mt-2 flex items-center gap-1">
+                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                          </svg>
+                          Account linked and eligible for SC tips
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-2 text-sm">
+                        <div>
+                          <span className="text-text-muted">Username: </span>
+                          <span className="text-neon-cyan font-mono">
+                            {isPinUnlocked ? (user.username || 'Not set') : '••••••••'}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-text-muted">Email: </span>
+                          <span className="text-neon-cyan font-mono">
+                            {isPinUnlocked ? (user.email || 'Not set') : '••••••••'}
+                          </span>
+                        </div>
+                        <div className="mt-3 p-3 bg-yellow-500/10 border border-yellow-400/30 rounded-lg">
+                          <p className="text-xs text-yellow-400">
+                            <strong>Link your Runewager account</strong> in the Linked Casino Accounts section to become eligible for SC tips.
+                          </p>
+                        </div>
+                        {!isPinUnlocked && (
+                          <button
+                            onClick={() => setShowPinModal(true)}
+                            className="mt-2 text-xs text-neon-cyan hover:text-neon-cyan/70 underline"
+                          >
+                            Unlock with PIN to view
+                          </button>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>
@@ -221,7 +273,7 @@ export const GiveawayRewardsPanel = ({
                     {runewagerTips.map((tip) => (
                       <div
                         key={tip.id}
-                        className="p-4 bg-gray-800/50 rounded-lg border border-neon-cyan/10 hover:border-neon-cyan/30 transition-colors"
+                        className="p-4 bg-bg-dark rounded-xl border border-neon-cyan/20 hover:border-neon-cyan/40 transition-all card-hover"
                       >
                         <div className="flex justify-between items-start mb-2">
                           <div>
@@ -246,9 +298,14 @@ export const GiveawayRewardsPanel = ({
             {/* Crypto Tips Tab */}
             {activeTab === 'crypto' && (
               <div>
-                <div className="mb-6 p-4 bg-neon-cyan/10 rounded-lg border border-neon-cyan/30">
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-bold text-neon-cyan">Crypto Addresses</h3>
+                <div className="mb-6 p-4 bg-neon-cyan/10 rounded-xl border-2 border-neon-cyan/30 relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-r from-neon-cyan/5 via-transparent to-neon-pink/5 animate-pulse" />
+                  <div className="relative z-10">
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="text-lg font-bold text-neon-cyan flex items-center gap-2">
+                        <span>₿</span>
+                        Crypto Addresses
+                      </h3>
                     {!editingCrypto && (
                       <button
                         onClick={() => {
@@ -261,8 +318,8 @@ export const GiveawayRewardsPanel = ({
                         {isPinUnlocked ? 'Edit' : 'Unlock to Edit'}
                       </button>
                     )}
-                  </div>
-                  {editingCrypto ? (
+                    </div>
+                    {editingCrypto ? (
                     <div className="space-y-3">
                       {(['btc', 'eth', 'sol', 'usdt'] as const).map((asset) => (
                         <div key={asset}>
@@ -315,9 +372,15 @@ export const GiveawayRewardsPanel = ({
                             ? (user.cwallet_id || 'Not set')
                             : maskString(user.cwallet_id || 'Not set')}
                         </span>
+                        {!user.cwallet_id && (
+                          <Tooltip content="Don't have Cwallet yet? Use our referral link to create one and unlock rewards. Cwallet is required for raffle participation and crypto rewards.">
+                            <span className="ml-2 text-xs text-neon-cyan cursor-help underline">Need Cwallet?</span>
+                          </Tooltip>
+                        )}
                       </div>
                     </div>
                   )}
+                  </div>
                 </div>
 
                 <h3 className="text-lg font-bold mb-4">Reward History</h3>
@@ -328,7 +391,7 @@ export const GiveawayRewardsPanel = ({
                     {cryptoTips.map((tip) => (
                       <div
                         key={tip.id}
-                        className="p-4 bg-gray-800/50 rounded-lg border border-neon-cyan/10 hover:border-neon-cyan/30 transition-colors"
+                        className="p-4 bg-bg-dark rounded-xl border border-neon-cyan/20 hover:border-neon-cyan/40 transition-all card-hover"
                       >
                         <div className="flex justify-between items-start mb-2">
                           <div>
@@ -368,7 +431,7 @@ export const GiveawayRewardsPanel = ({
                     {lootboxRewards.map((reward) => (
                       <div
                         key={reward.id}
-                        className="p-4 bg-gray-800/50 rounded-lg border border-neon-cyan/10 hover:border-neon-cyan/30 transition-colors"
+                        className="p-4 bg-bg-dark rounded-xl border border-neon-pink/20 hover:border-neon-pink/40 transition-all card-hover"
                       >
                         <div className="flex justify-between items-start mb-2">
                           <div className="flex-1">
@@ -423,7 +486,7 @@ export const GiveawayRewardsPanel = ({
                     {telegramNotifications.map((notif) => (
                       <div
                         key={notif.id}
-                        className="p-4 bg-gray-800/50 rounded-lg border border-neon-cyan/10 hover:border-neon-cyan/30 transition-colors"
+                        className="p-4 bg-bg-dark rounded-xl border border-neon-cyan/20 hover:border-neon-cyan/40 transition-all card-hover"
                       >
                         <div className="flex items-start gap-3">
                           <div className="text-2xl">

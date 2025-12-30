@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { getRaffles } from '../utils/api';
 import { RaffleJoinModal } from '../components/Raffles/RaffleJoinModal';
+import { SEOHead, pageSEO } from '../components/Common/SEOHead';
+import { InlineHelper } from '../components/Common/Tooltip';
 import type { Raffle, Profile } from '../types';
 
 export const Raffles = () => {
@@ -30,7 +32,9 @@ export const Raffles = () => {
   };
 
   return (
-    <div className="min-h-screen pt-24 px-4 pb-12">
+    <>
+      <SEOHead {...pageSEO.raffles} />
+      <div className="min-h-screen pt-24 px-4 pb-12">
       <div className="container mx-auto">
         <div className="mb-8 flex justify-between items-center">
           <div>
@@ -40,6 +44,7 @@ export const Raffles = () => {
             <p className="text-text-muted">
               Browse live raffles, track entries, and claim Cwallet rewards.
             </p>
+            <InlineHelper text="Raffles may require newsletter subscription or account linking. Winners are chosen randomly from valid entries. Draws occur at scheduled times." />
           </div>
           {(!profile || !profile.user.hasRaffleAccess) && (
             <button
@@ -110,5 +115,6 @@ export const Raffles = () => {
         hasCwallet={!!profile?.user.cwallet_id}
       />
     </div>
+    </>
   );
 };

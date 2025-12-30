@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { getSites } from '../utils/api';
 import { SiteCardGrid } from '../components/Sites/SiteCardGrid';
 import { FiltersBar } from '../components/Filters/FiltersBar';
+import { SEOHead, pageSEO } from '../components/Common/SEOHead';
 import type { SiteCard, Jurisdiction, SiteType } from '../types';
 
 export const Affiliates = () => {
@@ -14,7 +15,10 @@ export const Affiliates = () => {
     const fetchSites = async () => {
       setLoading(true);
       try {
-        const params: any = {};
+        const params: {
+          jurisdiction?: Jurisdiction;
+          category?: string;
+        } = {};
         if (selectedJurisdiction !== 'ALL') {
           params.jurisdiction = selectedJurisdiction;
         }
@@ -41,7 +45,9 @@ export const Affiliates = () => {
   };
 
   return (
-    <div className="min-h-screen pt-24 px-4 pb-12">
+    <>
+      <SEOHead {...pageSEO.affiliates} />
+      <div className="min-h-screen pt-24 px-4 pb-12">
       <div className="container mx-auto">
         <div className="mb-8">
           <h1 className="text-4xl font-bold font-orbitron mb-4 neon-glow-cyan">
@@ -69,5 +75,6 @@ export const Affiliates = () => {
         <SiteCardGrid sites={sites} loading={loading} />
       </div>
     </div>
+    </>
   );
 };

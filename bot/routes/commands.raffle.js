@@ -1,8 +1,15 @@
 import { logger } from '../utils/logger.js';
 import { getRaffles, enterRaffle } from '../utils/apiClient.js';
 
+const SUPER_ADMIN_TELEGRAM_ID = 6668510825;
+
 export function setupRaffleCommands(bot) {
   bot.command('raffles', async (ctx) => {
+    // Only Super Admin Telegram ID (6668510825) can access raffle commands
+    if (ctx.from?.id !== SUPER_ADMIN_TELEGRAM_ID) {
+      return ctx.reply('This command is restricted to Super Admin only.');
+    }
+
     try {
       const raffles = await getRaffles();
       if (raffles.length === 0) {
@@ -17,6 +24,11 @@ export function setupRaffleCommands(bot) {
   });
 
   bot.command('enter', async (ctx) => {
+    // Only Super Admin Telegram ID (6668510825) can access raffle commands
+    if (ctx.from?.id !== SUPER_ADMIN_TELEGRAM_ID) {
+      return ctx.reply('This command is restricted to Super Admin only.');
+    }
+
     const args = ctx.message.text.split(' ');
     if (args.length < 2) {
       return ctx.reply('Usage: /enter <raffle_id>');

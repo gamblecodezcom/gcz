@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getRaffles, getPastRaffles, submitSecretCode, getRaffleEntries } from '../../utils/api';
+import { getRaffles, getPastRaffles, submitSecretCode, getRaffleEntries, getEndlessRaffle } from '../../utils/api';
 import type { Raffle, RaffleEntry, SecretCodeResponse } from '../../types';
 
 interface RafflesPanelProps {
@@ -17,17 +17,20 @@ export const RafflesPanel = ({ onEntryAdded }: RafflesPanelProps) => {
   const [codeError, setCodeError] = useState<string | null>(null);
   const [showPastRaffles, setShowPastRaffles] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [endlessRaffle, setEndlessRaffle] = useState<{ raffle: Raffle | null; userEntries: number; totalEntries: number } | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [active, past] = await Promise.all([
+        const [active, past, endless] = await Promise.all([
           getRaffles().catch(() => []),
           getPastRaffles().catch(() => []),
+          getEndlessRaffle().catch(() => ({ raffle: null, userEntries: 0, totalEntries: 0 })),
         ]);
         setActiveRaffles(active);
         setPastRaffles(past);
+        setEndlessRaffle(endless);
 
         // Fetch entries for active raffles
         const entriesMap = new Map<string, RaffleEntry[]>();
@@ -71,6 +74,14 @@ export const RafflesPanel = ({ onEntryAdded }: RafflesPanelProps) => {
 
       if (result.success) {
         setShowConfetti(true);
+        // Add success wave animation
+        const codeInput = document.querySelector('.secret-code-input');
+        if (codeInput) {
+          codeInput.classList.add('success-wave-active');
+          setTimeout(() => {
+            codeInput.classList.remove('success-wave-active');
+          }, 500);
+        }
         setTimeout(() => setShowConfetti(false), 3000);
         if (onEntryAdded) onEntryAdded();
         // Refresh raffles and entries
@@ -84,8 +95,8 @@ export const RafflesPanel = ({ onEntryAdded }: RafflesPanelProps) => {
         // Shake animation will be handled by CSS
         setCodeError(result.message || 'Invalid or expired code');
       }
-    } catch (error: any) {
-      setCodeError(error.message || 'Failed to submit code');
+    } catch (error) {
+      setCodeError(error instanceof Error ? error.message : 'Failed to submit code');
     } finally {
       setSubmittingCode(false);
     }
@@ -135,6 +146,41 @@ export const RafflesPanel = ({ onEntryAdded }: RafflesPanelProps) => {
         Raffles
       </h2>
 
+      {/* Endless Raffle Banner */}
+      {endlessRaffle?.raffle && (
+        <div className="mb-6 p-6 bg-gradient-to-r from-neon-pink/20 via-neon-cyan/20 to-neon-pink/20 rounded-xl border-2 border-neon-cyan/50 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-neon-cyan/5 via-transparent to-neon-pink/5 animate-pulse" />
+          <div className="relative z-10">
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="text-3xl animate-spin" style={{ animationDuration: '3s' }}>♾️</span>
+                  <h3 className="text-xl font-bold text-neon-cyan">Never-Ending Raffle</h3>
+                  <span className="px-3 py-1 bg-neon-green/20 border border-neon-green/50 rounded-full text-xs font-semibold text-neon-green">
+                    Active
+                  </span>
+                </div>
+                <p className="text-text-muted mb-3">{endlessRaffle.raffle.description || 'Spin the wheel daily to earn entries!'}</p>
+                <div className="flex gap-6 text-sm">
+                  <div>
+                    <span className="text-text-muted">Your Entries: </span>
+                    <span className="text-neon-cyan font-bold text-lg">{endlessRaffle.userEntries}</span>
+                  </div>
+                  <div>
+                    <span className="text-text-muted">Total Entries: </span>
+                    <span className="text-neon-pink font-bold text-lg">{endlessRaffle.totalEntries}</span>
+                  </div>
+                  <div>
+                    <span className="text-text-muted">Prize: </span>
+                    <span className="text-neon-yellow font-bold">{endlessRaffle.raffle.prize}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Active Raffles - Left Side */}
         <div className="lg:col-span-2">
@@ -155,7 +201,9 @@ export const RafflesPanel = ({ onEntryAdded }: RafflesPanelProps) => {
                 return (
                   <div
                     key={raffle.id}
-                    className="bg-gradient-to-br from-gray-900/50 to-gray-800/30 rounded-lg border border-neon-cyan/20 p-6 hover:border-neon-cyan/40 transition-colors"
+                    className={`bg-gradient-to-br from-bg-dark-2 to-bg-dark-3 rounded-lg border border-neon-cyan/20 p-6 hover:border-neon-cyan/40 transition-all card-hover ${
+                      raffle.winners && raffle.winners.length > 0 ? 'gold-pulse' : ''
+                    }`}
                   >
                     <div className="flex justify-between items-start mb-4">
                       <div className="flex-1">
@@ -274,20 +322,23 @@ export const RafflesPanel = ({ onEntryAdded }: RafflesPanelProps) => {
           <div className="bg-gradient-to-br from-neon-pink/10 to-neon-cyan/10 rounded-lg border-2 border-neon-pink/30 p-6 relative overflow-hidden">
             {/* Confetti Animation */}
             {showConfetti && (
-              <div className="absolute inset-0 pointer-events-none z-10">
-                <div className="confetti-container">
-                  {[...Array(50)].map((_, i) => (
+              <div className="absolute inset-0 pointer-events-none z-10 overflow-hidden rounded-xl">
+                {[...Array(50)].map((_, i) => {
+                  const colors = ['#00F5FF', '#FF007A', '#FFD600', '#00FF85'];
+                  const color = colors[i % colors.length];
+                  return (
                     <div
                       key={i}
-                      className="confetti"
+                      className="confetti-particle"
                       style={{
                         left: `${Math.random() * 100}%`,
                         animationDelay: `${Math.random() * 0.5}s`,
-                        backgroundColor: i % 3 === 0 ? '#00F5FF' : i % 3 === 1 ? '#FF007A' : '#FFD600',
+                        color: color,
+                        top: '-10px',
                       }}
                     />
-                  ))}
-                </div>
+                  );
+                })}
               </div>
             )}
 
@@ -297,7 +348,7 @@ export const RafflesPanel = ({ onEntryAdded }: RafflesPanelProps) => {
             </p>
 
             <form onSubmit={handleSubmitSecretCode}>
-              <div className="mb-4">
+              <div className="mb-4 relative">
                 <input
                   type="text"
                   value={secretCode}
@@ -306,16 +357,19 @@ export const RafflesPanel = ({ onEntryAdded }: RafflesPanelProps) => {
                     setCodeError(null);
                     setCodeResult(null);
                   }}
-                  className={`w-full px-4 py-3 bg-gray-800 border-2 rounded-lg text-neon-cyan font-semibold focus:outline-none transition-all ${
+                  className={`secret-code-input w-full px-4 py-3 bg-bg-dark border-2 rounded-lg text-neon-cyan font-semibold focus:outline-none transition-all ${
                     codeError
                       ? 'border-red-500 animate-shake'
                       : codeResult?.success
-                      ? 'border-neon-green'
-                      : 'border-neon-cyan/30 focus:border-neon-cyan'
+                      ? 'border-neon-green shadow-neon-green'
+                      : 'border-neon-cyan/30 focus:border-neon-cyan focus:shadow-neon-cyan'
                   }`}
                   placeholder="Enter secret code..."
                   disabled={submittingCode}
                 />
+                {codeResult?.success && (
+                  <div className="success-wave" />
+                )}
               </div>
 
               {codeError && (
@@ -349,40 +403,7 @@ export const RafflesPanel = ({ onEntryAdded }: RafflesPanelProps) => {
         </div>
       </div>
 
-      {/* Confetti CSS Animation */}
-      <style>{`
-        @keyframes shake {
-          0%, 100% { transform: translateX(0); }
-          25% { transform: translateX(-10px); }
-          75% { transform: translateX(10px); }
-        }
-        .animate-shake {
-          animation: shake 0.5s ease-in-out;
-        }
-        .confetti-container {
-          position: absolute;
-          width: 100%;
-          height: 100%;
-          overflow: hidden;
-        }
-        .confetti {
-          position: absolute;
-          width: 8px;
-          height: 8px;
-          top: -10px;
-          animation: confetti-fall 3s linear forwards;
-        }
-        @keyframes confetti-fall {
-          0% {
-            transform: translateY(0) rotate(0deg);
-            opacity: 1;
-          }
-          100% {
-            transform: translateY(100vh) rotate(720deg);
-            opacity: 0;
-          }
-        }
-      `}</style>
+      {/* Shake animation for errors - using global CSS */}
     </div>
   );
 };

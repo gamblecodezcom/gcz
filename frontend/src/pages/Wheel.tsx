@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { SEOHead, pageSEO } from '../components/Common/SEOHead';
 
 export const Wheel = () => {
   const [spinning, setSpinning] = useState(false);
@@ -20,7 +21,9 @@ export const Wheel = () => {
   };
 
   return (
-    <div className="min-h-screen pt-24 px-4 pb-12">
+    <>
+      <SEOHead {...pageSEO.wheel} />
+      <div className="min-h-screen pt-24 px-4 pb-12">
       <div className="container mx-auto max-w-2xl">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold font-orbitron mb-4 neon-glow-yellow">
@@ -80,5 +83,6 @@ export const Wheel = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };

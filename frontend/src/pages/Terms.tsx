@@ -1,6 +1,10 @@
+import { SEOHead, pageSEO } from '../components/Common/SEOHead';
+
 export const Terms = () => {
   return (
-    <div className="min-h-screen pt-24 px-4 pb-12 page-transition">
+    <>
+      <SEOHead {...pageSEO.terms} />
+      <div className="min-h-screen pt-24 px-4 pb-12 page-transition">
       <div className="container mx-auto max-w-4xl">
         <div className="mb-8 text-center">
           <h1 className="text-4xl font-bold font-orbitron mb-4 neon-glow-cyan">
@@ -68,5 +72,6 @@ export const Terms = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };

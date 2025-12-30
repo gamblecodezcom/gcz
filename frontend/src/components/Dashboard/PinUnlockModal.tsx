@@ -46,16 +46,21 @@ export const PinUnlockModal = ({ isOpen, onClose, onSuccess }: PinUnlockModalPro
       const result = await verifyPin(pin);
       if (result.success) {
         setCrownFlipped(true);
+        // Trigger neon ripple effect
+        const modal = document.querySelector('.neon-ripple-container');
+        if (modal) {
+          modal.classList.add('active');
+        }
         setTimeout(() => {
           onSuccess();
           onClose();
-        }, 600);
+        }, 1000);
       } else {
         setError('Invalid PIN');
         setPin('');
       }
-    } catch (err: any) {
-      setError(err.message || 'Invalid PIN');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Invalid PIN');
       setPin('');
     } finally {
       setIsVerifying(false);
@@ -66,31 +71,50 @@ export const PinUnlockModal = ({ isOpen, onClose, onSuccess }: PinUnlockModalPro
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-      <div className="bg-bg-dark-2 border-2 border-neon-cyan/50 rounded-xl p-8 max-w-md w-full mx-4 relative overflow-hidden">
+      <div className="bg-bg-dark-2 border-2 border-neon-cyan/50 rounded-xl p-8 max-w-md w-full mx-4 relative overflow-hidden neon-ripple-container">
         {/* Animated background gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-neon-cyan/10 via-neon-pink/10 to-neon-yellow/10 animate-pulse" />
 
         <div className="relative z-10">
-          {/* Crown Icon */}
+          {/* Crown Icon with Flip Animation */}
           <div className="flex justify-center mb-6">
-            <svg
-              className={`w-16 h-16 transition-transform duration-600 ${crownFlipped ? 'animate-flip' : ''}`}
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M5 16L3 5L8.5 10L12 4L15.5 10L21 5L19 16H5Z"
-                fill="url(#crownGradient)"
-                className="drop-shadow-[0_0_10px_rgba(255,215,0,0.8)]"
-              />
-              <defs>
-                <linearGradient id="crownGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#FFD600" />
-                  <stop offset="100%" stopColor="#FFA500" />
-                </linearGradient>
-              </defs>
-            </svg>
+            <div className="relative">
+              <svg
+                className={`w-20 h-20 transition-all duration-300 ${crownFlipped ? 'crown-flip' : 'crown-animation'}`}
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M5 16L3 5L8.5 10L12 4L15.5 10L21 5L19 16H5Z"
+                  fill="url(#crownGradient)"
+                  className="drop-shadow-[0_0_10px_rgba(255,215,0,0.8)]"
+                />
+                <defs>
+                  <linearGradient id="crownGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#FFD700" />
+                    <stop offset="50%" stopColor="#FFD600" />
+                    <stop offset="100%" stopColor="#FFA500" />
+                  </linearGradient>
+                </defs>
+              </svg>
+              {/* Sparkle effects on success */}
+              {crownFlipped && (
+                <>
+                  {[...Array(8)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="crown-sparkle"
+                      style={{
+                        top: `${20 + Math.sin((i * Math.PI) / 4) * 30}%`,
+                        left: `${50 + Math.cos((i * Math.PI) / 4) * 30}%`,
+                        animationDelay: `${i * 0.1}s`,
+                      }}
+                    />
+                  ))}
+                </>
+              )}
+            </div>
           </div>
 
           <h2 className="text-2xl font-bold text-center mb-2 neon-glow-cyan">Unlock with PIN</h2>
@@ -168,7 +192,10 @@ export const PinUnlockModal = ({ isOpen, onClose, onSuccess }: PinUnlockModalPro
         {/* Neon ripple effect on success */}
         {crownFlipped && (
           <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute inset-0 bg-gradient-radial from-neon-cyan/20 via-transparent to-transparent animate-ping" />
+            <div className="absolute inset-0 bg-gradient-radial from-neon-cyan/30 via-neon-pink/20 to-transparent animate-ping" />
+            <div className="absolute inset-0 bg-gradient-radial from-neon-pink/20 via-neon-cyan/20 to-transparent animate-ping" style={{ animationDelay: '0.3s' }} />
+            {/* Glow sweep across header */}
+            <div className="absolute top-0 left-0 right-0 h-2 glow-sweep" />
           </div>
         )}
       </div>
