@@ -35,31 +35,33 @@ BEGIN
   -- If no suitable endless raffle exists, create one
   IF endless_raffle_id IS NULL THEN
     INSERT INTO raffles (
-      name,
+      title,
       description,
-      prize,
-      secret_password,
-      start_time,
-      end_time,
+      prize_value,
+      secret_code,
+      start_date,
+      end_date,
       active,
       secret,
       hidden,
       prize_type,
-      prize_value,
-      end_date
+      raffle_type,
+      entry_sources,
+      entries_per_source
     ) VALUES (
       'Never-Ending Raffle',
       'Spin the wheel daily to earn entries! This raffle never ends and winners are drawn periodically.',
       'Mystery Crypto Box',
-      '',  -- No secret password needed
+      NULL,  -- No secret code needed
       CURRENT_TIMESTAMP,
-      '2099-12-31 23:59:59'::timestamp,  -- Far future end_time (required field)
+      NULL,  -- NULL end_date indicates endless
       true,
       false,
       false,
       'crypto_box',
-      'Mystery Crypto Box',
-      NULL  -- NULL end_date indicates endless
+      'daily',  -- Use 'daily' type for endless raffles
+      '["wheel","wheel_spin"]'::jsonb,
+      '{"wheel":5,"wheel_spin":5}'::jsonb
     ) RETURNING id INTO endless_raffle_id;
 
     RAISE NOTICE 'Created endless raffle with ID: %', endless_raffle_id;
@@ -82,7 +84,7 @@ END $$;
 -- Verify the setup
 SELECT 
   r.id as raffle_id,
-  r.name as raffle_name,
+  r.title as raffle_name,
   r.active,
   r.end_date,
   wc.target_raffle_id,

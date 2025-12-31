@@ -165,7 +165,7 @@ router.get("/admin/overview", async (req, res) => {
         SELECT 
           COUNT(*) as total_entries,
           COUNT(DISTINCT user_id) as unique_participants,
-          COUNT(CASE WHEN entry_time > NOW() - INTERVAL '24 hours' THEN 1 END) as entries_24h
+          COUNT(CASE WHEN created_at > NOW() - INTERVAL '24 hours' THEN 1 END) as entries_24h
         FROM raffle_entries
       `),
       pool.query(`

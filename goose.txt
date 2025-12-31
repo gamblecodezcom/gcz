@@ -1,0 +1,269 @@
+You already reviewed the codebase and found the issues. Now I’m giving you the exact spec you asked for. Stop asking questions and IMPLEMENT based on this.
+
+## 1) Exact schema I want
+
+Use THIS as the single source of truth. If the DB already has these tables/columns, only add what’s missing.
+
+TABLE: raffles
+- id SERIAL PRIMARY KEY
+- title TEXT NOT NULL
+- description TEXT
+- active BOOLEAN DEFAULT TRUE
+- hidden BOOLEAN DEFAULT FALSE         -- already present
+- secret BOOLEAN DEFAULT FALSE         -- already present
+- secret_code TEXT                     -- already present
+- raffle_type TEXT DEFAULT 'manual'    -- allowed: 'manual', 'timed', 'daily'
+- num_winners INTEGER DEFAULT 1
+- allow_repeat_winners BOOLEAN DEFAULT FALSE
+- start_date TIMESTAMP
+- end_date TIMESTAMP
+- prize_type TEXT                      -- e.g. 'manual_tip', 'crypto_box', 'custom'
+- prize_value TEXT                     -- display string like "$50", "Mystery Box"
+- prize_site_id INTEGER
+- sponsor_site TEXT
+- sponsor_campaign_id INTEGER
+- entry_sources JSONB DEFAULT '["daily_checkin", "wheel", "secret_code", "manual"]'::jsonb
+- entries_per_source JSONB DEFAULT '{"wheel": 5, "manual": 0, "secret_code": 10, "daily_checkin": 1}'::jsonb
+- winner_selection_method TEXT DEFAULT 'random'
+- created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+- updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+
+TABLE: raffle_entries
+- id SERIAL PRIMARY KEY
+- raffle_id INTEGER NOT NULL REFERENCES raffles(id) ON DELETE CASCADE
+- user_id TEXT NOT NULL
+- source TEXT NOT NULL                  -- 'manual', 'wheel', 'secret_code', 'daily_checkin', etc.
+- created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+
+TABLE: raffle_winners
+- id SERIAL PRIMARY KEY
+- raffle_id INTEGER NOT NULL REFERENCES raffles(id) ON DELETE CASCADE
+- user_id TEXT NOT NULL
+- prize_type TEXT
+- cwallet_claim_url TEXT                -- single-use Cwallet URL
+- assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+
+TABLE: raffle_prize_urls
+- id SERIAL PRIMARY KEY
+- raffle_id INTEGER NOT NULL REFERENCES raffles(id) ON DELETE CASCADE
+- url TEXT NOT NULL                     -- single-use Cwallet URL
+- used BOOLEAN DEFAULT FALSE
+- assigned_to_user_id TEXT
+- created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+
+You must:
+- Fix any remaining code that still references r.name → use r.title.
+- Keep everything idempotent with ALTER TABLE ... ADD COLUMN IF NOT EXISTS for new columns.
+
+## 2) Entry sources and how entries are counted
+
+We will use entry_sources + entries_per_source on raffles as the rule engine.
+
+Supported sources (for now):
+- "daily_checkin"
+- "wheel"
+- "secret_code"
+- "manual"
+
+Behavior:
+- entry_sources: which sources are allowed for this raffle.
+- entries_per_source: how many entries each event from that source gives.
+
+Rules:
+- When a user triggers an event (check-in, wheel spin, manual add, secret phrase), you:
+  1) Check if that source is allowed for this raffle (source in entry_sources).
+  2) Look up the multiplier in entries_per_source[source].
+  3) Insert N rows into raffle_entries with that source, where N = entries_per_source[source].
+- If entries_per_source has no value for that key → treat it as 0 entries.
+- If a raffle doesn’t define custom JSON, fall back to the defaults in the column definition.
+
+## 3) Winner selection (random vs weighted)
+
+winner_selection_method on raffles:
+- "random" (default and main mode)
+  - Every entry in raffle_entries is one ticket.
+  - You pick winners uniformly at random over all entries (taking into account that some users may have multiple entries via multipliers).
+- "weighted"
+  - If we use this later, we can treat entries_per_source or some other logic as weights.
+  - For now, implement ONLY "random" robustly.
+  - If winner_selection_method != 'random', you can reject the request with a "not implemented" error, but don’t break the system.
+
+Important:
+- For num_winners:
+  - You must ensure you don’t pick more distinct winners than there are distinct users (unless allow_repeat_winners = TRUE).
+- For allow_repeat_winners:
+  - If FALSE (typical for most raffles), winners must be distinct users.
+  - If TRUE (the endless raffle supports it), a user can win again in a different raffle, but for a single draw, we still pick distinct users unless specified otherwise.
+
+## 4) Raffle types (timed, manual, daily, endless)
+
+Use these as the meanings:
+
+- raffle_type = 'manual'
+  - No automatic schedule.
+  - Entries are allowed while active = TRUE and (optionally) start_date <= now <= end_date if set.
+  - Winner picking happens when super admin triggers it.
+  - Endless raffle uses this type, it is manual and fully controlled by me.
+
+- raffle_type = 'timed'
+  - start_date and end_date define the window.
+  - Frontend must block new entries if now < start_date or now > end_date.
+  - Admin can still pick winners after end_date.
+
+- raffle_type = 'daily'
+  - Not used for the current endless raffle engine.
+  - Leave in place for future use. Do not build any cron-like logic now.
+
+Endless raffle concept:
+- Implemented as a 'manual' raffle with special handling in the admin winner-pick flow.
+- allow_repeat_winners may be TRUE for endless raffles.
+
+## 5) Entry multipliers per source
+
+You already have entries_per_source JSONB; use it like this:
+
+- Example default:
+  - "wheel": 5
+  - "manual": 0
+  - "secret_code": 10
+  - "daily_checkin": 1
+
+Rules:
+- When an event comes from a source, multiply entries according to entries_per_source[source].
+- If a source is not listed or value is 0 → no entries created.
+- This allows us to tune multipliers per raffle by editing the JSON.
+
+## 6) Wheel integration with raffles
+
+Integration rules:
+- When the wheel is spun and the outcome should award raffle entries:
+  - The backend needs to:
+    1) Determine the active raffle(s) that should receive entries from the wheel.
+       - For now, use the single primary endless raffle (raffle_type='manual', active=TRUE, hidden=FALSE) OR any raffle explicitly configured in code.
+    2) Check if "wheel" is in that raffle’s entry_sources.
+    3) Insert entries according to entries_per_source["wheel"].
+- Source for those entries in raffle_entries.source must be "wheel".
+
+If there is no active raffle that accepts "wheel", you can safely no-op or log.
+
+## 7) Admin panel functionality (super admin focus)
+
+You must wire all of this into the existing admin/super admin panels.
+
+A) Raffle list (super admin)
+- Show:
+  - id, title, active, hidden, raffle_type, num_winners, prize_type, prize_value, start_date, end_date.
+- Add filters:
+  - Active vs inactive
+  - Hidden vs visible
+  - By raffle_type
+
+B) Create/Edit raffle
+- Fields:
+  - title
+  - description
+  - active (toggle)
+  - hidden (toggle)
+  - secret (toggle)
+  - secret_code (input if secret = true)
+  - raffle_type (manual / timed / daily)
+  - num_winners
+  - allow_repeat_winners
+  - start_date / end_date (optional)
+  - prize_type
+  - prize_value
+  - entry_sources (multi-select or checklist)
+  - entries_per_source (config UI; or simple JSON editor if faster)
+
+- For hidden/time-limited raffles with prize_type='crypto_box':
+  - Add a "Claim URLs" section:
+    - Show list of existing URLs from raffle_prize_urls.
+    - Allow adding/removing URLs until count matches num_winners.
+    - Show 'used' flag and assigned_to_user_id (read-only).
+    - On save, insert/update rows in raffle_prize_urls.
+
+- For endless raffles (raffle_type='manual' and marked as the special endless raffle in code, or selected via admin flag):
+  - DO NOT preload URLs here.
+  - URLs are provided at winner-pick time.
+
+C) Winner selection (super admin only)
+- Add "Pick Winners" button for raffles that:
+  - Have entries AND
+  - Are not already closed.
+
+Clicking it opens a modal:
+- Shows:
+  - raffle_id, title, raffle_type, num_winners, prize_type, prize_value.
+- Allow overriding num_winners for this draw (optional).
+
+Behavior:
+
+For hidden/time-limited raffles with preloaded URLs:
+- prize_type='crypto_box'
+- On confirm:
+  - Ensure there are at least num_winners unused URLs in raffle_prize_urls for that raffle.
+  - Randomly pick num_winners winners using "random" logic:
+    - Distinct users if allow_repeat_winners=FALSE.
+  - For each winner:
+    - Take one unused URL from raffle_prize_urls.
+    - Mark it used=TRUE and assigned_to_user_id=winner.user_id.
+    - Insert into raffle_winners:
+      - raffle_id, user_id, prize_type, cwallet_claim_url = that URL.
+  - Mark raffle.active = FALSE.
+
+For endless raffles:
+- On opening modal, require:
+  - num_winners for this draw.
+  - prize_type.
+  - prize_value.
+  - EXACTLY num_winners Cwallet claim URLs entered in text inputs.
+- On confirm:
+  - Use entries from raffle_entries for that raffle.
+  - Pick num_winners winners at random according to "random" logic.
+  - Assign each winner one of the provided URLs:
+    - Insert into raffle_winners with cwallet_claim_url set.
+  - Mark the raffle.active = FALSE.
+  - Auto-create a new endless raffle row in raffles:
+    - title = 'Endless Raffle'
+    - description = 'Primary endless raffle'
+    - active = FALSE (I will activate when funded)
+    - hidden = TRUE
+    - raffle_type = 'manual'
+    - allow_repeat_winners = TRUE
+    - num_winners = 1 by default
+    - prize_type and prize_value can be NULL
+    - start_date, end_date = NULL
+
+D) Activating the next endless raffle
+- For the newly created endless raffle:
+  - On the admin list, show a "Fund & Activate Endless Raffle" button.
+  - On click:
+    - Set hidden = FALSE
+    - Set active = TRUE
+    - Set start_date = NOW()
+- This gives me full control to only make it live when I have funds.
+
+E) Detail view
+- For each raffle:
+  - Show its fields.
+  - Show entries count.
+  - Show winners (from raffle_winners):
+    - user_id, prize_type, cwallet_claim_url, assigned_at.
+  - Show raffle_prize_urls:
+    - url, used, assigned_to_user_id.
+
+## 8) Implementation notes
+
+- Do NOT keep re-asking what I want. You now have the spec.
+- Align field names with the PostgreSQL schema exactly (use title, not name).
+- Use the existing stack (routes, controllers, DB helpers, frontend framework in this repo).
+- Enforce super admin checks on all winner-pick, URL management, and raffle create/edit endpoints.
+- Keep the code clean, consistent, and ready for future extension.
+
+Now implement:
+- Any missing migrations for the above schema.
+- All backend endpoints required to support the flows above.
+- All admin/super admin panel UI pieces required to use this system end-to-end.
+- Frontend behavior for visible raffles, secret phrase entry, and basic claim URL display for winners.
+
+Do not output questions. Just output the diff / files / code you are creating or changing.

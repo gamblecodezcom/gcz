@@ -82,21 +82,96 @@ view_result() {
   fi
 }
 
+# ---------- FIX-PROFILE (DEGEN PROFILE) ----------
+fix_profile() {
+  log "🌌 Running Degen Profile management..."
+  node "$GOOSE_HOME/fix-profile.js" "$@"
+}
+
 # ---------- HELP ----------
 show_help() {
   echo "GCZ Goose commands:"
   echo "  gcz-goose index"
   echo "  gcz-goose diagnose"
   echo "  gcz-goose view <index|diagnostics|logs>"
+  echo "  gcz-goose fix-profile [options]"
+  echo ""
+  echo "🌌 DEGEN PROFILE MANAGEMENT OPTIONS"
+  echo "\"ONE IDENTITY. ONE PIN. ONE CWALLET. INFINITE DEGEN.\""
+  echo ""
+  echo "Identity Management:"
+  echo "  --user-id <ID>                  User ID to manage"
+  echo "  --url <URL>                    Extract user ID from profile URL"
+  echo "  --create-profile true           Create new Degen Profile"
+  echo "  --update-identity true          Update Degen Identity"
+  echo "  --username <NAME>               Set username (@DeGenName)"
+  echo "  --rename <NAME>                 Alias for --username"
+  echo "  --email <EMAIL>                 Set email address"
+  echo "  --telegram <USERNAME>           Set Telegram username"
+  echo "  --telegram-id <ID>              Set Telegram ID"
+  echo "  --cwallet <ID>                  Set Cwallet ID"
+  echo "  --jurisdiction <TYPE>           Set jurisdiction (US|NON_US|GLOBAL)"
+  echo ""
+  echo "PIN Security:"
+  echo "  --set-pin <PIN>                 Set PIN (4-6 digits)"
+  echo "  --update-pin <PIN>              Update PIN (requires --old-pin)"
+  echo "  --old-pin <PIN>                 Old PIN for updates"
+  echo "  --pin-4 <PIN>                   Alias for 4-digit PIN"
+  echo "  --pin-6 <PIN>                   Alias for 6-digit PIN"
+  echo ""
+  echo "Linked Casino Accounts:"
+  echo "  --link-site true                Link a casino account"
+  echo "  --site-id <ID>                  Site ID or slug"
+  echo "  --identifier-type <TYPE>        Type: username|email|player_id"
+  echo "  --identifier-value <VALUE>      Account identifier value"
+  echo "  --unlink-site true              Unlink a casino account"
+  echo ""
+  echo "Crypto Addresses:"
+  echo "  --update-crypto-addresses true   Update crypto wallet addresses"
+  echo "  --btc-address <ADDRESS>         Bitcoin address"
+  echo "  --eth-address <ADDRESS>         Ethereum address"
+  echo "  --sol-address <ADDRESS>         Solana address"
+  echo "  --usdt-address <ADDRESS>        USDT address"
+  echo ""
+  echo "Icon/Avatar:"
+  echo "  --setup-icon true               Setup profile icon"
+  echo "  --fix-icon-load true            Fix icon loading issues"
+  echo "  --icon-url <URL>                Set icon URL"
+  echo "  --icon-style <STYLE>            Style: default|hex|circle|square"
+  echo "  --icon-fallback <URL>           Set fallback icon URL"
+  echo "  --fallback-logic true           Apply default fallback logic"
+  echo ""
+  echo "Validation & Diagnostics:"
+  echo "  --validate-profile true         Validate Degen Profile completeness"
+  echo "  --css-upgrade true              Upgrade CSS for Degen Profile"
+  echo ""
+  echo "System:"
+  echo "  --audit-log <TABLE>             Audit log table name"
+  echo "  --log-errors true               Log errors to console"
+  echo "  --super-admin true              Super admin mode"
+  echo ""
+  echo "Examples:"
+  echo "  # Create new Degen Profile"
+  echo "  gcz-goose fix-profile --create-profile --user-id user123 --username DeGenPlayer --cwallet cw_abc123 --set-pin 1234"
+  echo ""
+  echo "  # Link casino account"
+  echo "  gcz-goose fix-profile --user-id user123 --link-site --site-id runewager --identifier-type username --identifier-value player123"
+  echo ""
+  echo "  # Update crypto addresses"
+  echo "  gcz-goose fix-profile --user-id user123 --update-crypto-addresses --btc-address bc1q... --eth-address 0x..."
+  echo ""
+  echo "  # Validate profile"
+  echo "  gcz-goose fix-profile --user-id user123 --validate-profile"
 }
 
 cmd="$1"
-arg="$2"
+shift
 
 case "$cmd" in
   index) index_project ;;
   diagnose) diagnose_stack ;;
-  view) view_result "$arg" ;;
+  view) view_result "$1" ;;
+  fix-profile) fix_profile "$@" ;;
   ""|help|--help|-h) show_help ;;
   *) echo "Unknown command: $cmd"; show_help ;;
 esac

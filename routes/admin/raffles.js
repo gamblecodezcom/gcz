@@ -30,13 +30,17 @@ async function logAdminAction(req, action, resourceType, resourceId, details = {
 router.get("/", async (req, res) => {
   try {
     const result = await pool.query(
-      "SELECT * FROM raffles ORDER BY created_at DESC"
+      `SELECT r.*, 
+        (SELECT COUNT(*) FROM raffle_winners WHERE raffle_id = r.id) as winners_count
+       FROM raffles r 
+       ORDER BY r.created_at DESC`
     );
     // Parse JSON fields
     const raffles = result.rows.map(r => ({
       ...r,
       entry_sources: typeof r.entry_sources === 'string' ? JSON.parse(r.entry_sources || '[]') : r.entry_sources,
-      entries_per_source: typeof r.entries_per_source === 'string' ? JSON.parse(r.entries_per_source || '{}') : r.entries_per_source
+      entries_per_source: typeof r.entries_per_source === 'string' ? JSON.parse(r.entries_per_source || '{}') : r.entries_per_source,
+      winners_count: parseInt(r.winners_count || 0, 10)
     }));
     res.json({ raffles });
   } catch (error) {
@@ -171,14 +175,43 @@ router.delete("/:id", superAdminOnly, async (req, res) => {
   }
 });
 
-// POST /api/admin/raffles/:id/pick-winner - Pick a random winner (Super Admin only)
-router.post("/:id/pick-winner", superAdminOnly, async (req, res) => {
+// POST /api/admin/raffles/:id/pick-winners - Pick winners (Super Admin only)
+// This is the main winner selection endpoint that handles both endless and preloaded URL raffles
+router.post("/:id/pick-winners", superAdminOnly, async (req, res) => {
   try {
     const { id } = req.params;
+    const { 
+      num_winners: overrideNumWinners, 
+      prize_type: overridePrizeType,
+      prize_value: overridePrizeValue,
+      urls: providedUrls // For endless raffles
+    } = req.body;
 
-    // Get all entries for this raffle
+    // Get raffle info
+    const raffleResult = await pool.query(
+      `SELECT id, title, raffle_type, num_winners, prize_type, prize_value, 
+              winner_selection_method, allow_repeat_winners, active, hidden
+       FROM raffles WHERE id = $1`,
+      [id]
+    );
+
+    if (raffleResult.rows.length === 0) {
+      return res.status(404).json({ error: "Raffle not found" });
+    }
+
+    const raffle = raffleResult.rows[0];
+    const selectionMethod = raffle.winner_selection_method || 'random';
+    
+    // Only support random for now
+    if (selectionMethod !== 'random') {
+      return res.status(400).json({ error: `Winner selection method '${selectionMethod}' is not implemented` });
+    }
+
+    // Get all entries (each row is one ticket)
     const entriesResult = await pool.query(
-      "SELECT user_id FROM raffle_entries WHERE raffle_id = $1",
+      `SELECT user_id, source 
+       FROM raffle_entries 
+       WHERE raffle_id = $1`,
       [id]
     );
 
@@ -186,41 +219,195 @@ router.post("/:id/pick-winner", superAdminOnly, async (req, res) => {
       return res.status(400).json({ error: "No entries for this raffle" });
     }
 
-    // Pick random winner
-    const randomIndex = Math.floor(Math.random() * entriesResult.rows.length);
-    const winner = entriesResult.rows[randomIndex];
+    const numWinners = overrideNumWinners || raffle.num_winners || 1;
+    const allowRepeat = raffle.allow_repeat_winners || false;
 
-    // Check if winner already exists
-    const existingWinner = await pool.query(
-      "SELECT * FROM raffle_winners WHERE raffle_id = $1 AND winner = $2",
-      [id, winner.user_id]
-    );
+    // Determine if this is an endless raffle (manual type)
+    // Endless raffles are manual type and may be hidden or visible
+    const isEndlessRaffle = raffle.raffle_type === 'manual';
 
-    if (existingWinner.rows.length > 0) {
-      return res.json({ winner: existingWinner.rows[0], message: "Winner already selected" });
+    // For endless raffles, require URLs to be provided
+    if (isEndlessRaffle) {
+      if (!providedUrls || !Array.isArray(providedUrls) || providedUrls.length !== numWinners) {
+        return res.status(400).json({ 
+          error: `For endless raffles, exactly ${numWinners} URLs must be provided`,
+          required: numWinners,
+          provided: providedUrls ? providedUrls.length : 0
+        });
+      }
+
+      if (!overridePrizeType || !overridePrizeValue) {
+        return res.status(400).json({ 
+          error: "For endless raffles, prize_type and prize_value must be provided" 
+        });
+      }
+    } else {
+      // For preloaded URL raffles, check if URLs exist
+      const urlCountResult = await pool.query(
+        `SELECT COUNT(*) as count FROM raffle_prize_urls 
+         WHERE raffle_id = $1 AND used = false`,
+        [id]
+      );
+      const availableUrls = parseInt(urlCountResult.rows[0]?.count || 0, 10);
+      
+      if (raffle.prize_type === 'crypto_box' && availableUrls < numWinners) {
+        return res.status(400).json({ 
+          error: `Not enough unused URLs. Required: ${numWinners}, Available: ${availableUrls}` 
+        });
+      }
     }
 
-    // Get raffle prize info
-    const raffleResult = await pool.query("SELECT prize_type, prize_value FROM raffles WHERE id = $1", [id]);
-    const raffle = raffleResult.rows[0];
+    // Pick winners using random selection
+    // Each entry in raffle_entries is one ticket
+    const allTickets = entriesResult.rows.map(e => e.user_id);
+    
+    if (allTickets.length === 0) {
+      return res.status(400).json({ error: "No entries available" });
+    }
 
-    // Insert winner
-    const winnerResult = await pool.query(
-      `INSERT INTO raffle_winners (raffle_id, winner, prize, won_at)
-       VALUES ($1, $2, $3, CURRENT_TIMESTAMP) RETURNING *`,
-      [
-        id,
-        winner.user_id,
-        raffle.prize_value || raffle.prize_type || "Prize"
-      ]
+    const winners = [];
+    const usedUserIds = new Set();
+    const availableTickets = [...allTickets];
+
+    // Pick distinct winners if allow_repeat_winners is false
+    while (winners.length < numWinners && availableTickets.length > 0) {
+      const randomIndex = Math.floor(Math.random() * availableTickets.length);
+      const selectedUserId = availableTickets[randomIndex];
+
+      // If repeats not allowed, ensure distinct users
+      if (!allowRepeat && usedUserIds.has(selectedUserId)) {
+        // Remove this ticket and try again
+        availableTickets.splice(randomIndex, 1);
+        continue;
+      }
+
+      // Check if user is already a winner (for this specific draw)
+      const existingWinner = await pool.query(
+        "SELECT * FROM raffle_winners WHERE raffle_id = $1 AND user_id = $2",
+        [id, selectedUserId]
+      );
+
+      if (existingWinner.rows.length > 0 && !allowRepeat) {
+        // Remove this ticket and try again
+        availableTickets.splice(randomIndex, 1);
+        continue;
+      }
+
+      winners.push(selectedUserId);
+      usedUserIds.add(selectedUserId);
+
+      // If repeats not allowed, remove all tickets for this user
+      if (!allowRepeat) {
+        for (let i = availableTickets.length - 1; i >= 0; i--) {
+          if (availableTickets[i] === selectedUserId) {
+            availableTickets.splice(i, 1);
+          }
+        }
+      } else {
+        // Remove just this one ticket
+        availableTickets.splice(randomIndex, 1);
+      }
+    }
+
+    if (winners.length < numWinners) {
+      return res.status(400).json({ 
+        error: `Could only pick ${winners.length} distinct winners out of ${numWinners} requested`,
+        winnersPicked: winners.length,
+        requested: numWinners
+      });
+    }
+
+    // Assign URLs and create winner records
+    const winnerRecords = [];
+    const prizeType = overridePrizeType || raffle.prize_type;
+    const prizeValue = overridePrizeValue || raffle.prize_value;
+
+    for (let i = 0; i < winners.length; i++) {
+      const userId = winners[i];
+      let claimUrl = null;
+
+      if (isEndlessRaffle) {
+        // Use provided URLs
+        claimUrl = providedUrls[i];
+      } else if (raffle.prize_type === 'crypto_box') {
+        // Get unused URL from raffle_prize_urls
+        const urlResult = await pool.query(
+          `UPDATE raffle_prize_urls 
+           SET used = true, assigned_to_user_id = $1
+           WHERE id = (
+             SELECT id FROM raffle_prize_urls 
+             WHERE raffle_id = $2 AND used = false 
+             LIMIT 1 FOR UPDATE SKIP LOCKED
+           )
+           RETURNING url`,
+          [userId, id]
+        );
+
+        if (urlResult.rows.length === 0) {
+          return res.status(500).json({ 
+            error: `Failed to assign URL to winner ${userId}` 
+          });
+        }
+
+        claimUrl = urlResult.rows[0].url;
+      }
+
+      // Insert winner record
+      const winnerResult = await pool.query(
+        `INSERT INTO raffle_winners (raffle_id, user_id, prize_type, cwallet_claim_url, assigned_at)
+         VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP) RETURNING *`,
+        [id, userId, prizeType, claimUrl]
+      );
+
+      winnerRecords.push(winnerResult.rows[0]);
+    }
+
+    // Mark raffle as inactive
+    await pool.query(
+      "UPDATE raffles SET active = false, updated_at = CURRENT_TIMESTAMP WHERE id = $1",
+      [id]
     );
 
-    await logAdminAction(req, "PICK_WINNER", "raffle", id, { winner: winner.user_id });
-    res.json({ winner: winnerResult.rows[0] });
+    // For endless raffles, create the next endless raffle
+    if (isEndlessRaffle) {
+      await pool.query(
+        `INSERT INTO raffles (
+          title, description, active, hidden, raffle_type, 
+          allow_repeat_winners, num_winners, prize_type, prize_value,
+          start_date, end_date, entry_sources, entries_per_source, winner_selection_method
+        ) VALUES (
+          'Endless Raffle', 'Primary endless raffle', false, true, 'manual',
+          true, 1, NULL, NULL,
+          NULL, NULL,
+          '["daily_checkin", "wheel", "secret_code", "manual"]'::jsonb,
+          '{"wheel": 5, "manual": 0, "secret_code": 10, "daily_checkin": 1}'::jsonb,
+          'random'
+        )`
+      );
+    }
+
+    await logAdminAction(req, "PICK_WINNERS", "raffle", id, { 
+      winners: winners,
+      num_winners: winners.length,
+      method: selectionMethod,
+      is_endless: isEndlessRaffle
+    });
+
+    res.json({ 
+      winners: winnerRecords,
+      count: winnerRecords.length,
+      raffle_id: id
+    });
   } catch (error) {
-    console.error("Error picking winner:", error);
-    res.status(500).json({ error: "Failed to pick winner" });
+    console.error("Error picking winners:", error);
+    res.status(500).json({ error: "Failed to pick winners", message: error.message });
   }
+});
+
+// Legacy endpoint - redirects to new pick-winners
+router.post("/:id/pick-winner", superAdminOnly, async (req, res) => {
+  req.url = req.url.replace('/pick-winner', '/pick-winners');
+  router.handle(req, res);
 });
 
 // POST /api/admin/raffles/:id/notify-winner - Send notification to winner (Super Admin only)
@@ -230,7 +417,7 @@ router.post("/:id/notify-winner", superAdminOnly, async (req, res) => {
 
     // Get winner
     const winnerResult = await pool.query(
-      "SELECT * FROM raffle_winners WHERE raffle_id = $1 ORDER BY won_at DESC LIMIT 1",
+      "SELECT * FROM raffle_winners WHERE raffle_id = $1 ORDER BY assigned_at DESC LIMIT 1",
       [id]
     );
 
@@ -247,14 +434,14 @@ router.post("/:id/notify-winner", superAdminOnly, async (req, res) => {
     // TODO: Implement actual push notification
     // For now, just log the action
     await logAdminAction(req, "NOTIFY_WINNER", "raffle", id, {
-      winner: winner.winner,
+      winner: winner.user_id,
       raffle_title: raffle.title
     });
 
     res.json({
       success: true,
       message: "Winner notification sent",
-      winner: winner.winner
+      winner: winner.user_id
     });
   } catch (error) {
     console.error("Error notifying winner:", error);
@@ -293,25 +480,25 @@ router.get("/:id/entries", async (req, res) => {
     const entriesResult = await pool.query(
       `SELECT 
         user_id,
-        entry_source,
+        source,
         COUNT(*) as entry_count,
-        MIN(entry_time) as first_entry,
-        MAX(entry_time) as last_entry
+        MIN(created_at) as first_entry,
+        MAX(created_at) as last_entry
       FROM raffle_entries 
       WHERE raffle_id = $1 
-      GROUP BY user_id, entry_source
-      ORDER BY user_id, entry_source`,
+      GROUP BY user_id, source
+      ORDER BY user_id, source`,
       [id]
     );
 
     // Get total counts
     const totalResult = await pool.query(
       `SELECT 
-        entry_source,
+        source,
         COUNT(*) as source_count
       FROM raffle_entries 
       WHERE raffle_id = $1 
-      GROUP BY entry_source`,
+      GROUP BY source`,
       [id]
     );
 
@@ -330,7 +517,7 @@ router.get("/:id/entries", async (req, res) => {
         unique_users: uniqueUsers,
         total_entries: totalEntries,
         by_source: totalResult.rows.map(r => ({
-          source: r.entry_source || 'unknown',
+          source: r.source || 'unknown',
           count: parseInt(r.source_count || 0, 10)
         }))
       }
@@ -341,64 +528,10 @@ router.get("/:id/entries", async (req, res) => {
   }
 });
 
-// POST /api/admin/raffles/:id/draw-winners - Draw multiple winners (Super Admin only)
+// Legacy endpoint - redirects to new pick-winners
 router.post("/:id/draw-winners", superAdminOnly, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { num_winners, selection_method = 'random', allow_repeat = false } = req.body;
-
-    // Get raffle info
-    const raffleResult = await pool.query("SELECT * FROM raffles WHERE id = $1", [id]);
-    if (raffleResult.rows.length === 0) {
-      return res.status(404).json({ error: "Raffle not found" });
-    }
-    const raffle = raffleResult.rows[0];
-
-    const winnersCount = num_winners || raffle.num_winners || 1;
-
-    // Get all entries
-    const entriesResult = await pool.query(
-      "SELECT DISTINCT user_id FROM raffle_entries WHERE raffle_id = $1",
-      [id]
-    );
-
-    if (entriesResult.rows.length === 0) {
-      return res.status(400).json({ error: "No entries for this raffle" });
-    }
-
-    const winners = [];
-    const availableUsers = [...entriesResult.rows];
-
-    for (let i = 0; i < winnersCount && availableUsers.length > 0; i++) {
-      const randomIndex = Math.floor(Math.random() * availableUsers.length);
-      const winner = availableUsers[randomIndex];
-      
-      // Check if already a winner
-      const existing = await pool.query(
-        "SELECT * FROM raffle_winners WHERE raffle_id = $1 AND winner = $2",
-        [id, winner.user_id]
-      );
-
-      if (existing.rows.length === 0) {
-        const winnerResult = await pool.query(
-          `INSERT INTO raffle_winners (raffle_id, winner, prize, won_at)
-           VALUES ($1, $2, $3, CURRENT_TIMESTAMP) RETURNING *`,
-          [id, winner.user_id, raffle.prize_value || raffle.prize_type || "Prize"]
-        );
-        winners.push(winnerResult.rows[0]);
-      }
-
-      if (!allow_repeat) {
-        availableUsers.splice(randomIndex, 1);
-      }
-    }
-
-    await logAdminAction(req, "DRAW_WINNERS", "raffle", id, { winners_count: winners.length });
-    res.json({ winners, count: winners.length });
-  } catch (error) {
-    console.error("Error drawing winners:", error);
-    res.status(500).json({ error: "Failed to draw winners" });
-  }
+  req.url = req.url.replace('/draw-winners', '/pick-winners');
+  router.handle(req, res);
 });
 
 // POST /api/admin/raffles/:id/duplicate - Duplicate raffle (Super Admin only)
@@ -464,6 +597,149 @@ router.post("/:id/end", superAdminOnly, async (req, res) => {
   } catch (error) {
     console.error("Error ending raffle:", error);
     res.status(500).json({ error: "Failed to end raffle" });
+  }
+});
+
+// GET /api/admin/raffles/:id/prize-urls - Get prize URLs for a raffle
+router.get("/:id/prize-urls", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query(
+      `SELECT id, url, used, assigned_to_user_id, created_at
+       FROM raffle_prize_urls 
+       WHERE raffle_id = $1 
+       ORDER BY created_at DESC`,
+      [id]
+    );
+    res.json({ urls: result.rows });
+  } catch (error) {
+    console.error("Error fetching prize URLs:", error);
+    res.status(500).json({ error: "Failed to fetch prize URLs" });
+  }
+});
+
+// POST /api/admin/raffles/:id/prize-urls - Add prize URLs (Super Admin only)
+router.post("/:id/prize-urls", superAdminOnly, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { urls } = req.body;
+
+    if (!urls || !Array.isArray(urls) || urls.length === 0) {
+      return res.status(400).json({ error: "URLs array is required" });
+    }
+
+    const insertPromises = urls.map(url =>
+      pool.query(
+        `INSERT INTO raffle_prize_urls (raffle_id, url, used, created_at)
+         VALUES ($1, $2, false, CURRENT_TIMESTAMP)`,
+        [id, url]
+      )
+    );
+
+    await Promise.all(insertPromises);
+
+    await logAdminAction(req, "ADD_PRIZE_URLS", "raffle", id, { count: urls.length });
+    res.json({ success: true, count: urls.length });
+  } catch (error) {
+    console.error("Error adding prize URLs:", error);
+    res.status(500).json({ error: "Failed to add prize URLs" });
+  }
+});
+
+// DELETE /api/admin/raffles/:id/prize-urls/:urlId - Delete a prize URL (Super Admin only)
+router.delete("/:id/prize-urls/:urlId", superAdminOnly, async (req, res) => {
+  try {
+    const { id, urlId } = req.params;
+
+    const result = await pool.query(
+      "DELETE FROM raffle_prize_urls WHERE id = $1 AND raffle_id = $2 AND used = false RETURNING *",
+      [urlId, id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "URL not found or already used" });
+    }
+
+    await logAdminAction(req, "DELETE_PRIZE_URL", "raffle", id, { url_id: urlId });
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Error deleting prize URL:", error);
+    res.status(500).json({ error: "Failed to delete prize URL" });
+  }
+});
+
+// POST /api/admin/raffles/:id/activate - Activate endless raffle (Super Admin only)
+router.post("/:id/activate", superAdminOnly, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query(
+      `UPDATE raffles 
+       SET active = true, hidden = false, start_date = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP 
+       WHERE id = $1 AND raffle_type = 'manual' 
+       RETURNING *`,
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Raffle not found or not a manual raffle" });
+    }
+
+    await logAdminAction(req, "ACTIVATE_ENDLESS_RAFFLE", "raffle", id);
+    res.json({ raffle: result.rows[0] });
+  } catch (error) {
+    console.error("Error activating raffle:", error);
+    res.status(500).json({ error: "Failed to activate raffle" });
+  }
+});
+
+// GET /api/admin/raffles/:id/detail - Get detailed raffle info including entries, winners, and URLs
+router.get("/:id/detail", async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Get raffle
+    const raffleResult = await pool.query("SELECT * FROM raffles WHERE id = $1", [id]);
+    if (raffleResult.rows.length === 0) {
+      return res.status(404).json({ error: "Raffle not found" });
+    }
+    
+    const raffle = raffleResult.rows[0];
+    raffle.entry_sources = typeof raffle.entry_sources === 'string' ? JSON.parse(raffle.entry_sources || '[]') : raffle.entry_sources;
+    raffle.entries_per_source = typeof raffle.entries_per_source === 'string' ? JSON.parse(raffle.entries_per_source || '{}') : raffle.entries_per_source;
+
+    // Get entries count
+    const entriesCount = await pool.query(
+      "SELECT COUNT(*) as count FROM raffle_entries WHERE raffle_id = $1",
+      [id]
+    );
+
+    // Get winners
+    const winnersResult = await pool.query(
+      `SELECT id, user_id, prize_type, cwallet_claim_url, assigned_at
+       FROM raffle_winners 
+       WHERE raffle_id = $1 
+       ORDER BY assigned_at DESC`,
+      [id]
+    );
+
+    // Get prize URLs
+    const urlsResult = await pool.query(
+      `SELECT id, url, used, assigned_to_user_id, created_at
+       FROM raffle_prize_urls 
+       WHERE raffle_id = $1 
+       ORDER BY created_at DESC`,
+      [id]
+    );
+
+    res.json({
+      raffle,
+      entries_count: parseInt(entriesCount.rows[0]?.count || 0, 10),
+      winners: winnersResult.rows,
+      prize_urls: urlsResult.rows
+    });
+  } catch (error) {
+    console.error("Error fetching raffle detail:", error);
+    res.status(500).json({ error: "Failed to fetch raffle detail" });
   }
 });
 

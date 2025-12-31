@@ -1,6 +1,7 @@
 import express from "express";
 import pool from "../../utils/db.js";
 import auth from "../../middleware/auth.js";
+import { isEntrySourceAllowed } from "../../utils/raffleValidation.js";
 
 const router = express.Router();
 
@@ -97,19 +98,22 @@ router.post("/user-spin", auth, async (req, res) => {
     // Add entries to active raffles if target_raffle_id is set
     if (config.target_raffle_id) {
       const activeRaffles = await pool.query(
-        `SELECT id FROM raffles 
+        `SELECT id, entry_sources FROM raffles 
          WHERE active = true 
          AND (end_date IS NULL OR end_date > CURRENT_TIMESTAMP)
          AND (start_date IS NULL OR start_date <= CURRENT_TIMESTAMP)`
       );
       
       for (const raffle of activeRaffles.rows) {
-        await pool.query(
-          `INSERT INTO raffle_entries (raffle_id, user_id, entry_time, entry_source)
-           VALUES ($1, $2, CURRENT_TIMESTAMP, 'manual')
-           ON CONFLICT (raffle_id, user_id) DO NOTHING`,
-          [raffle.id, user_id]
-        );
+        // Validate that manual source is allowed for this raffle
+        if (!isEntrySourceAllowed(raffle, 'manual')) {
+          console.log(`Manual entry not allowed for raffle ${raffle.id} - source not in entry_sources`);
+          continue; // Skip this raffle
+        }
+        
+        // Use the new entry system
+        const { addRaffleEntries } = await import("../utils/raffleEntries.js");
+        await addRaffleEntries(user_id, raffle.id, 'manual');
       }
     }
     
@@ -201,14 +205,17 @@ router.post("/user-entries", auth, async (req, res) => {
     let totalEntriesAdded = 0;
     
     for (const raffle of rafflesToUpdate) {
-      // Add entries (multiple entries per user allowed if allow_repeat_winners is true)
+      // Validate that manual source is allowed for this raffle
+      if (!isEntrySourceAllowed(raffle, 'manual')) {
+        console.log(`Manual entry not allowed for raffle ${raffle.id} - source not in entry_sources`);
+        continue; // Skip this raffle
+      }
+      
+      // Use the new entry system which handles multipliers
+      const { addRaffleEntries } = await import("../utils/raffleEntries.js");
+      // Add entries multiple times (each call adds entries_per_source['manual'] entries)
       for (let i = 0; i < entries; i++) {
-        await pool.query(
-          `INSERT INTO raffle_entries (raffle_id, user_id, entry_time, entry_source)
-           VALUES ($1, $2, CURRENT_TIMESTAMP, 'manual')
-           ON CONFLICT (raffle_id, user_id) DO UPDATE SET entry_time = CURRENT_TIMESTAMP`,
-          [raffle.id, user_id]
-        );
+        await addRaffleEntries(user_id, raffle.id, 'manual');
         totalEntriesAdded++;
       }
     }
@@ -427,7 +434,7 @@ router.post("/force-winner", auth, async (req, res) => {
     
     // Check if already a winner
     const existingWinner = await pool.query(
-      "SELECT * FROM raffle_winners WHERE raffle_id = $1 AND winner = $2",
+      "SELECT * FROM raffle_winners WHERE raffle_id = $1 AND user_id = $2",
       [raffle_id, user_id]
     );
     
@@ -437,10 +444,10 @@ router.post("/force-winner", auth, async (req, res) => {
     
     // Add winner
     const winnerResult = await pool.query(
-      `INSERT INTO raffle_winners (raffle_id, winner, prize, won_at)
-       VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
+      `INSERT INTO raffle_winners (raffle_id, user_id, prize_type, cwallet_claim_url, assigned_at)
+       VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)
        RETURNING *`,
-      [raffle_id, user_id, prize || raffleResult.rows[0].prize_value]
+      [raffle_id, user_id, raffleResult.rows[0].prize_type || null, prize || raffleResult.rows[0].prize_value || null]
     );
     
     // Log activity

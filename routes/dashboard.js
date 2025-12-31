@@ -42,7 +42,7 @@ router.get("/dashboard-stats", async (req, res) => {
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
     const raffleEntriesTodayResult = await pool.query(
-      "SELECT COUNT(*) as count FROM raffle_entries WHERE user_id = $1 AND entry_time >= $2",
+      "SELECT COUNT(*) as count FROM raffle_entries WHERE user_id = $1 AND created_at >= $2",
       [userId, todayStart]
     );
     

@@ -1,6 +1,7 @@
 import express from "express";
 import pool from "../utils/db.js";
 import { getUserFromRequest, requireUser } from "../middleware/userAuth.js";
+import { addRaffleEntries } from "../utils/raffleEntries.js";
 
 const router = express.Router();
 
@@ -35,7 +36,7 @@ router.post("/secret-code", requireUser, async (req, res) => {
     
     // Find active raffles with matching secret code
     const rafflesResult = await pool.query(
-      `SELECT id, title, entries_per_source 
+      `SELECT id, title, entries_per_source, entry_sources 
        FROM raffles 
        WHERE active = true 
        AND secret = true 
@@ -56,42 +57,37 @@ router.post("/secret-code", requireUser, async (req, res) => {
     const raffleIds = [];
     
     for (const raffle of rafflesResult.rows) {
-      // Check if already entered
-      const existingEntry = await pool.query(
-        "SELECT * FROM raffle_entries WHERE raffle_id = $1 AND user_id = $2",
-        [raffle.id, userId]
-      );
+      // Use the new entry system which handles multipliers and validation
+      await addRaffleEntries(pool, raffle, userId, 'secret_code');
       
-      if (existingEntry.rows.length > 0) {
-        continue; // Skip if already entered
+      // Calculate entries added
+      let entriesPerSource = raffle.entries_per_source;
+      if (typeof entriesPerSource === 'string') {
+        try {
+          entriesPerSource = JSON.parse(entriesPerSource || '{}');
+        } catch (e) {
+          entriesPerSource = {};
+        }
       }
+      const multiplier = entriesPerSource['secret_code'] || 0;
       
-      // Get entries per source from JSONB
-      const entriesPerSource = raffle.entries_per_source || {};
-      const entriesToAdd = entriesPerSource.secret_code || 10;
-      
-      // Add entry
-      await pool.query(
-        `INSERT INTO raffle_entries (raffle_id, user_id, entry_source, entry_time)
-         VALUES ($1, $2, 'secret_code', CURRENT_TIMESTAMP)`,
-        [raffle.id, userId]
-      );
-      
-      // Log activity
-      await pool.query(
-        `INSERT INTO activity_log (user_id, activity_type, title, description, created_at)
-         VALUES ($1, 'secret_code', 'Secret Code Redeemed', 'Redeemed secret code for ' || $2, CURRENT_TIMESTAMP)`,
-        [userId, raffle.title]
-      );
-      
-      entriesAdded.push(entriesToAdd);
-      raffleIds.push(raffle.id.toString());
+      if (multiplier > 0) {
+        // Log activity
+        await pool.query(
+          `INSERT INTO activity_log (user_id, activity_type, title, description, created_at)
+           VALUES ($1, 'secret_code', 'Secret Code Redeemed', 'Redeemed secret code for ' || $2, CURRENT_TIMESTAMP)`,
+          [userId, raffle.title]
+        );
+        
+        entriesAdded.push(multiplier);
+        raffleIds.push(raffle.id.toString());
+      }
     }
     
     if (entriesAdded.length === 0) {
       return res.json({
         success: false,
-        message: "You have already entered all raffles for this code",
+        message: "Invalid secret code or you have already entered all raffles for this code",
       });
     }
     
@@ -146,15 +142,9 @@ router.get("/entries", async (req, res) => {
         re.id,
         re.raffle_id as "raffleId",
         r.title as "raffleTitle",
-        re.entry_source as source,
-        re.entry_time as "createdAt",
-        CASE 
-          WHEN re.entry_source = 'daily_checkin' THEN COALESCE((r.entries_per_source->>'daily_checkin')::int, 1)
-          WHEN re.entry_source = 'wheel' THEN COALESCE((r.entries_per_source->>'wheel')::int, 5)
-          WHEN re.entry_source = 'secret_code' THEN COALESCE((r.entries_per_source->>'secret_code')::int, 10)
-          WHEN re.entry_source = 'manual' THEN COALESCE((r.entries_per_source->>'manual')::int, 0)
-          ELSE 1
-        END as entries
+        re.source,
+        re.created_at as "createdAt",
+        1 as entries
       FROM raffle_entries re
       JOIN raffles r ON re.raffle_id = r.id
       WHERE re.user_id = $1
@@ -167,7 +157,7 @@ router.get("/entries", async (req, res) => {
       params.push(raffleId);
     }
     
-    query += " ORDER BY re.entry_time DESC";
+    query += " ORDER BY re.created_at DESC";
     
     const result = await pool.query(query, params);
     
@@ -213,14 +203,15 @@ router.get("/past", async (req, res) => {
         end_date as "endsAt",
         created_at as "createdAt",
         active,
+        raffle_type,
         CASE 
-          WHEN end_date < CURRENT_TIMESTAMP THEN 'ended'
+          WHEN end_date IS NOT NULL AND end_date < CURRENT_TIMESTAMP THEN 'ended'
           WHEN active = false THEN 'cancelled'
           ELSE 'active'
         END as status
        FROM raffles 
-       WHERE end_date < CURRENT_TIMESTAMP OR active = false
-       ORDER BY end_date DESC 
+       WHERE (end_date IS NOT NULL AND end_date < CURRENT_TIMESTAMP) OR active = false
+       ORDER BY end_date DESC NULLS LAST
        LIMIT 50`
     );
     
@@ -228,7 +219,7 @@ router.get("/past", async (req, res) => {
     const rafflesWithWinners = await Promise.all(
       result.rows.map(async (raffle) => {
         const winnersResult = await pool.query(
-          "SELECT winner FROM raffle_winners WHERE raffle_id = $1",
+          "SELECT user_id FROM raffle_winners WHERE raffle_id = $1",
           [raffle.id]
         );
         
@@ -241,10 +232,11 @@ router.get("/past", async (req, res) => {
           secretCode: raffle.secretCode || undefined,
           isSecret: raffle.secret || false,
           maxWinners: raffle.maxWinners || 1,
-          winners: winnersResult.rows.map((w) => w.winner),
-          endsAt: raffle.endsAt ? raffle.endsAt.toISOString() : "",
+          winners: winnersResult.rows.map((w) => w.user_id),
+          endsAt: raffle.endsAt ? raffle.endsAt.toISOString() : null,
           createdAt: raffle.createdAt.toISOString(),
           status: raffle.status,
+          raffleType: raffle.raffle_type || 'timed',
         };
       })
     );

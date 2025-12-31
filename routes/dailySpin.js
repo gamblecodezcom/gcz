@@ -5,6 +5,7 @@ import { getUserFromRequest } from "../middleware/userAuth.js";
 import { awardXP, updateStreak } from "./gamification.js";
 import { broadcastToUser } from "./realtime.js";
 import { notifyWheelSpin } from "../bot/services/notifications.js";
+import { addRaffleEntries, addEntriesToActiveRaffles, getPrimaryEndlessRaffle } from "../utils/raffleEntries.js";
 
 const router = express.Router();
 
@@ -152,42 +153,53 @@ router.post("/spin", async (req, res) => {
       );
     }
     
-    // Calculate entries added (if reward is a number, it's raffle entries)
-    const entriesAdded = typeof reward === "number" ? reward : 0;
-    
-    // If entries were added, add them to active raffles
-    if (entriesAdded > 0 && user) {
+    // Add raffle entries for wheel spin
+    let entriesAdded = 0;
+    if (user) {
       try {
-        // Get wheel config to find target raffle
+        // First try to get target raffle from wheel_config
         const wheelConfig = await pool.query(
           "SELECT target_raffle_id FROM wheel_config WHERE id = 1"
         );
         
+        let targetRaffle = null;
         if (wheelConfig.rows.length > 0 && wheelConfig.rows[0].target_raffle_id) {
-          const targetRaffleId = wheelConfig.rows[0].target_raffle_id;
-          
-          // Check if raffle is active
-          const raffleCheck = await pool.query(
-            "SELECT id, entries_per_source FROM raffles WHERE id = $1 AND active = true",
-            [targetRaffleId]
+          const raffleResult = await pool.query(
+            "SELECT * FROM raffles WHERE id = $1",
+            [wheelConfig.rows[0].target_raffle_id]
           );
-          
-          if (raffleCheck.rows.length > 0) {
-            // Check if user already has entry
-            const existingEntry = await pool.query(
-              "SELECT * FROM raffle_entries WHERE raffle_id = $1 AND user_id = $2",
-              [targetRaffleId, userId]
-            );
-            
-            if (existingEntry.rows.length === 0) {
-              // Add entry
-              await pool.query(
-                `INSERT INTO raffle_entries (raffle_id, user_id, entry_source, entry_time)
-                 VALUES ($1, $2, 'wheel_spin', CURRENT_TIMESTAMP)`,
-                [targetRaffleId, userId]
-              );
+          if (raffleResult.rows.length > 0) {
+            targetRaffle = raffleResult.rows[0];
+          }
+        } else {
+          // Fallback to primary endless raffle
+          targetRaffle = await getPrimaryEndlessRaffle(pool);
+        }
+        
+        if (targetRaffle) {
+          // Use 'wheel' as the source (not 'wheel_spin')
+          await addRaffleEntries(pool, targetRaffle, userId, 'wheel');
+          // Calculate entries added by checking multiplier
+          let entriesPerSource = targetRaffle.entries_per_source;
+          if (typeof entriesPerSource === 'string') {
+            try {
+              entriesPerSource = JSON.parse(entriesPerSource || '{}');
+            } catch (e) {
+              entriesPerSource = {};
             }
           }
+          entriesAdded = entriesPerSource['wheel'] || 0;
+        } else {
+          // If no specific raffle, add to all active raffles that accept wheel
+          await addEntriesToActiveRaffles(pool, userId, 'wheel');
+          // Count total entries added
+          const countResult = await pool.query(
+            `SELECT COUNT(*) as count FROM raffle_entries 
+             WHERE user_id = $1 AND source = 'wheel' 
+             AND created_at >= CURRENT_TIMESTAMP - INTERVAL '1 minute'`,
+            [userId]
+          );
+          entriesAdded = parseInt(countResult.rows[0]?.count || 0, 10);
         }
       } catch (error) {
         console.error("Error adding raffle entries from wheel:", error);

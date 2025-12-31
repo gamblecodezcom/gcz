@@ -157,7 +157,7 @@ CREATE TABLE IF NOT EXISTS raffles (
   raffle_type TEXT DEFAULT 'timed' CHECK (raffle_type IN ('timed', 'manual', 'daily')),
   num_winners INTEGER DEFAULT 1,
   secret_code TEXT,
-  entry_sources JSONB DEFAULT '["daily_checkin","wheel","secret_code","manual"]'::jsonb,
+  entry_sources JSONB DEFAULT '["daily_checkin", "wheel", "secret_code", "manual"]'::jsonb,
   entries_per_source JSONB DEFAULT '{"daily_checkin":1,"wheel":5,"secret_code":10,"manual":0}'::jsonb,
   winner_selection_method TEXT DEFAULT 'random' CHECK (winner_selection_method IN ('random','weighted')),
   allow_repeat_winners BOOLEAN DEFAULT false,

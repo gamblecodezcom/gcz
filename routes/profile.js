@@ -648,8 +648,48 @@ router.get("/rewards/telegram", requireUser, async (req, res) => {
 });
 
 /**
+ * GET /api/profile/crypto-addresses
+ * Get crypto addresses (PIN required - sensitive data)
+ * 
+ * @route GET /api/profile/crypto-addresses
+ * @returns {Promise<{btc_address, eth_address, sol_address, usdt_address}>} 200 - Success response
+ * @returns {Promise<{error: string}>} 401 - Authentication required
+ * @returns {Promise<{error: string}>} 403 - PIN required
+ * @returns {Promise<{error: string}>} 500 - Server error
+ */
+router.get("/crypto-addresses", requirePin, async (req, res) => {
+  try {
+    const userId = req.user.user_id;
+    
+    const result = await pool.query(
+      `SELECT btc_address, eth_address, sol_address, usdt_address 
+       FROM crypto_addresses 
+       WHERE user_id = $1`,
+      [userId]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(200).json({
+        btc_address: null,
+        eth_address: null,
+        sol_address: null,
+        usdt_address: null
+      });
+    }
+    
+    res.status(200).json(result.rows[0]);
+  } catch (error) {
+    console.error("Error fetching crypto addresses:", error);
+    res.status(500).json({ 
+      error: "Failed to fetch crypto addresses",
+      message: error instanceof Error ? error.message : "Unknown error"
+    });
+  }
+});
+
+/**
  * POST /api/profile/crypto-addresses
- * Update crypto addresses (BTC, ETH, SOL, USDT)
+ * Update crypto addresses (BTC, ETH, SOL, USDT) - PIN required
  * 
  * @route POST /api/profile/crypto-addresses
  * @param {Object} req.body
@@ -659,23 +699,41 @@ router.get("/rewards/telegram", requireUser, async (req, res) => {
  * @param {string} [req.body.usdt] - USDT address
  * @returns {Promise<{success: boolean, message: string}>} 200 - Success response
  * @returns {Promise<{error: string}>} 401 - Authentication required
+ * @returns {Promise<{error: string}>} 403 - PIN required
  * @returns {Promise<{error: string}>} 500 - Server error
  */
-router.post("/crypto-addresses", requireUser, async (req, res) => {
+router.post("/crypto-addresses", requirePin, async (req, res) => {
   try {
     const { btc, eth, sol, usdt } = req.body;
     const userId = req.user.user_id;
     
-    // Store crypto addresses in users table or a separate crypto_addresses table
-    // For now, we'll store them in a JSONB column or separate columns
-    // This is a placeholder implementation
-    const updates = [];
-    const values = [];
-    let paramIndex = 1;
+    // Insert or update crypto addresses
+    await pool.query(
+      `INSERT INTO crypto_addresses (user_id, btc_address, eth_address, sol_address, usdt_address, updated_at)
+       VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)
+       ON CONFLICT (user_id) 
+       DO UPDATE SET 
+         btc_address = COALESCE(EXCLUDED.btc_address, crypto_addresses.btc_address),
+         eth_address = COALESCE(EXCLUDED.eth_address, crypto_addresses.eth_address),
+         sol_address = COALESCE(EXCLUDED.sol_address, crypto_addresses.sol_address),
+         usdt_address = COALESCE(EXCLUDED.usdt_address, crypto_addresses.usdt_address),
+         updated_at = CURRENT_TIMESTAMP`,
+      [
+        userId,
+        btc || null,
+        eth || null,
+        sol || null,
+        usdt || null
+      ]
+    );
     
-    // TODO: Add crypto address columns to users table or create crypto_addresses table
-    // For now, this is a placeholder that returns success
-    // When implemented, update the users table or crypto_addresses table
+    // Log activity
+    await pool.query(
+      `INSERT INTO activity_log (user_id, activity_type, title, description, created_at)
+       VALUES ($1, 'crypto_addresses_updated', 'Crypto Addresses Updated', 'Updated crypto wallet addresses', CURRENT_TIMESTAMP)
+       ON CONFLICT DO NOTHING`,
+      [userId]
+    );
     
     res.status(200).json({ 
       success: true, 

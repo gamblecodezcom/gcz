@@ -1,5 +1,6 @@
 import express from "express";
 import pool from "../utils/db.js";
+import { addRaffleEntries } from "../utils/raffleEntries.js";
 
 const router = express.Router();
 
@@ -32,16 +33,18 @@ router.get("/", async (_, res) => {
     const result = await pool.query(
       `SELECT 
         id,
-        name as title,
+        title,
         description,
         prize_type as "prizeType",
         prize_value as "prize",
-        secret_password as "secretCode",
+        secret_code as "secretCode",
         secret as "isSecret",
-        1 as "maxWinners",
+        num_winners as "maxWinners",
         end_date as "endsAt",
-        updated_at as "createdAt",
+        created_at as "createdAt",
         active,
+        hidden,
+        raffle_type,
         CASE 
           WHEN end_date IS NOT NULL AND end_date < CURRENT_TIMESTAMP THEN 'ended'
           WHEN active = false THEN 'cancelled'
@@ -49,7 +52,9 @@ router.get("/", async (_, res) => {
         END as status
        FROM raffles 
        WHERE active = true 
+       AND hidden = false
        AND (end_date IS NULL OR end_date >= CURRENT_TIMESTAMP)
+       AND (start_date IS NULL OR start_date <= CURRENT_TIMESTAMP)
        ORDER BY end_date ASC NULLS LAST`
     );
     
@@ -57,7 +62,7 @@ router.get("/", async (_, res) => {
     const rafflesWithWinners = await Promise.all(
       result.rows.map(async (raffle) => {
         const winnersResult = await pool.query(
-          "SELECT winner FROM raffle_winners WHERE raffle_id = $1",
+          "SELECT user_id FROM raffle_winners WHERE raffle_id = $1",
           [raffle.id]
         );
         
@@ -70,10 +75,11 @@ router.get("/", async (_, res) => {
           secretCode: raffle.secretCode || undefined,
           isSecret: raffle.isSecret || false,
           maxWinners: raffle.maxWinners || 1,
-          winners: winnersResult.rows.map((w) => w.winner),
+          winners: winnersResult.rows.map((w) => w.user_id),
           endsAt: raffle.endsAt ? raffle.endsAt.toISOString() : null,
           createdAt: raffle.createdAt ? raffle.createdAt.toISOString() : new Date().toISOString(),
           status: raffle.status,
+          raffleType: raffle.raffle_type || 'timed',
         };
       })
     );
@@ -119,23 +125,49 @@ router.post("/enter", async (req, res) => {
       return res.status(404).json({ error: "Raffle not found or inactive" });
     }
 
-    // Check if already entered
-    const exists = await pool.query(
-      "SELECT * FROM raffle_entries WHERE user_id = $1 AND raffle_id = $2",
-      [user_id, raffle_id]
-    );
-
-    if (exists.rows.length > 0) {
-      return res.status(409).json({ error: "Already entered" });
+    // Use the new entry system which handles multipliers and validation
+    const raffle = raffleCheck.rows[0];
+    
+    // Check if manual source is allowed
+    let entrySources = raffle.entry_sources;
+    if (typeof entrySources === 'string') {
+      try {
+        entrySources = JSON.parse(entrySources || '[]');
+      } catch (e) {
+        entrySources = [];
+      }
+    }
+    if (!Array.isArray(entrySources) || !entrySources.includes('manual')) {
+      return res.status(403).json({ 
+        error: "Manual entry is not allowed for this raffle",
+        message: "Manual entry is not allowed for this raffle"
+      });
     }
 
-    // Insert entry
-    await pool.query(
-      "INSERT INTO raffle_entries (user_id, raffle_id) VALUES ($1, $2)",
-      [user_id, raffle_id]
-    );
+    await addRaffleEntries(pool, raffle, user_id, 'manual');
+    
+    // Calculate entries added
+    let entriesPerSource = raffle.entries_per_source;
+    if (typeof entriesPerSource === 'string') {
+      try {
+        entriesPerSource = JSON.parse(entriesPerSource || '{}');
+      } catch (e) {
+        entriesPerSource = {};
+      }
+    }
+    const entriesAdded = entriesPerSource['manual'] || 0;
 
-    res.status(200).json({ success: true, message: "Entry submitted" });
+    if (entriesAdded === 0) {
+      return res.status(200).json({ 
+        success: true, 
+        message: "Entry submitted (0 entries - manual entries may be disabled for this raffle)" 
+      });
+    }
+
+    res.status(200).json({ 
+      success: true, 
+      message: `Entry submitted (${entriesAdded} entries added)` 
+    });
   } catch (error) {
     console.error("Error entering raffle:", error);
     res.status(500).json({ 
@@ -226,16 +258,17 @@ router.get("/endless", async (req, res) => {
     const raffleResult = await pool.query(
       `SELECT 
         id,
-        name as title,
+        title,
         description,
         prize_type as "prizeType",
         prize_value as "prize",
-        secret_password as "secretCode",
+        secret_code as "secretCode",
         secret as "isSecret",
-        1 as "maxWinners",
+        num_winners as "maxWinners",
         end_date as "endsAt",
-        updated_at as "createdAt",
+        created_at as "createdAt",
         active,
+        raffle_type,
         CASE 
           WHEN end_date IS NOT NULL AND end_date < CURRENT_TIMESTAMP THEN 'ended'
           WHEN active = false THEN 'cancelled'
@@ -277,7 +310,7 @@ router.get("/endless", async (req, res) => {
     
     // Get winners
     const winnersResult = await pool.query(
-      "SELECT winner FROM raffle_winners WHERE raffle_id = $1",
+      "SELECT user_id FROM raffle_winners WHERE raffle_id = $1",
       [targetRaffleId]
     );
     
@@ -291,11 +324,11 @@ router.get("/endless", async (req, res) => {
         secretCode: raffle.secretCode || undefined,
         isSecret: raffle.isSecret || false,
         maxWinners: raffle.maxWinners || 1,
-        winners: winnersResult.rows.map((w) => w.winner),
+        winners: winnersResult.rows.map((w) => w.user_id),
         endsAt: raffle.endsAt ? raffle.endsAt.toISOString() : null,
         createdAt: raffle.createdAt ? raffle.createdAt.toISOString() : new Date().toISOString(),
         status: raffle.status,
-        raffleType: 'endless', // Endless raffles are identified by being linked via wheel_config
+        raffleType: raffle.raffle_type || 'daily', // Endless raffles are identified by being linked via wheel_config
       },
       userEntries,
       totalEntries,
