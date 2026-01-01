@@ -1,132 +1,57 @@
-import { logger } from '../utils/logger.js';
-import { config } from '../config.js';
-import {
-  getUserProfile,
-  markUserStarted,
-  setCwalletId,
-  setRunewagerUsername,
-  touchUser
-} from '../utils/storage.js';
+import { getTelegramUserById } from "../services/telegramRoles.js";
 
-const SUPER_ADMIN_TELEGRAM_ID = 6668510825;
+export function setupCommandList(bot) {
+  bot.command("commands", async (ctx) => {
+    const telegramId = ctx.from.id;
 
-/**
- * Setup user-facing commands
- */
-export function setupUserCommands(bot) {
-  // /start command with welcome message and buttons
-  bot.start(async (ctx) => {
-    try {
-      const user = ctx.from;
-      touchUser(user);
-      markUserStarted(user.id);
+    const role = await getTelegramUserById(telegramId);
+    const level = role?.level || 1; // default: member
 
-      const welcomeMessage = `👋 Welcome to GambleCodez!
+    const userCommands = [
+      "• /start – Welcome menu",
+      "• /profile – View your profile",
+      "• /setcwallet <id> – Save Cwallet ID",
+      "• /setrunewager <username> – Save Runewager username",
+      "• /donate – Send promo link/code",
+      "• /commands – Show available commands"
+    ];
 
-🎰 Redeem today, flex tomorrow.
-🔥 Track bonuses, join giveaways, and unlock exclusive drops.
+    const modCommands = [
+      "• /whois – Inspect a user",
+      "• /postpromo – Post promo manually"
+    ];
 
-Use the buttons below to join our community.`;
+    const adminCommands = [
+      "• /approve <id> – Approve promo",
+      "• /editpromo <id> <text> – Edit promo",
+      "• /broadcast – Broadcast message",
+      "• /giveaway start|cancel|status – Manage giveaways",
+      "• /join – Join giveaway (if allowed)"
+    ];
 
-      const inlineKeyboard = {
-        inline_keyboard: [
-          [
-            { text: '📢 Join Channel', url: 'https://gamblecodez.com/Channel' },
-            { text: '👥 Join Community Group', url: 'https://gamblecodez.com/Group' }
-          ],
-          [
-            { text: '🌐 Open Web App', url: 'https://t.me/GambleCodezCasinoDrops_bot/GambleCodez' }
-          ]
-        ]
-      };
+    const superAdminCommands = [
+      "• /admin @user – Promote to admin",
+      "• /mod @user – Promote to moderator",
+      "• /demote @user – Demote to member"
+    ];
 
-      await ctx.reply(welcomeMessage, {
-        reply_markup: inlineKeyboard
-      });
-    } catch (error) {
-      logger.error('Start command error:', error);
-      ctx.reply('❌ An error occurred. Please try again.');
+    let message = `📜 *Your Available Commands*\n\n`;
+
+    // Everyone gets user commands
+    message += `👤 *User Commands:*\n${userCommands.join("\n")}\n\n`;
+
+    if (level >= 3) {
+      message += `🛡️ *Moderator Commands:*\n${modCommands.join("\n")}\n\n`;
     }
-  });
 
-  // /profile command
-  bot.command('profile', async (ctx) => {
-    try {
-      const userId = ctx.from.id.toString();
-      const profile = getUserProfile(userId);
-
-      let message = `👤 *Your Profile*\n\n`;
-      message += `🆔 Telegram ID: \`${profile.id}\`\n`;
-      message += `👤 Username: ${profile.username ? `@${profile.username}` : 'Not set'}\n`;
-      message += `📝 Name: ${profile.first_name || ''} ${profile.last_name || ''}\n\n`;
-      message += `💸 Cwallet ID: ${profile.cwalletId || '❌ Not set'}\n`;
-      message += `🎰 Runewager: ${profile.runewager || '❌ Not set'}\n\n`;
-      message += `📅 First seen: ${new Date(profile.created_at).toLocaleDateString()}\n`;
-      message += `🔄 Last updated: ${new Date(profile.updated_at).toLocaleDateString()}`;
-
-      await ctx.reply(message, { parse_mode: 'Markdown' });
-    } catch (error) {
-      logger.error('Profile command error:', error);
-      ctx.reply('❌ Error fetching profile.');
+    if (level >= 4) {
+      message += `🔧 *Admin Commands:*\n${adminCommands.join("\n")}\n\n`;
     }
-  });
 
-  // /setcwallet <id>
-  bot.command('setcwallet', async (ctx) => {
-    try {
-      const parts = ctx.message.text.split(' ');
-      if (parts.length < 2) {
-        return ctx.reply('❌ Usage: `/setcwallet <your_cwallet_id>`', { parse_mode: 'Markdown' });
-      }
-
-      const cwalletId = parts.slice(1).join(' ').trim();
-      if (!cwalletId) {
-        return ctx.reply('❌ Cwallet ID cannot be empty.');
-      }
-
-      setCwalletId(ctx.from.id, cwalletId, ctx.from);
-      await ctx.reply(`✅ Cwallet ID saved: \`${cwalletId}\``, { parse_mode: 'Markdown' });
-    } catch (error) {
-      logger.error('Setcwallet command error:', error);
-      ctx.reply('❌ Error saving Cwallet ID.');
+    if (level === 5) {
+      message += `👑 *Super Admin Commands:*\n${superAdminCommands.join("\n")}\n\n`;
     }
-  });
 
-  // /setrunewager <username>
-  bot.command('setrunewager', async (ctx) => {
-    try {
-      const parts = ctx.message.text.split(' ');
-      if (parts.length < 2) {
-        return ctx.reply('❌ Usage: `/setrunewager <your_runewager_username>`', { parse_mode: 'Markdown' });
-      }
-
-      const runewager = parts.slice(1).join(' ').trim();
-      if (!runewager) {
-        return ctx.reply('❌ Runewager username cannot be empty.');
-      }
-
-      setRunewagerUsername(ctx.from.id, runewager, ctx.from);
-      await ctx.reply(`✅ Runewager username saved: \`${runewager}\``, { parse_mode: 'Markdown' });
-    } catch (error) {
-      logger.error('Setrunewager command error:', error);
-      ctx.reply('❌ Error saving Runewager username.');
-    }
-  });
-
-  // /join command for giveaways
-  bot.command('join', async (ctx) => {
-    // Only Super Admin Telegram ID (6668510825) can join giveaways
-    if (ctx.from?.id !== SUPER_ADMIN_TELEGRAM_ID) {
-      return ctx.reply('This command is restricted to Super Admin only.');
-    }
-    
-    try {
-      // This will be handled by the giveaway service
-      // Just acknowledge here if no active giveaway
-      await ctx.reply('⏳ Checking for active giveaways...');
-    } catch (error) {
-      logger.error('Join command error:', error);
-      ctx.reply('❌ Error processing join request.');
-    }
+    await ctx.reply(message, { parse_mode: "Markdown" });
   });
 }

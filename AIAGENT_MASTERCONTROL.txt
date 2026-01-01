@@ -1,0 +1,412 @@
+# ============================================================
+#  G A M B L E C O D E Z — PERSONAL SERVICES CHEAT SHEET
+#  (FULLY UPDATED — FRONTEND, BACKEND, API, BOT, ENV, SYSTEM)
+# ============================================================
+
+BRAND MOTTO: "Redeem today, flex tomorrow"
+DOMAIN: https://gamblecodez.com
+STACK: React/Next.js + Vite + TailwindCSS + TypeScript
+ENV PATH: /var/www/html/gcz/.env
+REPO: github.com/gamblecodezcom/gcz
+
+==============================================================
+🎨 BRANDING + THEME
+==============================================================
+- Background: #02040A → #050816 gradient
+- Text: #F5F5F5 (primary), #9FA6B2 (muted)
+- Neon accents:
+  - Cyan #00F5FF
+  - Pink #FF007A
+  - Yellow #FFD600
+  - Green #00FF85
+- Crown logo: flip animation on hover
+- Rainbow flash SVG: once every 24h per device
+- Neon dice animation on black background
+- Site cards: neon borders, glow badges, hover depth
+- Menu button: persistent, hover glow
+
+==============================================================
+📍 FRONTEND ROUTES
+==============================================================
+/                       → Home  
+/drops                  → Promo Code Drops  
+/raffles                → Raffles Board  
+/wheel                  → Degen Daily Wheel  
+/affiliates             → All Sites  
+/sites/recent           → Recently Added  
+/leaderboard            → Leaderboard  
+/blacklist              → Blacklist Safety Board  
+/contact                → Contact Form  
+/profile                → User Profile (PIN Gate)
+
+==============================================================
+📢 LIVE NOTIFICATION BANNER
+==============================================================
+Endpoint: GET /api/notifications/live  
+Types: promo, winner, new_site, system  
+Dismissible: localStorage key → gcz_banner_dismissed_<id>  
+Colors:
+- promo → pink glow  
+- winner → gold glow  
+- new_site → cyan glow  
+- system → purple glow  
+
+==============================================================
+🔔 SITE PUSH NOTIFICATIONS (IN‑APP)
+==============================================================
+Navbar bell → dropdown  
+GET /api/push  
+PATCH /api/push/:id/read  
+
+==============================================================
+📱 PWA + NOTIFICATION PROMPTS
+==============================================================
+- Ask for notifications on first visit  
+- Show PWA install banner (beforeinstallprompt)  
+- Store decisions in localStorage  
+
+==============================================================
+🧭 RECENTLY ADDED SITES PAGE
+==============================================================
+GET /api/sites/recent  
+Sort: date_added DESC  
+NEW badge: added within 7 days  
+Filters: jurisdiction + categories  
+SEO: jump‑to‑filters anchor  
+
+==============================================================
+⚠️ RAFFLE SYSTEM RULES
+==============================================================
+- PIN cannot be reset by user  
+- Must join newsletter to access raffles  
+- Admin-only PIN reset  
+- Disclaimers shown on:
+  - Join modal  
+  - Profile  
+  - Raffles footer  
+- Cwallet ID example: 49657363 (admin)  
+
+==============================================================
+🪙 CWALLET AFFILIATE LINK
+==============================================================
+If user has no cwallet_id → show CTA  
+Default: https://cwallet.com/referral/Nwnah81L  
+Admin override: settings table → key: cwallet_affiliate_url  
+
+==============================================================
+🔍 SEO REQUIREMENTS
+==============================================================
+- Full meta tags per page  
+- OG + Twitter cards  
+- robots.txt + sitemap.xml  
+- JSON-LD ItemList for site lists  
+- Jump-to-filters anchor  
+
+==============================================================
+🧱 SITE CARD RULES
+==============================================================
+Required fields:
+name, slug, icon_url, category, jurisdiction, bonus_code,
+bonus_description, redemption_speed, redemption_minimum,
+redemption_type, is_top_pick, resolveddomain, redirect_slug,
+date_added
+
+Category → emblem + color:
+- sweeps   → gold + 🎟️  
+- crypto   → neon green + ₿  
+- lootbox  → orange + 🎁  
+- faucet   → cyan + 💧  
+- instant  → yellow + ⚡  
+- kyc      → red + 🛂  
+- top_pick → white + gold glow + 👑  
+
+Jurisdiction badges:
+- US → neon blue  
+- NON_US → neon purple  
+- GLOBAL → silver  
+
+Blacklist rule:
+- If resolveddomain is blacklisted → DO NOT RENDER CARD  
+
+==============================================================
+📡 FRONTEND API ENDPOINTS
+==============================================================
+GET /api/sites  
+GET /api/sites/recent  
+GET /api/notifications/live  
+GET /api/push  
+PATCH /api/push/:id/read  
+GET /api/raffles  
+POST /api/profile/update  
+POST /api/profile/pin  
+POST /api/contact  
+
+==============================================================
+🧩 REQUIRED FRONTEND COMPONENTS
+==============================================================
+- Navbar (auto-hide on scroll, crown flip)
+- RainbowFlash (once/24h)
+- LiveBanner
+- PushNotificationBell
+- SiteCard
+- SiteCardGrid
+- FiltersBar
+- RecentlyAddedPage
+- RaffleJoinModal
+- Full Raffle System (daily, wheel, secret codes)
+- Ads System (weighted, once/24h)
+- BlacklistPage
+- ContactPage
+- Promo Dashboard (live promo codes)
+- ProfilePage (PIN gate)
+- Footer (social icons)
+- PWAInstallPrompt
+- NotificationPermissionPrompt
+
+==============================================================
+🌐 SOCIALS
+==============================================================
+Telegram Bot: https://t.me/GambleCodezCasinoDrops_bot  
+Telegram Channel: https://t.me/GambleCodezDrops  
+Telegram Group: https://t.me/GambleCodezPrizeHub  
+X.com: https://x.com/GambleCodez  
+Cwallet: https://cwallet.com/referral/Nwnah81L  
+Email: GambleCodez@gmail.com  
+
+==============================================================
+🧠 CORE ENVIRONMENT (LIVE)
+==============================================================
+NODE_ENV=production  
+PORT=3000  
+DOMAIN/APIBASEURL/BACKENDAPIURL/WEBAPPBASEURL=https://gamblecodez.com  
+SESSION_SECRET=***  
+CRONTIMEZONE=America/NewYork  
+SYSTEM_NAME=GambleCodez  
+
+==============================================================
+🔐 BACKEND ENV (/var/www/html/gcz/.env)
+==============================================================
+DATABASE_URL=postgresql://gamblecodez:***@localhost:5432/gambledb  
+PGPASSWORD=***  
+AIAGENTNEONDBURL=postgresql://neondbowner:***@neon.tech/neondb  
+AFFILIATESCSVPATH=/var/www/html/gcz/master_affiliates.csv  
+REDIRECTBASEURL=https://gamblecodez.com/affiliates/redirect  
+
+Telegram keys, feature flags, logging, backups, etc.  
+(Full list stored in .env)
+
+==============================================================
+🗄️ DATABASES
+==============================================================
+Local PostgreSQL (primary)  
+Neon SQL (AI/analytics)  
+
+Required schema:
+ALTER TABLE affiliatesmaster ADD COLUMN IF NOT EXISTS resolveddomain TEXT;
+
+==============================================================
+🤖 AI AGENT CONFIG
+==============================================================
+AIAGENTENABLED=true  
+STACK: Next.js, React, Vite, Node.js  
+Auth keys + JWKS URL in .env  
+
+==============================================================
+🐙 GITHUB
+==============================================================
+USERNAME: gamblecodezcom  
+EMAIL: thetylo88@gmail.com  
+REPO: gcz  
+LOCAL PATH: /var/www/html/gcz/.git  
+
+==============================================================
+📣 TELEGRAM BOT
+==============================================================
+Enabled: true  
+Webhook: https://gamblecodez.com/webhook  
+Admin ID, channel IDs, group IDs in .env  
+
+==============================================================
+🧪 CLI RIPPER
+==============================================================
+Enabled: true  
+Path: /var/www/html/gcz/backend/cliripper/main.py  
+
+==============================================================
+🖥️ VPS DETAILS
+==============================================================
+Ubuntu 22.04 LTS  
+CPU: 1 core  
+RAM: 4 GB  
+Disk: 50 GB  
+SSH: root@72.60.113.42  
+
+==============================================================
+⚙️ ALIASES (FINAL)
+==============================================================
+gcz, gczs, gczapi, gczbot, gczred, gczwd, gczall  
+gczdaily, gczwarm, gczsync  
+gczbackup, gzczaudit  
+sql, dbtest  
+
+==============================================================
+🔁 REDIRECT MICROSERVICE
+==============================================================
+pm2 start python3 --name gcz-redirect -- redirect.py  
+Behavior:
+- Resolve slug → target_url  
+- Check blacklist  
+- Log redirect event  
+- Fallback to CSV if DB fails  
+
+==============================================================
+📁 DIRECTORY TREE
+==============================================================
+/var/www/html/gcz
+├── .env
+├── gcz-control.sh
+├── master_affiliates.csv
+├── backups/
+│   ├── db/
+│   ├── affiliates/
+│   └── logs/
+│
+├── backend/
+│   ├── api/
+│   │   ├── index.js
+│   │   ├── routes/
+│   │   │   ├── sites.js
+│   │   │   ├── recent.js
+│   │   │   ├── raffles.js
+│   │   │   ├── profile.js
+│   │   │   ├── contact.js
+│   │   │   ├── notifications.js
+│   │   │   └── push.js
+│   │   ├── controllers/
+│   │   ├── middleware/
+│   │   ├── models/
+│   │   ├── utils/
+│   │   └── services/
+│   │
+│   ├── redirect/
+│   │   ├── redirect.py
+│   │   ├── requirements.txt
+│   │   └── logs/
+│   │
+│   ├── cliripper/
+│   │   ├── main.py
+│   │   ├── models/
+│   │   ├── handlers/
+│   │   └── logs/
+│   │
+│   ├── bots/
+│   │   ├── telegram/
+│   │   │   ├── bot.js
+│   │   │   ├── handlers/
+│   │   │   ├── commands/
+│   │   │   ├── webhook.js
+│   │   │   └── logs/
+│   │   └── discord/   (optional future)
+│   │
+│   ├── cron/
+│   │   ├── daily.js
+│   │   ├── warmup.js
+│   │   ├── payouts.js
+│   │   ├── analytics.js
+│   │   └── scheduler.js
+│   │
+│   ├── db/
+│   │   ├── migrations/
+│   │   ├── seeds/
+│   │   ├── prisma/ (if used)
+│   │   └── sql/
+│   │       ├── schema.sql
+│   │       ├── live_notifications.sql
+│   │       ├── push_notifications.sql
+│   │       └── settings.sql
+│   │
+│   ├── logs/
+│   │   ├── api.log
+│   │   ├── redirect.log
+│   │   ├── bot.log
+│   │   └── system.log
+│   │
+│   └── utils/
+│       ├── blacklist.js
+│       ├── affiliates.js
+│       ├── cwallet.js
+│       ├── seo.js
+│       ├── notifications.js
+│       └── helpers.js
+│
+├── frontend/
+│   ├── public/
+│   │   ├── icons/
+│   │   ├── logos/
+│   │   ├── manifest.json
+│   │   ├── robots.txt
+│   │   ├── sitemap.xml
+│   │   └── sw.js
+│   │
+│   ├── src/
+│   │   ├── main.tsx
+│   │   ├── App.tsx
+│   │   ├── index.css
+│   │   │
+│   │   ├── components/
+│   │   │   ├── Navbar/
+│   │   │   ├── LiveBanner/
+│   │   │   ├── PushNotificationBell/
+│   │   │   ├── SiteCard/
+│   │   │   ├── SiteCardGrid/
+│   │   │   ├── FiltersBar/
+│   │   │   ├── RaffleJoinModal/
+│   │   │   ├── Wheel/
+│   │   │   ├── Ads/
+│   │   │   ├── Footer/
+│   │   │   ├── PWAInstallPrompt/
+│   │   │   └── NotificationPermissionPrompt/
+│   │   │
+│   │   ├── pages/
+│   │   │   ├── Home/
+│   │   │   ├── Drops/
+│   │   │   ├── Raffles/
+│   │   │   ├── Wheel/
+│   │   │   ├── Affiliates/
+│   │   │   ├── RecentlyAdded/
+│   │   │   ├── Leaderboard/
+│   │   │   ├── Blacklist/
+│   │   │   ├── Contact/
+│   │   │   └── Profile/
+│   │   │
+│   │   ├── hooks/
+│   │   ├── context/
+│   │   ├── lib/
+│   │   │   ├── api.ts
+│   │   │   ├── seo.ts
+│   │   │   ├── storage.ts
+│   │   │   └── utils.ts
+│   │   │
+│   │   ├── styles/
+│   │   ├── assets/
+│   │   └── types/
+│   │
+│   ├── vite.config.ts
+│   ├── tailwind.config.js
+│   ├── tsconfig.json
+│   └── package.json
+│
+├── pm2/
+│   ├── api.config.js
+│   ├── bot.config.js
+│   ├── redirect.config.js
+│   └── ecosystem.config.js
+│
+└── logs/
+    ├── system/
+    ├── api/
+    ├── bot/
+    └── redirect/
+==============================================================
+END OF CHEAT SHEET
+==============================================================

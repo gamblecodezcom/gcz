@@ -10,6 +10,9 @@
 # Ignore GCZ shell environment file
 gcz-env.sh
 
+# Ignore AI Agent Master Control file
+/var/www/html/gcz/AIAGENT_MASTERCONTROL.txt
+
 # ============================
 # Shell Scripts
 # BLOCK ALL .sh FILES
