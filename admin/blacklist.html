@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manage Blacklist - GambleCodez Admin</title>
+  <link rel="stylesheet" href="/admin/styles.css" />
+  <style>
+    .blacklist-form, .blacklist-card {
+      background: #1a1a1a;
+      border: 1px solid #00fff7;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: #00fff7;
+      font-weight: bold;
+    }
+    .form-group input,
+    .form-group textarea {
+      width: 100%;
+      padding: 0.75rem;
+      background: #0a0a0a;
+      border: 1px solid #333;
+      border-radius: 4px;
+      color: #fff;
+    }
+    .btn {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      margin-right: 0.5rem;
+    }
+    .btn-primary { background: #00fff7; color: #000; }
+    .btn-danger { background: #ff0000; color: #fff; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🚫 Manage Blacklist</h1>
+    <div style="margin-bottom: 1rem;">
+      <a href="/admin/index.html" style="color: #00fff7;">← Back to Admin Panel</a>
+    </div>
+
+    <button class="btn btn-primary" onclick="toggleForm()">+ Add Entry</button>
+
+    <div id="blacklist-form-container" style="display: none;">
+      <div class="blacklist-form">
+        <h2>Add Blacklist Entry</h2>
+        <form onsubmit="saveEntry(event)">
+          <div class="form-group">
+            <label>User ID / Email / IP *</label>
+            <input type="text" id="blacklist-value" required />
+          </div>
+          <div class="form-group">
+            <label>Reason</label>
+            <textarea id="blacklist-reason"></textarea>
+          </div>
+          <div>
+            <button type="submit" class="btn btn-primary">Save</button>
+            <button type="button" class="btn" onclick="toggleForm()">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div id="blacklist-container">
+      <div class="loading">Loading blacklist...</div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = window.location.origin;
+
+    function toggleForm() {
+      document.getElementById('blacklist-form-container').style.display = 
+        document.getElementById('blacklist-form-container').style.display === 'none' ? 'block' : 'none';
+    }
+
+    async function saveEntry(e) {
+      e.preventDefault();
+      const data = {
+        value: document.getElementById('blacklist-value').value,
+        reason: document.getElementById('blacklist-reason').value || null,
+      };
+
+      try {
+        await fetch(`${API_BASE}/api/admin/blacklist`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        showToast('Saved', 'success');
+        toggleForm();
+        loadBlacklist();
+      } catch (error) {
+        showToast('Error', 'error');
+      }
+    }
+
+    async function loadBlacklist() {
+      const res = await fetch(`${API_BASE}/api/admin/blacklist`);
+      const data = await res.json();
+      const container = document.getElementById('blacklist-container');
+      container.innerHTML = (data.entries || []).map(entry => `
+        <div class="blacklist-card">
+          <div style="display: flex; justify-content: space-between;">
+            <div>
+              <h3>${escapeHtml(entry.value)}</h3>
+              <p>${entry.reason || 'No reason provided'}</p>
+            </div>
+            <div>
+              <button class="btn btn-danger" onclick="deleteEntry(${entry.id})">Delete</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function deleteEntry(id) {
+      if (!confirm('Delete?')) return;
+      await fetch(`${API_BASE}/api/admin/blacklist/${id}`, { method: 'DELETE' });
+      showToast('Deleted', 'success');
+      loadBlacklist();
+    }
+
+    function showToast(msg, type) {
+      const toast = document.createElement('div');
+      toast.textContent = msg;
+      toast.style.cssText = `position: fixed; top: 20px; right: 20px; padding: 1rem; border-radius: 4px; color: #fff; background: ${type === 'success' ? '#00ff00' : '#ff0000'}; z-index: 1000;`;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    loadBlacklist();
+  </script>
+</body>
+</html>

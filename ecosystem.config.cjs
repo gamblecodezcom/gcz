@@ -1,0 +1,67 @@
+module.exports = {
+  apps: [
+    {
+      name: "gcz-redirect",
+      script: "uvicorn",
+      args: "backend.redirect:app --host 0.0.0.0 --port 8000",
+      cwd: "/var/www/html/gcz",
+      interpreter: "python3",
+      exec_mode: "fork",
+      instances: 1,
+      max_memory_restart: "300M",
+      error_file: "./logs/gcz-redirect-error.log",
+      out_file: "./logs/gcz-redirect-out.log",
+      log_date_format: "YYYY-MM-DD HH:mm:ss Z",
+    },
+
+    {
+      name: "gcz-drops",
+      script: "uvicorn",
+      args: "backend.drops:app --host 0.0.0.0 --port 8002",
+      cwd: "/var/www/html/gcz",
+      interpreter: "python3",
+      exec_mode: "fork",
+      instances: 1,
+      max_memory_restart: "300M",
+      error_file: "./logs/gcz-drops-error.log",
+      out_file: "./logs/gcz-drops-out.log",
+      log_date_format: "YYYY-MM-DD HH:mm:ss Z",
+    },
+
+    {
+      name: "gcz-bot",
+      script: "start-bot.js",
+      cwd: "/var/www/html/gcz/bot",
+      exec_mode: "fork",
+      instances: 1,
+      max_memory_restart: "300M",
+      error_file: "../logs/gcz-bot-error.log",
+      out_file: "../logs/gcz-bot-out.log",
+      log_date_format: "YYYY-MM-DD HH:mm:ss Z",
+    },
+
+    {
+      name: "gcz-discord",
+      script: "start-discord.js",
+      cwd: "/var/www/html/gcz/discord",
+      exec_mode: "fork",
+      instances: 1,
+      max_memory_restart: "300M",
+      error_file: "../logs/gcz-discord-error.log",
+      out_file: "../logs/gcz-discord-out.log",
+      log_date_format: "YYYY-MM-DD HH:mm:ss Z",
+    },
+
+    {
+      name: "gcz-watchdog",
+      script: "watchdog.js",
+      cwd: "/var/www/html/gcz",
+      exec_mode: "fork",
+      instances: 1,
+      max_memory_restart: "200M",
+      error_file: "./logs/gcz-watchdog-error.log",
+      out_file: "./logs/gcz-watchdog-out.log",
+      log_date_format: "YYYY-MM-DD HH:mm:ss Z",
+    },
+  ],
+};

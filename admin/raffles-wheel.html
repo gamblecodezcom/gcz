@@ -1,0 +1,1194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Raffles & Wheel Engine - GambleCodez Admin</title>
+  <link rel="stylesheet" href="/admin/styles.css" />
+  <style>
+    body {
+      background: linear-gradient(135deg, #02040A 0%, #050816 100%);
+      color: #F5F5F5;
+      font-family: 'Inter', sans-serif;
+    }
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    h1 {
+      color: #00F5FF;
+      margin-bottom: 1rem;
+      font-size: 2rem;
+    }
+    .tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+      border-bottom: 2px solid rgba(0, 245, 255, 0.3);
+    }
+    .tab {
+      padding: 1rem 2rem;
+      background: transparent;
+      border: none;
+      color: #9FA6B2;
+      cursor: pointer;
+      font-weight: bold;
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s;
+    }
+    .tab.active {
+      color: #00F5FF;
+      border-bottom-color: #00F5FF;
+    }
+    .tab:hover {
+      color: #00F5FF;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    .btn {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.2s;
+      margin: 0.25rem;
+      background: rgba(0, 245, 255, 0.2);
+      color: #00F5FF;
+      border: 1px solid rgba(0, 245, 255, 0.3);
+    }
+    .btn:hover {
+      background: rgba(0, 245, 255, 0.3);
+      box-shadow: 0 0 10px rgba(0, 245, 255, 0.3);
+    }
+    .btn-primary { background: #00F5FF; color: #000; }
+    .btn-success { background: #00FF85; color: #000; }
+    .btn-danger { background: #FF3B3B; color: #fff; }
+    .raffle-card {
+      background: rgba(26, 26, 26, 0.8);
+      border: 1px solid rgba(0, 245, 255, 0.3);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    .raffle-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 1rem;
+    }
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: bold;
+      margin: 0.25rem;
+    }
+    .badge-public { background: #00FF85; color: #000; }
+    .badge-hidden { background: #9200FF; color: #fff; }
+    .badge-active { background: #00F5FF; color: #000; }
+    .badge-ended { background: #888; color: #fff; }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 1000;
+      overflow-y: auto;
+    }
+    .modal-content {
+      background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+      margin: 2rem auto;
+      padding: 2rem;
+      max-width: 900px;
+      border-radius: 12px;
+      border: 2px solid rgba(0, 245, 255, 0.3);
+      box-shadow: 0 0 30px rgba(0, 245, 255, 0.2);
+    }
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: #00F5FF;
+      font-weight: bold;
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 0.75rem;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(0, 245, 255, 0.3);
+      border-radius: 4px;
+      color: #fff;
+      font-family: inherit;
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin: 0.5rem 0;
+    }
+    .checkbox-group input[type="checkbox"] {
+      width: auto;
+    }
+    .section-title {
+      color: #00F5FF;
+      font-size: 1.2rem;
+      margin: 1.5rem 0 1rem 0;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid rgba(0, 245, 255, 0.3);
+    }
+    .wheel-config-panel {
+      background: rgba(26, 26, 26, 0.8);
+      border: 1px solid rgba(0, 245, 255, 0.3);
+      border-radius: 8px;
+      padding: 2rem;
+    }
+    .prize-slot {
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(0, 245, 255, 0.3);
+      border-radius: 4px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎟️ Raffles & Wheel Engine</h1>
+    <div style="margin-bottom: 1rem;">
+      <a href="/admin/index.html" style="color: #00F5FF;">← Back to Admin Panel</a>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('raffles')">Raffles</button>
+      <button class="tab" onclick="switchTab('wheel')">Daily Wheel / Never-Ending Raffle</button>
+    </div>
+
+    <!-- Raffles Tab -->
+    <div id="raffles-tab" class="tab-content active">
+      <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap;">
+        <button class="btn btn-primary" onclick="showRaffleModal()">+ Create Raffle</button>
+      </div>
+
+      <div id="raffles-container">
+        <div style="text-align: center; padding: 2rem;">Loading raffles...</div>
+      </div>
+    </div>
+
+    <!-- Wheel Tab -->
+    <div id="wheel-tab" class="tab-content">
+      <div class="wheel-config-panel">
+        <h2 style="color: #00F5FF; margin-bottom: 1.5rem;">Daily Wheel Configuration</h2>
+        
+        <form id="wheel-form" onsubmit="saveWheelConfig(event)">
+          <div class="form-group">
+            <label>Spins Per Day Per User</label>
+            <input type="number" id="wheel-spins-per-day" min="1" value="1" required />
+          </div>
+
+          <div class="form-group">
+            <label>Target Raffle (Never-Ending Raffle)</label>
+            <select id="wheel-target-raffle">
+              <option value="">Select raffle...</option>
+            </select>
+            <small style="color: #9FA6B2;">Entries from wheel spins will go to this raffle</small>
+          </div>
+
+          <div class="section-title">Auto-Draw Settings</div>
+          <div class="checkbox-group">
+            <input type="checkbox" id="wheel-auto-draw" />
+            <label for="wheel-auto-draw">Enable Auto-Draw</label>
+          </div>
+          <div class="form-row" id="auto-draw-fields" style="display: none;">
+            <div class="form-group">
+              <label>Frequency</label>
+              <select id="wheel-draw-frequency">
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="manual">Manual Only</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Time (for daily/weekly)</label>
+              <input type="time" id="wheel-draw-time" />
+            </div>
+          </div>
+
+          <div class="section-title">Prize Slots</div>
+          <div id="prize-slots-container"></div>
+          <button type="button" class="btn" onclick="addPrizeSlot()">+ Add Prize Slot</button>
+
+          <div style="margin-top: 2rem;">
+            <button type="submit" class="btn btn-primary">Save Wheel Config</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Raffle Modal -->
+  <div id="raffle-modal" class="modal">
+    <div class="modal-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h2 id="raffle-modal-title" style="color: #00F5FF; margin: 0;">Create Raffle</h2>
+        <button class="btn btn-danger" onclick="closeRaffleModal()" style="margin: 0;">✕ Close</button>
+      </div>
+
+      <form id="raffle-form" onsubmit="saveRaffle(event)">
+        <div class="section-title">Basic Info</div>
+        <div class="form-group">
+          <label>Name *</label>
+          <input type="text" id="raffle-name" required />
+        </div>
+        <div class="form-group">
+          <label>Description *</label>
+          <textarea id="raffle-description" rows="3" required></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Start Date</label>
+            <input type="datetime-local" id="raffle-start-date" />
+          </div>
+          <div class="form-group">
+            <label>End Date</label>
+            <input type="datetime-local" id="raffle-end-date" />
+          </div>
+        </div>
+
+        <div class="section-title">Visibility</div>
+        <div class="form-row">
+          <div class="checkbox-group">
+            <input type="checkbox" id="raffle-public" checked />
+            <label for="raffle-public">Public (visible in Degen Profile)</label>
+          </div>
+          <div class="checkbox-group">
+            <input type="checkbox" id="raffle-hidden" />
+            <label for="raffle-hidden">Hidden (not in public list)</label>
+          </div>
+        </div>
+        <div class="checkbox-group">
+          <input type="checkbox" id="raffle-secret" />
+          <label for="raffle-secret">Secret Code Required</label>
+        </div>
+        <div class="form-group" id="secret-code-group" style="display: none;">
+          <label>Secret Code</label>
+          <input type="text" id="raffle-secret-code" placeholder="Enter secret phrase" />
+        </div>
+
+        <div class="section-title">Entry Sources</div>
+        <div class="checkbox-group">
+          <input type="checkbox" id="entry-daily-checkin" checked />
+          <label for="entry-daily-checkin">Daily Check-in</label>
+          <input type="number" id="entries-daily-checkin" value="1" min="0" style="width: 60px; margin-left: 1rem;" />
+        </div>
+        <div class="checkbox-group">
+          <input type="checkbox" id="entry-wheel" checked />
+          <label for="entry-wheel">Degen Wheel</label>
+          <input type="number" id="entries-wheel" value="5" min="0" style="width: 60px; margin-left: 1rem;" />
+        </div>
+        <div class="checkbox-group">
+          <input type="checkbox" id="entry-secret-code" checked />
+          <label for="entry-secret-code">Secret Code</label>
+          <input type="number" id="entries-secret-code" value="10" min="0" style="width: 60px; margin-left: 1rem;" />
+        </div>
+        <div class="checkbox-group">
+          <input type="checkbox" id="entry-manual" />
+          <label for="entry-manual">Manual Admin Grants</label>
+          <input type="number" id="entries-manual" value="0" min="0" style="width: 60px; margin-left: 1rem;" />
+        </div>
+
+        <div class="section-title">Reward</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Reward Type *</label>
+            <select id="raffle-reward-type" required onchange="updateRewardFields()">
+              <option value="">Select...</option>
+              <option value="runewager_sc">Runewager SC Tip</option>
+              <option value="crypto">Crypto Tip</option>
+              <option value="cwallet">Cwallet Transfer</option>
+              <option value="crypto_box">Crypto Box (Lootbox)</option>
+              <option value="lootbox">Lootbox Claim URL</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Prize Value *</label>
+            <input type="text" id="raffle-prize-value" required placeholder="Amount, address, or URL" />
+          </div>
+        </div>
+        <div class="form-group" id="reward-site-group" style="display: none;">
+          <label>Site (for SC Tip)</label>
+          <select id="raffle-prize-site">
+            <option value="">Select site...</option>
+          </select>
+        </div>
+        <div class="form-group" id="prize-urls-group" style="display: none;">
+          <label>Prize URLs (for hidden/time-limited crypto_box raffles)</label>
+          <div id="prize-urls-list" style="margin-bottom: 0.5rem;"></div>
+          <div style="display: flex; gap: 0.5rem;">
+            <input type="text" id="new-prize-url" placeholder="Enter Cwallet claim URL" style="flex: 1;" />
+            <button type="button" class="btn" onclick="addPrizeUrl()">Add URL</button>
+          </div>
+          <small style="color: #9FA6B2;">Add URLs that match the number of winners. These will be assigned when winners are picked.</small>
+        </div>
+
+        <div class="section-title">Winner Configuration</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Number of Winners *</label>
+            <input type="number" id="raffle-num-winners" min="1" value="1" required />
+          </div>
+          <div class="form-group">
+            <label>Selection Method</label>
+            <select id="raffle-selection-method">
+              <option value="random">Random</option>
+              <option value="weighted">Weighted by Entries</option>
+            </select>
+          </div>
+        </div>
+        <div class="checkbox-group">
+          <input type="checkbox" id="raffle-allow-repeat" />
+          <label for="raffle-allow-repeat">Allow Repeat Winners</label>
+        </div>
+        <div class="form-group">
+          <label>Raffle Type</label>
+          <select id="raffle-type">
+            <option value="timed">Timed (ends at specific date)</option>
+            <option value="manual">Manual (admin picks winner)</option>
+            <option value="daily">Daily (grows until picked)</option>
+          </select>
+        </div>
+
+        <div style="margin-top: 2rem; display: flex; gap: 0.5rem;">
+          <button type="submit" class="btn btn-primary">Save Raffle</button>
+          <button type="button" class="btn btn-danger" onclick="closeRaffleModal()">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Entries Modal -->
+  <div id="entries-modal" class="modal">
+    <div class="modal-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h2 style="color: #00F5FF; margin: 0;">Raffle Entries</h2>
+        <button class="btn btn-danger" onclick="closeEntriesModal()" style="margin: 0;">✕ Close</button>
+      </div>
+      <div id="entries-content"></div>
+    </div>
+  </div>
+
+  <!-- Prize URLs Modal -->
+  <div id="prize-urls-modal" class="modal">
+    <div class="modal-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h2 style="color: #00F5FF; margin: 0;">Prize URLs</h2>
+        <button class="btn btn-danger" onclick="closePrizeUrlsModal()" style="margin: 0;">✕ Close</button>
+      </div>
+      <div id="prize-urls-content"></div>
+    </div>
+  </div>
+
+  <script src="/admin/js/admin-utils.js"></script>
+  <script>
+    const API_BASE = window.location.origin;
+    let editingRaffleId = null;
+    let allRaffles = [];
+    let allSites = [];
+    let prizeSlotCounter = 0;
+
+    function switchTab(tab) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      event.target.classList.add('active');
+      document.getElementById(`${tab}-tab`).classList.add('active');
+      
+      if (tab === 'wheel') {
+        loadWheelConfig();
+      }
+    }
+
+    // Raffles functions
+    async function loadRaffles() {
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/raffles`);
+        const data = await res.json();
+        allRaffles = data.raffles || [];
+        displayRaffles(allRaffles);
+      } catch (error) {
+        console.error('Failed to load raffles:', error);
+        showToast('Failed to load raffles', 'error');
+      }
+    }
+
+    function displayRaffles(raffles) {
+      const container = document.getElementById('raffles-container');
+      if (raffles.length === 0) {
+        container.innerHTML = '<div style="text-align: center; padding: 2rem;">No raffles found</div>';
+        return;
+      }
+
+      container.innerHTML = raffles.map(raffle => {
+        const badges = [];
+        if (raffle.hidden) badges.push('<span class="badge badge-hidden">HIDDEN</span>');
+        else badges.push('<span class="badge badge-public">PUBLIC</span>');
+        if (raffle.active) badges.push('<span class="badge badge-active">ACTIVE</span>');
+        else badges.push('<span class="badge badge-ended">ENDED</span>');
+        if (raffle.secret) badges.push('<span class="badge badge-hidden">SECRET CODE</span>');
+
+        return `
+          <div class="raffle-card">
+            <div class="raffle-header">
+              <div>
+                <h3>${escapeHtml(raffle.title)} ${badges.join('')}</h3>
+                <p style="color: #9FA6B2; margin: 0.5rem 0;">${escapeHtml(raffle.description || '')}</p>
+                <p style="margin: 0.5rem 0;">
+                  <strong>Prize:</strong> ${escapeHtml(raffle.prize_value || raffle.prize_type || 'N/A')} | 
+                  <strong>Winners:</strong> ${raffle.num_winners || 1} | 
+                  <strong>Type:</strong> ${raffle.raffle_type || 'timed'}
+                </p>
+                ${raffle.secret_code ? `<p style="color: #9200FF; margin: 0.5rem 0;"><strong>Secret Code:</strong> ${escapeHtml(raffle.secret_code)}</p>` : ''}
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                <button class="btn" onclick="viewEntries(${raffle.id})">View Entries</button>
+                <button class="btn" onclick="viewPrizeUrls(${raffle.id})">Prize URLs</button>
+                <button class="btn btn-success" onclick="drawWinners(${raffle.id})">Draw Winners</button>
+                <button class="btn" onclick="editRaffle(${raffle.id})">Edit</button>
+                <button class="btn" onclick="duplicateRaffle(${raffle.id})">Duplicate</button>
+                ${raffle.active ? `<button class="btn btn-danger" onclick="endRaffle(${raffle.id})">End Raffle</button>` : `<button class="btn btn-success" onclick="activateRaffle(${raffle.id})">Activate</button>`}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function showRaffleModal() {
+      editingRaffleId = null;
+      currentRaffleIdForUrls = null;
+      prizeUrls = [];
+      document.getElementById('raffle-modal-title').textContent = 'Create Raffle';
+      document.getElementById('raffle-form').reset();
+      document.getElementById('prize-urls-list').innerHTML = '';
+      document.getElementById('raffle-modal').style.display = 'block';
+      loadSites();
+      updateRewardFields();
+    }
+
+    async function loadSites() {
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/affiliates`);
+        const data = await res.json();
+        allSites = data.affiliates || [];
+        const select = document.getElementById('raffle-prize-site');
+        select.innerHTML = '<option value="">Select site...</option>' +
+          allSites.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+      } catch (error) {
+        console.error('Failed to load sites:', error);
+      }
+    }
+
+    document.getElementById('raffle-secret').addEventListener('change', (e) => {
+      document.getElementById('secret-code-group').style.display = e.target.checked ? 'block' : 'none';
+    });
+
+    let prizeUrls = [];
+    let currentRaffleIdForUrls = null;
+
+    function updateRewardFields() {
+      const rewardType = document.getElementById('raffle-reward-type').value;
+      const siteGroup = document.getElementById('reward-site-group');
+      const urlsGroup = document.getElementById('prize-urls-group');
+      const raffleType = document.getElementById('raffle-type').value;
+      const isHidden = document.getElementById('raffle-hidden').checked;
+      
+      if (rewardType === 'runewager_sc') {
+        siteGroup.style.display = 'block';
+      } else {
+        siteGroup.style.display = 'none';
+      }
+      
+      // Show prize URLs for hidden/time-limited raffles with crypto_box
+      if (rewardType === 'crypto_box' && (isHidden || raffleType === 'timed')) {
+        urlsGroup.style.display = 'block';
+      } else {
+        urlsGroup.style.display = 'none';
+      }
+    }
+
+    document.getElementById('raffle-type').addEventListener('change', updateRewardFields);
+    document.getElementById('raffle-hidden').addEventListener('change', updateRewardFields);
+
+    function addPrizeUrl() {
+      const input = document.getElementById('new-prize-url');
+      const url = input.value.trim();
+      if (!url) {
+        showToast('Please enter a URL', 'error');
+        return;
+      }
+      prizeUrls.push({ id: null, url, used: false, assigned_to_user_id: null });
+      input.value = '';
+      updatePrizeUrlsList();
+    }
+
+    function removePrizeUrl(index) {
+      prizeUrls.splice(index, 1);
+      updatePrizeUrlsList();
+    }
+
+    function updatePrizeUrlsList() {
+      const container = document.getElementById('prize-urls-list');
+      if (prizeUrls.length === 0) {
+        container.innerHTML = '<p style="color: #9FA6B2;">No URLs added yet</p>';
+        return;
+      }
+      container.innerHTML = prizeUrls.map((item, idx) => `
+        <div style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.5rem; padding: 0.5rem; background: rgba(0,0,0,0.3); border-radius: 4px;">
+          <span style="flex: 1; color: ${item.used ? '#888' : '#fff'}; ${item.used ? 'text-decoration: line-through;' : ''}">${escapeHtml(item.url)}</span>
+          ${item.assigned_to_user_id ? `<span style="color: #00F5FF;">→ ${escapeHtml(item.assigned_to_user_id)}</span>` : ''}
+          ${item.used ? `<span class="badge badge-ended">USED</span>` : ''}
+          ${!item.used && item.id ? `<button type="button" class="btn btn-danger" onclick="removePrizeUrlFromServer(${item.id}, ${idx})">Remove</button>` : ''}
+          ${!item.id ? `<button type="button" class="btn btn-danger" onclick="removePrizeUrl(${idx})">Remove</button>` : ''}
+        </div>
+      `).join('');
+    }
+
+    async function removePrizeUrlFromServer(urlId, index) {
+      if (!currentRaffleIdForUrls) return;
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/raffles/${currentRaffleIdForUrls}/prize-urls/${urlId}`, {
+          method: 'DELETE'
+        });
+        if (!res.ok) throw new Error('Failed to delete URL');
+        prizeUrls.splice(index, 1);
+        updatePrizeUrlsList();
+        showToast('URL removed', 'success');
+      } catch (error) {
+        showToast(`Error: ${error.message}`, 'error');
+      }
+    }
+
+    async function saveRaffle(e) {
+      e.preventDefault();
+      
+      const entrySources = [];
+      const entriesPerSource = {};
+      
+      if (document.getElementById('entry-daily-checkin').checked) {
+        entrySources.push('daily_checkin');
+        entriesPerSource.daily_checkin = parseInt(document.getElementById('entries-daily-checkin').value) || 1;
+      }
+      if (document.getElementById('entry-wheel').checked) {
+        entrySources.push('wheel');
+        entriesPerSource.wheel = parseInt(document.getElementById('entries-wheel').value) || 5;
+      }
+      if (document.getElementById('entry-secret-code').checked) {
+        entrySources.push('secret_code');
+        entriesPerSource.secret_code = parseInt(document.getElementById('entries-secret-code').value) || 10;
+      }
+      if (document.getElementById('entry-manual').checked) {
+        entrySources.push('manual');
+        entriesPerSource.manual = parseInt(document.getElementById('entries-manual').value) || 0;
+      }
+
+      const formData = {
+        title: document.getElementById('raffle-name').value,
+        description: document.getElementById('raffle-description').value,
+        start_date: document.getElementById('raffle-start-date').value || null,
+        end_date: document.getElementById('raffle-end-date').value || null,
+        hidden: document.getElementById('raffle-hidden').checked,
+        secret: document.getElementById('raffle-secret').checked,
+        secret_code: document.getElementById('raffle-secret-code').value || null,
+        prize_type: document.getElementById('raffle-reward-type').value,
+        prize_value: document.getElementById('raffle-prize-value').value,
+        prize_site_id: document.getElementById('raffle-prize-site').value || null,
+        num_winners: parseInt(document.getElementById('raffle-num-winners').value) || 1,
+        raffle_type: document.getElementById('raffle-type').value,
+        winner_selection_method: document.getElementById('raffle-selection-method').value,
+        allow_repeat_winners: document.getElementById('raffle-allow-repeat').checked,
+        entry_sources: entrySources,
+        entries_per_source: entriesPerSource,
+        active: editingRaffleId ? undefined : true // Don't override active status when editing
+      };
+
+      try {
+        const url = editingRaffleId 
+          ? `${API_BASE}/api/admin/raffles/${editingRaffleId}`
+          : `${API_BASE}/api/admin/raffles`;
+        const method = editingRaffleId ? 'PUT' : 'POST';
+
+        const res = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
+        });
+
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.error || 'Failed to save raffle');
+        }
+
+        const savedRaffle = await res.json();
+        const raffleId = savedRaffle.raffle?.id || editingRaffleId;
+
+        // Save prize URLs if this is a crypto_box raffle
+        const rewardType = document.getElementById('raffle-reward-type').value;
+        const raffleType = document.getElementById('raffle-type').value;
+        const isHidden = document.getElementById('raffle-hidden').checked;
+        
+        if (rewardType === 'crypto_box' && (isHidden || raffleType === 'timed')) {
+          const newUrls = prizeUrls.filter(u => !u.id).map(u => u.url);
+          if (newUrls.length > 0) {
+            try {
+              await fetch(`${API_BASE}/api/admin/raffles/${raffleId}/prize-urls`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ urls: newUrls })
+              });
+            } catch (urlError) {
+              console.error('Failed to save prize URLs:', urlError);
+              // Don't fail the whole save if URLs fail
+            }
+          }
+        }
+
+        showToast('Raffle saved successfully', 'success');
+        closeRaffleModal();
+        loadRaffles();
+      } catch (error) {
+        showToast(`Error: ${error.message}`, 'error');
+      }
+    }
+
+    async function viewEntries(raffleId) {
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/raffles/${raffleId}/entries`);
+        const data = await res.json();
+        
+        const content = document.getElementById('entries-content');
+        content.innerHTML = `
+          <div style="margin-bottom: 1rem;">
+            <strong>Total Entries:</strong> ${data.summary.total_entries} | 
+            <strong>Unique Users:</strong> ${data.summary.unique_users}
+          </div>
+          <div style="margin-bottom: 1rem;">
+            <strong>By Source:</strong>
+            ${data.summary.by_source.map(s => `<span class="badge">${s.source}: ${s.count}</span>`).join('')}
+          </div>
+          <div style="max-height: 400px; overflow-y: auto;">
+            <table style="width: 100%; border-collapse: collapse;">
+              <thead>
+                <tr style="border-bottom: 1px solid rgba(0, 245, 255, 0.3);">
+                  <th style="padding: 0.5rem; text-align: left;">User ID</th>
+                  <th style="padding: 0.5rem; text-align: left;">Source</th>
+                  <th style="padding: 0.5rem; text-align: left;">Entries</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${data.entries.map(e => `
+                  <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                    <td style="padding: 0.5rem;">${escapeHtml(e.user_id)}</td>
+                    <td style="padding: 0.5rem;">${escapeHtml(e.source || 'unknown')}</td>
+                    <td style="padding: 0.5rem;">${e.entry_count}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+        document.getElementById('entries-modal').style.display = 'block';
+      } catch (error) {
+        showToast(`Error: ${error.message}`, 'error');
+      }
+    }
+
+    async function drawWinners(raffleId) {
+      const raffle = allRaffles.find(r => r.id === raffleId);
+      if (!raffle) return;
+      
+      // Check if this is an endless raffle (manual type, not hidden)
+      const isEndlessRaffle = raffle.raffle_type === 'manual' && raffle.hidden === false;
+      
+      let numWinners = prompt(`How many winners? (Default: ${raffle.num_winners || 1})`, raffle.num_winners || 1);
+      if (!numWinners) return;
+      numWinners = parseInt(numWinners);
+
+      let prizeType = null;
+      let prizeValue = null;
+      let urls = null;
+
+      // For endless raffles, require prize info and URLs
+      if (isEndlessRaffle) {
+        prizeType = prompt('Prize Type (e.g., crypto_box):', raffle.prize_type || 'crypto_box');
+        if (!prizeType) return;
+        
+        prizeValue = prompt('Prize Value (e.g., "Mystery Box"):', raffle.prize_value || '');
+        if (!prizeValue) return;
+
+        // Collect URLs
+        urls = [];
+        for (let i = 0; i < numWinners; i++) {
+          const url = prompt(`Cwallet Claim URL ${i + 1} of ${numWinners}:`, '');
+          if (!url) {
+            alert('All URLs are required');
+            return;
+          }
+          urls.push(url);
+        }
+      }
+
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/raffles/${raffleId}/pick-winners`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            num_winners: numWinners,
+            prize_type: prizeType,
+            prize_value: prizeValue,
+            urls: urls
+          })
+        });
+
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.error || 'Failed to pick winners');
+        }
+        const data = await res.json();
+        showToast(`Picked ${data.count} winner(s)`, 'success');
+        loadRaffles();
+      } catch (error) {
+        showToast(`Error: ${error.message}`, 'error');
+      }
+    }
+
+    async function editRaffle(id) {
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/raffles/${id}/detail`);
+        if (!res.ok) throw new Error('Failed to load raffle');
+        const data = await res.json();
+        const raffle = data.raffle;
+        
+        editingRaffleId = id;
+        currentRaffleIdForUrls = id;
+        document.getElementById('raffle-modal-title').textContent = 'Edit Raffle';
+        
+        // Populate form fields
+        document.getElementById('raffle-name').value = raffle.title || '';
+        document.getElementById('raffle-description').value = raffle.description || '';
+        document.getElementById('raffle-start-date').value = raffle.start_date ? new Date(raffle.start_date).toISOString().slice(0, 16) : '';
+        document.getElementById('raffle-end-date').value = raffle.end_date ? new Date(raffle.end_date).toISOString().slice(0, 16) : '';
+        document.getElementById('raffle-hidden').checked = raffle.hidden || false;
+        document.getElementById('raffle-secret').checked = raffle.secret || false;
+        document.getElementById('raffle-secret-code').value = raffle.secret_code || '';
+        document.getElementById('raffle-reward-type').value = raffle.prize_type || '';
+        document.getElementById('raffle-prize-value').value = raffle.prize_value || '';
+        document.getElementById('raffle-prize-site').value = raffle.prize_site_id || '';
+        document.getElementById('raffle-num-winners').value = raffle.num_winners || 1;
+        document.getElementById('raffle-type').value = raffle.raffle_type || 'timed';
+        document.getElementById('raffle-selection-method').value = raffle.winner_selection_method || 'random';
+        document.getElementById('raffle-allow-repeat').checked = raffle.allow_repeat_winners || false;
+        
+        // Populate entry sources
+        const entrySources = Array.isArray(raffle.entry_sources) ? raffle.entry_sources : 
+                           (typeof raffle.entry_sources === 'string' ? JSON.parse(raffle.entry_sources || '[]') : []);
+        const entriesPerSource = typeof raffle.entries_per_source === 'object' ? raffle.entries_per_source :
+                                (typeof raffle.entries_per_source === 'string' ? JSON.parse(raffle.entries_per_source || '{}') : {});
+        
+        document.getElementById('entry-daily-checkin').checked = entrySources.includes('daily_checkin');
+        document.getElementById('entries-daily-checkin').value = entriesPerSource.daily_checkin || 1;
+        document.getElementById('entry-wheel').checked = entrySources.includes('wheel');
+        document.getElementById('entries-wheel').value = entriesPerSource.wheel || 5;
+        document.getElementById('entry-secret-code').checked = entrySources.includes('secret_code');
+        document.getElementById('entries-secret-code').value = entriesPerSource.secret_code || 10;
+        document.getElementById('entry-manual').checked = entrySources.includes('manual');
+        document.getElementById('entries-manual').value = entriesPerSource.manual || 0;
+        
+        // Load prize URLs
+        prizeUrls = (data.prize_urls || []).map(u => ({
+          id: u.id,
+          url: u.url,
+          used: u.used,
+          assigned_to_user_id: u.assigned_to_user_id
+        }));
+        updatePrizeUrlsList();
+        
+        document.getElementById('secret-code-group').style.display = raffle.secret ? 'block' : 'none';
+        updateRewardFields();
+        loadSites();
+        document.getElementById('raffle-modal').style.display = 'block';
+      } catch (error) {
+        showToast(`Error: ${error.message}`, 'error');
+      }
+    }
+
+    async function duplicateRaffle(id) {
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/raffles/${id}/duplicate`, { method: 'POST' });
+        if (!res.ok) throw new Error('Failed to duplicate');
+        showToast('Raffle duplicated', 'success');
+        loadRaffles();
+      } catch (error) {
+        showToast(`Error: ${error.message}`, 'error');
+      }
+    }
+
+    async function endRaffle(id) {
+      if (!confirm('End this raffle now?')) return;
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/raffles/${id}/end`, { method: 'POST' });
+        if (!res.ok) throw new Error('Failed to end raffle');
+        showToast('Raffle ended', 'success');
+        loadRaffles();
+      } catch (error) {
+        showToast(`Error: ${error.message}`, 'error');
+      }
+    }
+
+    async function activateRaffle(id) {
+      if (!confirm('Activate this raffle?')) return;
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/raffles/${id}/activate`, { method: 'POST' });
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.error || 'Failed to activate raffle');
+        }
+        showToast('Raffle activated', 'success');
+        loadRaffles();
+      } catch (error) {
+        showToast(`Error: ${error.message}`, 'error');
+      }
+    }
+
+    async function viewPrizeUrls(raffleId) {
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/raffles/${raffleId}/prize-urls`);
+        if (!res.ok) throw new Error('Failed to load prize URLs');
+        const data = await res.json();
+        const urls = data.urls || [];
+        
+        const content = document.getElementById('prize-urls-content');
+        if (urls.length === 0) {
+          content.innerHTML = '<p style="text-align: center; padding: 2rem;">No prize URLs configured</p>';
+        } else {
+          content.innerHTML = `
+            <div style="margin-bottom: 1rem;">
+              <strong>Total URLs:</strong> ${urls.length} | 
+              <strong>Used:</strong> ${urls.filter(u => u.used).length} | 
+              <strong>Available:</strong> ${urls.filter(u => !u.used).length}
+            </div>
+            <div style="max-height: 400px; overflow-y: auto;">
+              <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                  <tr style="border-bottom: 1px solid rgba(0, 245, 255, 0.3);">
+                    <th style="padding: 0.5rem; text-align: left;">URL</th>
+                    <th style="padding: 0.5rem; text-align: left;">Status</th>
+                    <th style="padding: 0.5rem; text-align: left;">Assigned To</th>
+                    <th style="padding: 0.5rem; text-align: left;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${urls.map(u => `
+                    <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                      <td style="padding: 0.5rem; word-break: break-all; ${u.used ? 'color: #888; text-decoration: line-through;' : ''}">${escapeHtml(u.url)}</td>
+                      <td style="padding: 0.5rem;">
+                        ${u.used ? '<span class="badge badge-ended">USED</span>' : '<span class="badge badge-active">AVAILABLE</span>'}
+                      </td>
+                      <td style="padding: 0.5rem;">${u.assigned_to_user_id ? escapeHtml(u.assigned_to_user_id) : '-'}</td>
+                      <td style="padding: 0.5rem;">
+                        ${!u.used ? `<button class="btn btn-danger" onclick="deletePrizeUrl(${raffleId}, ${u.id})">Delete</button>` : '-'}
+                      </td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(0, 245, 255, 0.3);">
+              <div style="display: flex; gap: 0.5rem;">
+                <input type="text" id="add-url-input" placeholder="Enter Cwallet claim URL" style="flex: 1; padding: 0.5rem; background: rgba(0,0,0,0.5); border: 1px solid rgba(0, 245, 255, 0.3); border-radius: 4px; color: #fff;" />
+                <button class="btn btn-primary" onclick="addPrizeUrlToRaffle(${raffleId})">Add URL</button>
+              </div>
+            </div>
+          `;
+        }
+        document.getElementById('prize-urls-modal').style.display = 'block';
+      } catch (error) {
+        showToast(`Error: ${error.message}`, 'error');
+      }
+    }
+
+    async function addPrizeUrlToRaffle(raffleId) {
+      const input = document.getElementById('add-url-input');
+      const url = input.value.trim();
+      if (!url) {
+        showToast('Please enter a URL', 'error');
+        return;
+      }
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/raffles/${raffleId}/prize-urls`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ urls: [url] })
+        });
+        if (!res.ok) throw new Error('Failed to add URL');
+        input.value = '';
+        showToast('URL added', 'success');
+        viewPrizeUrls(raffleId); // Refresh
+      } catch (error) {
+        showToast(`Error: ${error.message}`, 'error');
+      }
+    }
+
+    async function deletePrizeUrl(raffleId, urlId) {
+      if (!confirm('Delete this URL?')) return;
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/raffles/${raffleId}/prize-urls/${urlId}`, {
+          method: 'DELETE'
+        });
+        if (!res.ok) throw new Error('Failed to delete URL');
+        showToast('URL deleted', 'success');
+        viewPrizeUrls(raffleId); // Refresh
+      } catch (error) {
+        showToast(`Error: ${error.message}`, 'error');
+      }
+    }
+
+    function closePrizeUrlsModal() {
+      document.getElementById('prize-urls-modal').style.display = 'none';
+    }
+
+    function closeRaffleModal() {
+      document.getElementById('raffle-modal').style.display = 'none';
+    }
+
+    function closeEntriesModal() {
+      document.getElementById('entries-modal').style.display = 'none';
+    }
+
+    // Wheel functions
+    async function loadWheelConfig() {
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/wheel/config`);
+        const data = await res.json();
+        const config = data.config;
+        const slots = data.slots || [];
+
+        document.getElementById('wheel-spins-per-day').value = config.spins_per_day || 1;
+        document.getElementById('wheel-target-raffle').value = config.target_raffle_id || '';
+        document.getElementById('wheel-auto-draw').checked = config.auto_draw_enabled || false;
+        document.getElementById('wheel-draw-frequency').value = config.auto_draw_frequency || 'daily';
+        document.getElementById('wheel-draw-time').value = config.auto_draw_time || '00:00';
+        
+        updateAutoDrawFields();
+        loadRafflesForWheel();
+        displayPrizeSlots(slots);
+      } catch (error) {
+        console.error('Failed to load wheel config:', error);
+        showToast('Failed to load wheel config', 'error');
+      }
+    }
+
+    async function loadRafflesForWheel() {
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/raffles`);
+        const data = await res.json();
+        const select = document.getElementById('wheel-target-raffle');
+        select.innerHTML = '<option value="">Select raffle...</option>' +
+          data.raffles.filter(r => r.active).map(r => 
+            `<option value="${r.id}">${escapeHtml(r.title)}</option>`
+          ).join('');
+      } catch (error) {
+        console.error('Failed to load raffles:', error);
+      }
+    }
+
+    document.getElementById('wheel-auto-draw').addEventListener('change', updateAutoDrawFields);
+    function updateAutoDrawFields() {
+      const enabled = document.getElementById('wheel-auto-draw').checked;
+      document.getElementById('auto-draw-fields').style.display = enabled ? 'block' : 'none';
+    }
+
+    function displayPrizeSlots(slots) {
+      const container = document.getElementById('prize-slots-container');
+      if (slots.length === 0) {
+        container.innerHTML = '<p style="color: #9FA6B2;">No prize slots configured. Add one to get started.</p>';
+        return;
+      }
+      container.innerHTML = slots.map((slot, idx) => `
+        <div class="prize-slot">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+            <strong style="color: #00F5FF;">Slot ${idx + 1}</strong>
+            <button type="button" class="btn btn-danger" onclick="removePrizeSlot(${slot.id})">Remove</button>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Label</label>
+              <input type="text" class="slot-label" data-id="${slot.id}" value="${escapeHtml(slot.label)}" />
+            </div>
+            <div class="form-group">
+              <label>Color (hex)</label>
+              <input type="color" class="slot-color" data-id="${slot.id}" value="${slot.color || '#00F5FF'}" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Entry Multiplier</label>
+              <input type="number" class="slot-multiplier" data-id="${slot.id}" value="${slot.entry_multiplier || 1}" min="1" />
+            </div>
+            <div class="form-group">
+              <label>Chance Weight</label>
+              <input type="number" class="slot-weight" data-id="${slot.id}" value="${slot.chance_weight || 1}" min="1" />
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function addPrizeSlot() {
+      const container = document.getElementById('prize-slots-container');
+      const slotId = `new-${prizeSlotCounter++}`;
+      const slotHtml = `
+        <div class="prize-slot" data-temp-id="${slotId}">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+            <strong style="color: #00F5FF;">New Slot</strong>
+            <button type="button" class="btn btn-danger" onclick="removeTempSlot('${slotId}')">Remove</button>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Label</label>
+              <input type="text" class="slot-label-temp" data-temp-id="${slotId}" value="Entry Bonus" />
+            </div>
+            <div class="form-group">
+              <label>Color (hex)</label>
+              <input type="color" class="slot-color-temp" data-temp-id="${slotId}" value="#00F5FF" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Entry Multiplier</label>
+              <input type="number" class="slot-multiplier-temp" data-temp-id="${slotId}" value="1" min="1" />
+            </div>
+            <div class="form-group">
+              <label>Chance Weight</label>
+              <input type="number" class="slot-weight-temp" data-temp-id="${slotId}" value="1" min="1" />
+            </div>
+          </div>
+        </div>
+      `;
+      container.insertAdjacentHTML('beforeend', slotHtml);
+    }
+
+    function removeTempSlot(id) {
+      document.querySelector(`[data-temp-id="${id}"]`).remove();
+    }
+
+    async function saveWheelConfig(e) {
+      e.preventDefault();
+      
+      // Collect existing slots
+      const existingSlots = [];
+      document.querySelectorAll('.prize-slot').forEach(slot => {
+        const slotId = slot.querySelector('.slot-label')?.dataset.id;
+        if (slotId && !slotId.startsWith('new-')) {
+          existingSlots.push({
+            id: parseInt(slotId),
+            label: slot.querySelector('.slot-label').value,
+            color: slot.querySelector('.slot-color').value,
+            entry_multiplier: parseInt(slot.querySelector('.slot-multiplier').value) || 1,
+            chance_weight: parseInt(slot.querySelector('.slot-weight').value) || 1,
+            sort_order: existingSlots.length
+          });
+        }
+      });
+
+      // Collect new slots
+      const newSlots = [];
+      document.querySelectorAll('[data-temp-id]').forEach(slot => {
+        const tempId = slot.dataset.tempId;
+        if (tempId) {
+          newSlots.push({
+            label: slot.querySelector('.slot-label-temp').value,
+            color: slot.querySelector('.slot-color-temp').value,
+            entry_multiplier: parseInt(slot.querySelector('.slot-multiplier-temp').value) || 1,
+            chance_weight: parseInt(slot.querySelector('.slot-weight-temp').value) || 1,
+            sort_order: existingSlots.length + newSlots.length
+          });
+        }
+      });
+
+      const allSlots = [...existingSlots, ...newSlots];
+
+      const formData = {
+        spins_per_day: parseInt(document.getElementById('wheel-spins-per-day').value) || 1,
+        target_raffle_id: document.getElementById('wheel-target-raffle').value || null,
+        auto_draw_enabled: document.getElementById('wheel-auto-draw').checked,
+        auto_draw_frequency: document.getElementById('wheel-draw-frequency').value,
+        auto_draw_time: document.getElementById('wheel-draw-time').value,
+        prize_slots: allSlots
+      };
+
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/wheel/config`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
+        });
+
+        if (!res.ok) throw new Error('Failed to save wheel config');
+        showToast('Wheel config saved successfully', 'success');
+        loadWheelConfig();
+      } catch (error) {
+        showToast(`Error: ${error.message}`, 'error');
+      }
+    }
+
+    function showToast(msg, type) {
+      const toast = document.createElement('div');
+      toast.textContent = msg;
+      toast.style.cssText = `position: fixed; top: 20px; right: 20px; padding: 1rem 1.5rem; border-radius: 4px; color: #fff; font-weight: bold; z-index: 2000; background: ${type === 'success' ? '#00FF85' : '#FF3B3B'};`;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Close modals on outside click
+    window.onclick = function(event) {
+      if (event.target.classList.contains('modal')) {
+        event.target.style.display = 'none';
+      }
+    };
+
+    // Helper function to format dates
+    function formatDate(dateString) {
+      if (!dateString) return '';
+      const date = new Date(dateString);
+      return date.toISOString().slice(0, 16);
+    }
+
+    loadRaffles();
+    loadSites();
+  </script>
+</body>
+</html>

@@ -1,0 +1,167 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>GCZ Admin – Bugs & To‑Do</title><style>
+body{background:#0d0d0d;color:#fff;font-family:Arial,sans-serif;padding:20px;}
+h1,h2{text-align:center;margin-bottom:20px;}
+table{width:100%;border-collapse:collapse;margin-top:20px;}
+th,td{padding:10px;border-bottom:1px solid #333;}
+th{background:#111;cursor:pointer;}
+tr:hover{background:#1a1a1a;}
+button{padding:6px 10px;border:none;border-radius:4px;cursor:pointer;font-weight:bold;}
+.fixed{background:#0f7;color:#000;}
+.progress{background:#ff0;color:#000;}
+.ignore{background:#f33;color:#fff;}
+.todo-item{background:#111;padding:10px;margin:8px 0;border-left:4px solid #09f;}
+.sev-high{border-color:#f33;}
+.sev-medium{border-color:#ff0;}
+.sev-low{border-color:#0f7;}
+#loginBox{max-width:300px;margin:80px auto;background:#111;padding:20px;border-radius:8px;}
+input{width:100%;padding:10px;margin:8px 0;border:none;border-radius:4px;}
+#loginBtn{background:#09f;color:#000;font-weight:bold;}
+#filters{display:flex;gap:10px;justify-content:center;margin-top:20px;}
+select, #search{padding:8px;border-radius:4px;border:none;}
+</style></head><body>
+
+<script>
+const ADMIN_USER = "GambleCodez";
+const ADMIN_PASS = "Dope-19881988";
+
+if(!localStorage.getItem("gcz_admin")){
+  document.body.innerHTML = `
+    <div id="loginBox">
+      <h2>Admin Login</h2>
+      <input id="user" placeholder="Username">
+      <input id="pass" type="password" placeholder="Password">
+      <button id="loginBtn">Login</button>
+    </div>`;
+  document.getElementById("loginBtn").onclick = () => {
+    const u = document.getElementById("user").value;
+    const p = document.getElementById("pass").value;
+    if(u === ADMIN_USER && p === ADMIN_PASS){
+      localStorage.setItem("gcz_admin","1");
+      location.reload();
+    } else alert("Invalid credentials");
+  };
+}
+</script>
+
+<h1>Bug Reports</h1>
+
+<div id="filters">
+  <select id="filterSeverity">
+    <option value="">Severity</option>
+    <option value="high">High</option>
+    <option value="medium">Medium</option>
+    <option value="low">Low</option>
+  </select>
+
+  <select id="filterStatus">
+    <option value="">Status</option>
+    <option value="new">New</option>
+    <option value="in-progress">In Progress</option>
+    <option value="ignored">Ignored</option>
+    <option value="fixed">Fixed</option>
+  </select>
+
+  <input id="search" placeholder="Search...">
+</div>
+
+<table id="bugTable">
+<thead><tr>
+<th data-sort="id">ID</th>
+<th data-sort="surface">Surface</th>
+<th data-sort="issue_type">Type</th>
+<th data-sort="severity">Severity</th>
+<th>Description</th>
+<th data-sort="status">Status</th>
+<th>Actions</th>
+</tr></thead><tbody></tbody></table>
+
+<h2>Admin To‑Do List</h2>
+<div id="todo"></div>
+
+<script>
+let bugs = [];
+let sortKey = "id";
+let sortDir = "desc";
+
+async function loadBugs(){
+  const res = await fetch("/api/bug-report/all");
+  bugs = await res.json();
+  render();
+}
+
+function render(){
+  const tbody = document.querySelector("#bugTable tbody");
+  const todo = document.querySelector("#todo");
+  tbody.innerHTML = ""; todo.innerHTML = "";
+
+  let filtered = bugs.filter(b => {
+    const sev = document.getElementById("filterSeverity").value;
+    const stat = document.getElementById("filterStatus").value;
+    const q = document.getElementById("search").value.toLowerCase();
+    if(sev && b.severity !== sev) return false;
+    if(stat && b.status !== stat) return false;
+    if(q && !JSON.stringify(b).toLowerCase().includes(q)) return false;
+    return true;
+  });
+
+  filtered.sort((a,b)=>{
+    if(a[sortKey] < b[sortKey]) return sortDir==="asc"?-1:1;
+    if(a[sortKey] > b[sortKey]) return sortDir==="asc"?1:-1;
+    return 0;
+  });
+
+  filtered.forEach(bug=>{
+    const row=document.createElement("tr");
+    row.innerHTML = `
+      <td>${bug.id}</td>
+      <td>${bug.surface}</td>
+      <td>${bug.issue_type}</td>
+      <td>${bug.severity}</td>
+      <td>${bug.description}</td>
+      <td>${bug.status}</td>
+      <td>
+        <button class="fixed" onclick="mark(${bug.id}, 'fixed')">Fixed</button>
+        <button class="progress" onclick="mark(${bug.id}, 'in-progress')">In Progress</button>
+        <button class="ignore" onclick="mark(${bug.id}, 'ignored')">Ignore</button>
+      </td>`;
+    tbody.appendChild(row);
+
+    if(bug.status !== "fixed"){
+      const div=document.createElement("div");
+      const sevClass = bug.severity==="high"?"sev-high":bug.severity==="medium"?"sev-medium":"sev-low";
+      div.className="todo-item "+sevClass;
+      div.innerHTML = `
+        <strong>#${bug.id}</strong> — ${bug.issue_type}
+        <br><small>${bug.surface} • Severity: ${bug.severity}</small>
+        <br>${bug.description}`;
+      todo.appendChild(div);
+    }
+  });
+}
+
+async function mark(id,status){
+  await fetch("/api/bug-report/status",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({id,status})
+  });
+  loadBugs();
+}
+
+document.querySelectorAll("th[data-sort]").forEach(th=>{
+  th.onclick = ()=>{
+    const key = th.getAttribute("data-sort");
+    if(sortKey === key) sortDir = sortDir==="asc"?"desc":"asc";
+    else { sortKey = key; sortDir = "asc"; }
+    render();
+  };
+});
+
+document.getElementById("filterSeverity").onchange = render;
+document.getElementById("filterStatus").onchange = render;
+document.getElementById("search").oninput = render;
+
+loadBugs();
+</script>
+
+</body></html>

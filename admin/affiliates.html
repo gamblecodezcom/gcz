@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manage Affiliates - GambleCodez Admin</title>
+  <link rel="stylesheet" href="/admin/styles.css" />
+  <style>
+    .affiliate-form, .affiliate-card {
+      background: #1a1a1a;
+      border: 1px solid #00fff7;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: #00fff7;
+      font-weight: bold;
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 0.75rem;
+      background: #0a0a0a;
+      border: 1px solid #333;
+      border-radius: 4px;
+      color: #fff;
+      font-family: inherit;
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .checkbox-group input[type="checkbox"] {
+      width: auto;
+    }
+    .btn {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.2s;
+      margin-right: 0.5rem;
+    }
+    .btn-primary { background: #00fff7; color: #000; }
+    .btn-danger { background: #ff0000; color: #fff; }
+    .badge-top-pick {
+      background: #ffd700;
+      color: #000;
+      padding: 0.25rem 0.75rem;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      font-weight: bold;
+      margin-left: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🏢 Manage Affiliates</h1>
+    <div style="margin-bottom: 1rem;">
+      <a href="/admin/index.html" style="color: #00fff7;">← Back to Admin Panel</a>
+    </div>
+
+    <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap;">
+      <button class="btn btn-primary" onclick="toggleForm()">+ Add New Affiliate</button>
+      <button class="btn" onclick="exportCSV()" style="background: #00ff00; color: #000;">📥 Export CSV</button>
+      <button class="btn" onclick="exportJSON()" style="background: #9200ff; color: #fff;">📥 Export JSON</button>
+      <button class="btn bulk-action" onclick="bulkDelete()" disabled style="background: #ff0000; color: #fff;">🗑️ Bulk Delete</button>
+    </div>
+
+    <div id="affiliate-form-container" style="display: none;">
+      <div class="affiliate-form">
+        <h2 id="form-title">Add New Affiliate</h2>
+        <form id="affiliate-form" onsubmit="saveAffiliate(event)">
+          <div class="form-group">
+            <label>Name *</label>
+            <input type="text" id="affiliate-name" required />
+          </div>
+          <div class="form-group">
+            <label>Affiliate URL *</label>
+            <input type="url" id="affiliate-url" required />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Level</label>
+              <input type="text" id="affiliate-level" />
+            </div>
+            <div class="form-group">
+              <label>Jurisdiction *</label>
+              <select id="affiliate-jurisdiction" required>
+                <option value="US">US</option>
+                <option value="NON_US">Non-US</option>
+                <option value="GLOBAL">Global</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Categories (comma-separated)</label>
+            <input type="text" id="affiliate-categories" placeholder="sweeps,crypto,lootbox,faucet,instant,kyc" />
+          </div>
+          <div class="form-group">
+            <label>Bonus Description</label>
+            <textarea id="affiliate-bonus"></textarea>
+          </div>
+          <div class="form-group">
+            <div class="checkbox-group">
+              <input type="checkbox" id="affiliate-top-pick" />
+              <label for="affiliate-top-pick">Top Pick</label>
+            </div>
+          </div>
+          <div>
+            <button type="submit" class="btn btn-primary">Save</button>
+            <button type="button" class="btn" onclick="toggleForm()">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div id="affiliates-container">
+      <div class="loading">Loading affiliates...</div>
+    </div>
+  </div>
+
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <script src="/admin/js/admin-utils.js"></script>
+  <script>
+    const API_BASE = window.location.origin;
+    let editingId = null;
+    let allAffiliates = [];
+    
+    // Connect WebSocket for real-time updates
+    const socket = adminUtils.connectAdminWebSocket('affiliates');
+    
+    // Listen for admin updates
+    window.onAdminUpdate = (data) => {
+      if (data.resource_type === 'affiliate') {
+        loadAffiliates();
+      }
+    };
+
+    function toggleForm() {
+      const container = document.getElementById('affiliate-form-container');
+      container.style.display = container.style.display === 'none' ? 'block' : 'none';
+      if (container.style.display === 'none') {
+        editingId = null;
+        document.getElementById('affiliate-form').reset();
+        document.getElementById('form-title').textContent = 'Add New Affiliate';
+      }
+    }
+
+    async function saveAffiliate(e) {
+      e.preventDefault();
+      
+      // Client-side validation
+      const name = document.getElementById('affiliate-name').value;
+      const url = document.getElementById('affiliate-url').value;
+      
+      const nameError = adminUtils.validateRequired(name, 'Name');
+      const urlError = adminUtils.validateURL(url);
+      
+      if (nameError) {
+        showToast(nameError, 'error');
+        return;
+      }
+      if (urlError) {
+        showToast(urlError, 'error');
+        return;
+      }
+      
+      const formData = {
+        name,
+        affiliate_url: url,
+        level: document.getElementById('affiliate-level').value || null,
+        jurisdiction: document.getElementById('affiliate-jurisdiction').value,
+        category: document.getElementById('affiliate-categories').value.split(',').map(s => s.trim()).filter(Boolean)[0] || null,
+        bonus_code: document.getElementById('affiliate-bonus').value || null,
+        top_pick: document.getElementById('affiliate-top-pick').checked,
+      };
+
+      try {
+        const url = editingId 
+          ? `${API_BASE}/api/admin/affiliates/${editingId}`
+          : `${API_BASE}/api/admin/affiliates`;
+        const method = editingId ? 'PUT' : 'POST';
+
+        const res = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
+        });
+
+        if (!res.ok) throw new Error('Failed to save');
+        showToast('Affiliate saved', 'success');
+        toggleForm();
+        loadAffiliates();
+      } catch (error) {
+        showToast(`Error: ${error.message}`, 'error');
+      }
+    }
+
+    async function loadAffiliates() {
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/affiliates`);
+        const data = await res.json();
+        displayAffiliates(data.affiliates || []);
+      } catch (error) {
+        showToast('Failed to load', 'error');
+      }
+    }
+
+    function displayAffiliates(affiliates) {
+      allAffiliates = affiliates;
+      const container = document.getElementById('affiliates-container');
+      container.innerHTML = `
+        <div style="margin-bottom: 1rem;">
+          <input type="checkbox" class="select-all" onchange="adminUtils.initBulkSelection('affiliates-container', 'bulk-select')" />
+          <label style="margin-left: 0.5rem;">Select All</label>
+        </div>
+        ${affiliates.map(a => `
+        <div class="affiliate-card">
+          <div style="display: flex; justify-content: space-between; align-items: start;">
+            <div style="display: flex; align-items: start; gap: 0.5rem;">
+              <input type="checkbox" class="bulk-select" data-id="${a.id}" onchange="adminUtils.updateBulkActions()" />
+              <div>
+                <h3>${escapeHtml(a.name)} ${a.top_pick ? '<span class="badge-top-pick">TOP PICK</span>' : ''}</h3>
+                <p style="color: #888;">${a.jurisdiction || 'N/A'} | ${a.category || 'No category'}</p>
+                <p><a href="${a.affiliate_url}" target="_blank" style="color: #00fff7;">${a.affiliate_url}</a></p>
+              </div>
+            </div>
+            <div>
+              <button class="btn btn-primary" onclick="editAffiliate(${a.id})">Edit</button>
+              <button class="btn btn-danger" onclick="deleteAffiliate(${a.id})">Delete</button>
+            </div>
+          </div>
+        </div>
+      `).join('')}`;
+      adminUtils.initBulkSelection('affiliates-container', 'bulk-select');
+    }
+    
+    function exportCSV() {
+      adminUtils.exportToCSV(allAffiliates, `affiliates-${new Date().toISOString().split('T')[0]}.csv`);
+    }
+    
+    function exportJSON() {
+      adminUtils.exportToJSON(allAffiliates, `affiliates-${new Date().toISOString().split('T')[0]}.json`);
+    }
+    
+    async function bulkDelete() {
+      const selected = adminUtils.getSelectedIds('bulk-select');
+      if (selected.length === 0) {
+        alert('No affiliates selected');
+        return;
+      }
+      
+      if (!confirm(`Delete ${selected.length} affiliate(s)?`)) return;
+      
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/affiliates/bulk`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'delete', ids: selected })
+        });
+        
+        if (!res.ok) throw new Error('Failed to delete');
+        showToast(`Deleted ${selected.length} affiliate(s)`, 'success');
+        loadAffiliates();
+      } catch (error) {
+        showToast(`Error: ${error.message}`, 'error');
+      }
+    }
+
+    async function editAffiliate(id) {
+      const res = await fetch(`${API_BASE}/api/admin/affiliates/${id}`);
+      const a = await res.json();
+      document.getElementById('affiliate-name').value = a.name;
+      document.getElementById('affiliate-url').value = a.affiliate_url;
+      document.getElementById('affiliate-level').value = a.level || '';
+      document.getElementById('affiliate-jurisdiction').value = a.jurisdiction;
+      document.getElementById('affiliate-categories').value = a.categories?.join(', ') || '';
+      document.getElementById('affiliate-bonus').value = a.bonus || '';
+      document.getElementById('affiliate-top-pick').checked = a.top_pick;
+      editingId = id;
+      document.getElementById('form-title').textContent = 'Edit Affiliate';
+      document.getElementById('affiliate-form-container').style.display = 'block';
+    }
+
+    async function deleteAffiliate(id) {
+      if (!confirm('Delete this affiliate?')) return;
+      await fetch(`${API_BASE}/api/admin/affiliates/${id}`, { method: 'DELETE' });
+      showToast('Deleted', 'success');
+      loadAffiliates();
+    }
+
+    function showToast(msg, type) {
+      const toast = document.createElement('div');
+      toast.textContent = msg;
+      toast.style.cssText = `position: fixed; top: 20px; right: 20px; padding: 1rem; border-radius: 4px; color: #fff; background: ${type === 'success' ? '#00ff00' : '#ff0000'}; z-index: 1000;`;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    loadAffiliates();
+  </script>
+</body>
+</html>

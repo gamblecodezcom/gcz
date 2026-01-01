@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Settings - GambleCodez Admin</title>
+  <link rel="stylesheet" href="/admin/styles.css" />
+  <style>
+    .settings-form {
+      background: #1a1a1a;
+      border: 1px solid #00fff7;
+      border-radius: 8px;
+      padding: 2rem;
+      max-width: 800px;
+    }
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: #00fff7;
+      font-weight: bold;
+    }
+    .form-group input,
+    .form-group textarea {
+      width: 100%;
+      padding: 0.75rem;
+      background: #0a0a0a;
+      border: 1px solid #333;
+      border-radius: 4px;
+      color: #fff;
+    }
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      background: #00fff7;
+      color: #000;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>⚙️ Settings</h1>
+    <div style="margin-bottom: 1rem;">
+      <a href="/admin/index.html" style="color: #00fff7;">← Back to Admin Panel</a>
+    </div>
+
+    <div class="settings-form">
+      <h2>Site Configuration</h2>
+      <form onsubmit="saveSettings(event)">
+        <div class="form-group">
+          <label>Cwallet Affiliate Link</label>
+          <input type="url" id="cwallet-link" />
+        </div>
+        <div class="form-group">
+          <label>Default SEO Title</label>
+          <input type="text" id="seo-title" />
+        </div>
+        <div class="form-group">
+          <label>Default SEO Description</label>
+          <textarea id="seo-description"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Default SEO Keywords</label>
+          <input type="text" id="seo-keywords" />
+        </div>
+        <div>
+          <button type="submit" class="btn">Save Settings</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = window.location.origin;
+
+    async function loadSettings() {
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/settings`);
+        const data = await res.json();
+        document.getElementById('cwallet-link').value = data.cwallet_affiliate_link || '';
+        document.getElementById('seo-title').value = data.seo_title || '';
+        document.getElementById('seo-description').value = data.seo_description || '';
+        document.getElementById('seo-keywords').value = data.seo_keywords || '';
+      } catch (error) {
+        console.error('Failed to load settings:', error);
+      }
+    }
+
+    async function saveSettings(e) {
+      e.preventDefault();
+      const data = {
+        cwallet_affiliate_link: document.getElementById('cwallet-link').value,
+        seo_title: document.getElementById('seo-title').value,
+        seo_description: document.getElementById('seo-description').value,
+        seo_keywords: document.getElementById('seo-keywords').value,
+      };
+
+      try {
+        await fetch(`${API_BASE}/api/admin/settings`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        showToast('Settings saved', 'success');
+      } catch (error) {
+        showToast('Error saving', 'error');
+      }
+    }
+
+    function showToast(msg, type) {
+      const toast = document.createElement('div');
+      toast.textContent = msg;
+      toast.style.cssText = `position: fixed; top: 20px; right: 20px; padding: 1rem; border-radius: 4px; color: #fff; background: ${type === 'success' ? '#00ff00' : '#ff0000'}; z-index: 1000;`;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+
+    loadSettings();
+  </script>
+</body>
+</html>

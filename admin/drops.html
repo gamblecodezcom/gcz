@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Drops Management - GambleCodez Admin</title>
+  <link rel="stylesheet" href="/admin/styles.css" />
+  <style>
+    .drops-container {
+      display: grid;
+      gap: 1rem;
+    }
+    .drop-card {
+      background: #1a1a1a;
+      border: 1px solid #00fff7;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    .drop-card.featured {
+      border-color: #ffd700;
+      background: linear-gradient(135deg, #1a1a1a 0%, #2a1a1a 100%);
+    }
+    .drop-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 1rem;
+    }
+    .drop-title {
+      font-size: 1.25rem;
+      font-weight: bold;
+      color: #00fff7;
+      margin: 0;
+    }
+    .drop-badges {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-top: 0.5rem;
+    }
+    .badge {
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: bold;
+    }
+    .badge-featured { background: #ffd700; color: #000; }
+    .badge-active { background: #00ff00; color: #000; }
+    .badge-archived { background: #666; color: #fff; }
+    .badge-jurisdiction { background: #00fff7; color: #000; }
+    .drop-actions {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .btn {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 0.875rem;
+    }
+    .btn-primary { background: #00fff7; color: #000; }
+    .btn-success { background: #00ff00; color: #000; }
+    .btn-warning { background: #ffd700; color: #000; }
+    .btn-danger { background: #ff0000; color: #fff; }
+    .btn-secondary { background: #666; color: #fff; }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .stat-card {
+      background: #1a1a1a;
+      border: 1px solid #00fff7;
+      border-radius: 8px;
+      padding: 1rem;
+      text-align: center;
+    }
+    .stat-value {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #00fff7;
+    }
+    .stat-label {
+      color: #999;
+      font-size: 0.875rem;
+      margin-top: 0.5rem;
+    }
+    .filters {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    .filter-group label {
+      font-size: 0.875rem;
+      color: #00fff7;
+    }
+    .filter-group select,
+    .filter-group input {
+      padding: 0.5rem;
+      background: #0a0a0a;
+      border: 1px solid #333;
+      border-radius: 4px;
+      color: #fff;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 1000;
+      overflow-y: auto;
+    }
+    .modal-content {
+      background: #1a1a1a;
+      border: 2px solid #00fff7;
+      border-radius: 8px;
+      padding: 2rem;
+      margin: 2rem auto;
+      max-width: 800px;
+      width: 90%;
+    }
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: #00fff7;
+      font-weight: bold;
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 0.75rem;
+      background: #0a0a0a;
+      border: 1px solid #333;
+      border-radius: 4px;
+      color: #fff;
+    }
+    .form-group textarea {
+      min-height: 100px;
+    }
+    .jurisdiction-tags {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .jurisdiction-tag {
+      padding: 0.25rem 0.5rem;
+      background: #00fff7;
+      color: #000;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      cursor: pointer;
+    }
+    .jurisdiction-tag.active {
+      background: #00ff00;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎯 Drops Management</h1>
+    <div style="margin-bottom: 1rem;">
+      <a href="/admin/index.html" style="color: #00fff7;">← Back to Admin Panel</a>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid" id="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value" id="stat-active">-</div>
+        <div class="stat-label">Active Drops</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-featured">-</div>
+        <div class="stat-label">Featured</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-views">-</div>
+        <div class="stat-label">Total Views</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-clicks">-</div>
+        <div class="stat-label">Total Clicks</div>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters">
+      <div class="filter-group">
+        <label>Status</label>
+        <select id="filter-status">
+          <option value="">All</option>
+          <option value="active">Active</option>
+          <option value="archived">Archived</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Featured</label>
+        <select id="filter-featured">
+          <option value="">All</option>
+          <option value="true">Featured</option>
+          <option value="false">Not Featured</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Jurisdiction</label>
+        <select id="filter-jurisdiction">
+          <option value="">All</option>
+          <option value="USA Daily">USA Daily</option>
+          <option value="Crypto Daily">Crypto Daily</option>
+          <option value="Everywhere">Everywhere</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Search</label>
+        <input type="text" id="filter-search" placeholder="Search headlines...">
+      </div>
+    </div>
+
+    <!-- Drops List -->
+    <div class="drops-container" id="drops-container">
+      <div class="loading">Loading drops...</div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="edit-modal" class="modal">
+      <div class="modal-content">
+        <h2>Edit Drop</h2>
+        <form id="edit-form" onsubmit="saveDrop(event)">
+          <div class="form-group">
+            <label>Headline *</label>
+            <input type="text" id="edit-headline" required>
+          </div>
+          <div class="form-group">
+            <label>Description</label>
+            <textarea id="edit-description"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Bonus Code</label>
+            <input type="text" id="edit-bonus-code">
+          </div>
+          <div class="form-group">
+            <label>Promo URL</label>
+            <input type="url" id="edit-promo-url">
+          </div>
+          <div class="form-group">
+            <label>Quick Signup URL</label>
+            <input type="url" id="edit-quick-signup-url">
+          </div>
+          <div class="form-group">
+            <label>Jurisdiction Tags</label>
+            <div class="jurisdiction-tags">
+              <span class="jurisdiction-tag" data-tag="USA Daily" onclick="toggleJurisdiction(this)">USA Daily</span>
+              <span class="jurisdiction-tag" data-tag="Crypto Daily" onclick="toggleJurisdiction(this)">Crypto Daily</span>
+              <span class="jurisdiction-tag" data-tag="Everywhere" onclick="toggleJurisdiction(this)">Everywhere</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>
+              <input type="checkbox" id="edit-featured"> Featured
+            </label>
+          </div>
+          <div class="form-group">
+            <label>Status</label>
+            <select id="edit-status">
+              <option value="active">Active</option>
+              <option value="archived">Archived</option>
+            </select>
+          </div>
+          <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+            <button type="submit" class="btn btn-primary">Save</button>
+            <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = window.location.origin;
+    let editingId = null;
+    let selectedJurisdictions = [];
+
+    async function loadStats() {
+      try {
+        const res = await fetch(`${API_BASE}/api/drops/admin/analytics`);
+        const data = await res.json();
+        
+        document.getElementById('stat-active').textContent = data.stats?.active_count || 0;
+        document.getElementById('stat-featured').textContent = data.stats?.featured_count || 0;
+        document.getElementById('stat-views').textContent = data.stats?.total_views || 0;
+        document.getElementById('stat-clicks').textContent = data.stats?.total_clicks || 0;
+      } catch (error) {
+        console.error('Failed to load stats:', error);
+      }
+    }
+
+    async function loadDrops() {
+      const status = document.getElementById('filter-status').value;
+      const featured = document.getElementById('filter-featured').value;
+      const jurisdiction = document.getElementById('filter-jurisdiction').value;
+      const search = document.getElementById('filter-search').value;
+
+      const params = new URLSearchParams();
+      if (status) params.append('status', status);
+      if (featured) params.append('featured', featured);
+      if (jurisdiction) params.append('jurisdiction', jurisdiction);
+
+      try {
+        const res = await fetch(`${API_BASE}/api/drops/admin/promos?${params}`);
+        const data = await res.json();
+        
+        let promos = data.promos || [];
+        
+        // Client-side search
+        if (search) {
+          const searchLower = search.toLowerCase();
+          promos = promos.filter(p => 
+            p.headline?.toLowerCase().includes(searchLower) ||
+            p.description?.toLowerCase().includes(searchLower) ||
+            p.bonus_code?.toLowerCase().includes(searchLower)
+          );
+        }
+
+        const container = document.getElementById('drops-container');
+        container.innerHTML = promos.map(drop => `
+          <div class="drop-card ${drop.featured ? 'featured' : ''}">
+            <div class="drop-header">
+              <div>
+                <h3 class="drop-title">${escapeHtml(drop.headline || 'No headline')}</h3>
+                ${drop.description ? `<p style="color: #999; margin-top: 0.5rem;">${escapeHtml(drop.description)}</p>` : ''}
+                <div class="drop-badges">
+                  ${drop.featured ? '<span class="badge badge-featured">⭐ Featured</span>' : ''}
+                  <span class="badge ${drop.status === 'active' ? 'badge-active' : 'badge-archived'}">${drop.status}</span>
+                  ${(drop.jurisdiction_tags || []).map(tag => `<span class="badge badge-jurisdiction">${tag}</span>`).join('')}
+                  ${drop.casino_name ? `<span class="badge">🏰 ${drop.casino_name}</span>` : ''}
+                </div>
+                <div style="margin-top: 0.5rem; font-size: 0.875rem; color: #999;">
+                  ${drop.bonus_code ? `<strong>Code:</strong> <code>${escapeHtml(drop.bonus_code)}</code> ` : ''}
+                  ${drop.view_count || 0} views • ${drop.click_count || 0} clicks
+                </div>
+              </div>
+              <div class="drop-actions">
+                <button class="btn btn-primary" onclick="editDrop(${drop.id})">Edit</button>
+                <button class="btn ${drop.featured ? 'btn-secondary' : 'btn-warning'}" onclick="toggleFeature(${drop.id}, ${!drop.featured})">
+                  ${drop.featured ? 'Unfeature' : 'Feature'}
+                </button>
+                <button class="btn btn-danger" onclick="deleteDrop(${drop.id})">Archive</button>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      } catch (error) {
+        console.error('Failed to load drops:', error);
+        document.getElementById('drops-container').innerHTML = '<div class="error">Error loading drops</div>';
+      }
+    }
+
+    function editDrop(id) {
+      editingId = id;
+      fetch(`${API_BASE}/api/drops/admin/promos/${id}`)
+        .then(res => res.json())
+        .then(data => {
+          const drop = data.promo;
+          document.getElementById('edit-headline').value = drop.headline || '';
+          document.getElementById('edit-description').value = drop.description || '';
+          document.getElementById('edit-bonus-code').value = drop.bonus_code || '';
+          document.getElementById('edit-promo-url').value = drop.promo_url || '';
+          document.getElementById('edit-quick-signup-url').value = drop.quick_signup_url || '';
+          document.getElementById('edit-featured').checked = drop.featured || false;
+          document.getElementById('edit-status').value = drop.status || 'active';
+          
+          // Set jurisdiction tags
+          selectedJurisdictions = drop.jurisdiction_tags || [];
+          document.querySelectorAll('.jurisdiction-tag').forEach(tag => {
+            tag.classList.toggle('active', selectedJurisdictions.includes(tag.dataset.tag));
+          });
+          
+          document.getElementById('edit-modal').style.display = 'block';
+        })
+        .catch(error => {
+          console.error('Failed to load drop:', error);
+          alert('Failed to load drop');
+        });
+    }
+
+    function toggleJurisdiction(el) {
+      const tag = el.dataset.tag;
+      if (selectedJurisdictions.includes(tag)) {
+        selectedJurisdictions = selectedJurisdictions.filter(t => t !== tag);
+        el.classList.remove('active');
+      } else {
+        selectedJurisdictions.push(tag);
+        el.classList.add('active');
+      }
+    }
+
+    function closeModal() {
+      document.getElementById('edit-modal').style.display = 'none';
+      editingId = null;
+      selectedJurisdictions = [];
+    }
+
+    async function saveDrop(e) {
+      e.preventDefault();
+      
+      const data = {
+        headline: document.getElementById('edit-headline').value,
+        description: document.getElementById('edit-description').value,
+        bonus_code: document.getElementById('edit-bonus-code').value,
+        promo_url: document.getElementById('edit-promo-url').value,
+        quick_signup_url: document.getElementById('edit-quick-signup-url').value,
+        jurisdiction_tags: selectedJurisdictions,
+        featured: document.getElementById('edit-featured').checked,
+        status: document.getElementById('edit-status').value
+      };
+
+      try {
+        const res = await fetch(`${API_BASE}/api/drops/admin/promos/${editingId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        if (!res.ok) throw new Error('Failed');
+        
+        showToast('Saved', 'success');
+        closeModal();
+        loadDrops();
+        loadStats();
+      } catch (error) {
+        showToast('Error saving', 'error');
+      }
+    }
+
+    async function toggleFeature(id, featured) {
+      try {
+        const res = await fetch(`${API_BASE}/api/drops/admin/promos/${id}/feature`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ featured })
+        });
+
+        if (!res.ok) throw new Error('Failed');
+        
+        showToast(featured ? 'Featured' : 'Unfeatured', 'success');
+        loadDrops();
+        loadStats();
+      } catch (error) {
+        showToast('Error', 'error');
+      }
+    }
+
+    async function deleteDrop(id) {
+      if (!confirm('Archive this drop?')) return;
+      
+      try {
+        const res = await fetch(`${API_BASE}/api/drops/admin/promos/${id}`, {
+          method: 'DELETE'
+        });
+
+        if (!res.ok) throw new Error('Failed');
+        
+        showToast('Archived', 'success');
+        loadDrops();
+        loadStats();
+      } catch (error) {
+        showToast('Error', 'error');
+      }
+    }
+
+    function showToast(msg, type) {
+      const toast = document.createElement('div');
+      toast.textContent = msg;
+      toast.style.cssText = `position: fixed; top: 20px; right: 20px; padding: 1rem; border-radius: 4px; color: #fff; background: ${type === 'success' ? '#00ff00' : '#ff0000'}; z-index: 1001;`;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Event listeners
+    document.getElementById('filter-status').addEventListener('change', loadDrops);
+    document.getElementById('filter-featured').addEventListener('change', loadDrops);
+    document.getElementById('filter-jurisdiction').addEventListener('change', loadDrops);
+    document.getElementById('filter-search').addEventListener('input', loadDrops);
+
+    // Close modal on outside click
+    document.getElementById('edit-modal').addEventListener('click', (e) => {
+      if (e.target.id === 'edit-modal') closeModal();
+    });
+
+    // Initial load
+    loadStats();
+    loadDrops();
+  </script>
+</body>
+</html>

@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>GambleCodez Bug Report</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #050713;
+      --card: #0c1024;
+      --accent: #8b5cf6;
+      --accent-soft: rgba(139, 92, 246, 0.25);
+      --border: #1f2933;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --danger: #f97373;
+      --success: #22c55e;
+      --shadow: 0 22px 50px rgba(0,0,0,0.9);
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+      background: radial-gradient(circle at top left, #111827, #020617 55%, #000000);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .shell {
+      width: 100%;
+      max-width: 900px;
+      background: linear-gradient(145deg, rgba(15,23,42,0.98), rgba(3,7,18,0.98));
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(148,163,184,0.3);
+      overflow: hidden;
+    }
+    .shell-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid rgba(51,65,85,0.75);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: radial-gradient(circle at top left, rgba(139,92,246,0.25), transparent 60%);
+    }
+    .shell-title {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .shell-title span:first-child {
+      font-size: 13px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .shell-title span:last-child {
+      font-size: 20px;
+      font-weight: 600;
+    }
+    .shell-pill {
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.6);
+      background: radial-gradient(circle at top, rgba(15,23,42,0.9), rgba(2,6,23,0.9));
+      color: var(--muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .shell-pill-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: #22c55e;
+      box-shadow: 0 0 10px rgba(34,197,94,0.8);
+    }
+    .content {
+      padding: 18px 20px 12px 20px;
+      border-bottom: 1px solid rgba(31,41,55,0.8);
+      font-size: 13px;
+      color: var(--muted);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 16px;
+      justify-content: space-between;
+    }
+    .content strong {
+      color: var(--text);
+      font-weight: 500;
+    }
+    form {
+      padding: 16px 20px 20px 20px;
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+      gap: 18px 20px;
+    }
+    @media (max-width: 800px) {
+      form {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+    .section {
+      background: radial-gradient(circle at top left, rgba(15,23,42,0.96), rgba(3,7,18,0.96));
+      border-radius: 14px;
+      border: 1px solid rgba(51,65,85,0.85);
+      padding: 14px 14px 12px 14px;
+    }
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 8px;
+      gap: 8px;
+    }
+    .section-title {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: var(--muted);
+    }
+    .section-tag {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.5);
+      color: var(--muted);
+    }
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      margin-bottom: 8px;
+    }
+    .field-label {
+      font-size: 13px;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .field-label span:last-child {
+      font-size: 11px;
+      color: rgba(148,163,184,0.9);
+    }
+    select, input[type="text"], input[type="email"], textarea {
+      width: 100%;
+      border-radius: 9px;
+      border: 1px solid rgba(55,65,81,0.9);
+      background: rgba(15,23,42,0.85);
+      color: var(--text);
+      padding: 7px 9px;
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.14s ease, box-shadow 0.14s ease, background 0.14s ease;
+    }
+    select:focus, input:focus, textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent-soft);
+      background: rgba(15,23,42,0.98);
+    }
+    textarea {
+      resize: vertical;
+      min-height: 95px;
+      max-height: 260px;
+    }
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 4px;
+    }
+    .chip {
+      border-radius: 999px;
+      border: 1px solid rgba(55,65,81,0.9);
+      background: rgba(15,23,42,0.9);
+      color: var(--muted);
+      font-size: 11px;
+      padding: 3px 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .chip input {
+      margin: 0;
+      width: 0;
+      height: 0;
+      opacity: 0;
+      position: absolute;
+      pointer-events: none;
+    }
+    .chip.active {
+      border-color: var(--accent);
+      background: radial-gradient(circle at top, rgba(76,29,149,0.6), rgba(15,23,42,0.95));
+      color: #e5e7ff;
+      box-shadow: 0 0 20px rgba(88,28,135,0.7);
+    }
+    .chip-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: rgba(148,163,184,0.8);
+    }
+    .chip.active .chip-dot {
+      background: var(--accent);
+    }
+    .severity-row {
+      display: flex;
+      gap: 6px;
+      margin-top: 5px;
+      flex-wrap: wrap;
+    }
+    .severity-pill {
+      border-radius: 999px;
+      border: 1px solid rgba(75,85,99,0.95);
+      padding: 3px 9px;
+      font-size: 11px;
+      color: var(--muted);
+      cursor: pointer;
+      user-select: none;
+      background: rgba(15,23,42,0.9);
+    }
+    .severity-pill[data-level="low"].active {
+      border-color: #22c55e;
+      color: #bbf7d0;
+      background: rgba(22,163,74,0.14);
+    }
+    .severity-pill[data-level="medium"].active {
+      border-color: #eab308;
+      color: #fef9c3;
+      background: rgba(234,179,8,0.14);
+    }
+    .severity-pill[data-level="high"].active {
+      border-color: #f97373;
+      color: #fee2e2;
+      background: rgba(248,113,113,0.16);
+    }
+    .two-col {
+      display: flex;
+      gap: 8px;
+    }
+    @media (max-width: 640px) {
+      .two-col {
+        flex-direction: column;
+      }
+    }
+    .footer-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-top: 4px;
+      padding-top: 8px;
+      border-top: 1px dashed rgba(51,65,85,0.9);
+    }
+    .foot-left {
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .foot-left strong {
+      color: var(--text);
+      font-weight: 500;
+    }
+    .submit-btn {
+      border-radius: 999px;
+      border: 1px solid rgba(129,140,248,0.95);
+      padding: 7px 18px;
+      font-size: 13px;
+      background: radial-gradient(circle at top, rgba(129,140,248,0.85), rgba(79,70,229,0.98));
+      color: #e5e7ff;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 14px 35px rgba(79,70,229,0.75);
+    }
+    .submit-btn span {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      opacity: 0.85;
+    }
+    .submit-btn:disabled {
+      opacity: 0.55;
+      cursor: default;
+      box-shadow: none;
+    }
+    .msg {
+      margin-top: 6px;
+      font-size: 12px;
+    }
+    .msg.error {
+      color: var(--danger);
+    }
+    .msg.success {
+      color: var(--success);
+    }
+    .small-link {
+      font-size: 11px;
+      color: var(--muted);
+      text-decoration: none;
+      border-bottom: 1px dotted rgba(148,163,184,0.7);
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="shell-header">
+      <div class="shell-title">
+        <span>GAMBLECODEZ / PROD</span>
+        <span>Bug & Issue Report</span>
+      </div>
+      <div class="shell-pill">
+        <span class="shell-pill-dot"></span>
+        <span>Live stack · routed to ops</span>
+      </div>
+    </div>
+
+    <div class="content">
+      <div>
+        <strong>Purpose:</strong> Fast path for real issues across site, admin, and bots.
+      </div>
+      <div>
+        <strong>Scope:</strong> User bugs, admin issues, Telegram bot problems, broken flows, wrong data, and anything “off”.
+      </div>
+    </div>
+
+    <form id="bug-form">
+      <!-- LEFT: reporter + context -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-title">Reporter & Context</div>
+          <div class="section-tag">Required · who + where</div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">
+            <span>Role</span>
+            <span>User vs Admin routing</span>
+          </label>
+          <div class="chips" id="role-chips">
+            <label class="chip active">
+              <span class="chip-dot"></span>
+              <span>User</span>
+              <input type="radio" name="role" value="user" checked />
+            </label>
+            <label class="chip">
+              <span class="chip-dot"></span>
+              <span>Admin / Mod</span>
+              <input type="radio" name="role" value="admin" />
+            </label>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">
+            <span>Surface(s) affected</span>
+            <span>Pick all that apply</span>
+          </label>
+          <div class="chips" id="surface-chips">
+            <label class="chip">
+              <span class="chip-dot"></span>
+              <span>User · Site (gamblecodez.com)</span>
+              <input type="checkbox" name="surface" value="user_site" />
+            </label>
+            <label class="chip">
+              <span class="chip-dot"></span>
+              <span>User · Telegram Bot</span>
+              <input type="checkbox" name="surface" value="user_telegram_bot" />
+            </label>
+            <label class="chip">
+              <span class="chip-dot"></span>
+              <span>Admin · Site</span>
+              <input type="checkbox" name="surface" value="admin_site" />
+            </label>
+            <label class="chip">
+              <span class="chip-dot"></span>
+              <span>Admin · Panel (admin)</span>
+              <input type="checkbox" name="surface" value="admin_panel" />
+            </label>
+            <label class="chip">
+              <span class="chip-dot"></span>
+              <span>Admin / User · Telegram Bot</span>
+              <input type="checkbox" name="surface" value="admin_user_telegram_bot" />
+            </label>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">
+            <span>Issue type</span>
+            <span>What “kind” of problem is it?</span>
+          </label>
+          <select name="issue_type" required>
+            <option value="">Select an issue type…</option>
+            <option value="ui_bug">Visual / UI bug</option>
+            <option value="broken_link">Broken link / redirect</option>
+            <option value="crash_error">Crash / error screen</option>
+            <option value="wrong_data">Wrong data / wrong odds / wrong balances</option>
+            <option value="login_auth">Login / auth issue</option>
+            <option value="notification_issue">Notifications / push / email issue</option>
+            <option value="raffles_issue">Raffles / entries / winners issue</option>
+            <option value="drops_promos_issue">Drops / promos / codes issue</option>
+            <option value="bot_behavior">Bot behaviour / commands issue</option>
+            <option value="performance">Slow / laggy / performance issue</option>
+            <option value="security">Security / suspicious behaviour</option>
+            <option value="other">Other (describe below)</option>
+          </select>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">
+            <span>Severity</span>
+            <span>How bad is it?</span>
+          </label>
+          <input type="hidden" name="severity" id="severity-input" value="medium" />
+          <div class="severity-row" id="severity-row">
+            <div class="severity-pill" data-level="low">Low · annoying but fine</div>
+            <div class="severity-pill active" data-level="medium">Medium · hurts UX / trust</div>
+            <div class="severity-pill" data-level="high">High · breaks core flow / money</div>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div class="field-group">
+            <label class="field-label">
+              <span>Your handle</span>
+              <span>Discord / Telegram / site username</span>
+            </label>
+            <input type="text" name="reporter_handle" placeholder="Example: gamblecodez_og, @user123" />
+          </div>
+          <div class="field-group">
+            <label class="field-label">
+              <span>Best contact</span>
+              <span>Optional · email or @handle</span>
+            </label>
+            <input type="text" name="contact" placeholder="Optional: email or Telegram @handle" />
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: description + steps + meta -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-title">What Actually Broke</div>
+          <div class="section-tag">Required · details matter</div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">
+            <span>Short title</span>
+            <span>One-line summary</span>
+          </label>
+          <input type="text" name="title" required placeholder="Example: Raffle page shows empty even with entries" />
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">
+            <span>What did you expect vs what happened?</span>
+            <span>Be as specific as you can</span>
+          </label>
+          <textarea
+            name="description"
+            required
+            placeholder="Example: Expected to see my live raffles. Got an empty list even though I can see entries in my activity. Mention exact pages, balances, or states that looked wrong."
+          ></textarea>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">
+            <span>Steps to reproduce</span>
+            <span>Click‑by‑click if you can</span>
+          </label>
+          <textarea
+            name="steps"
+            placeholder="Example:
+1) Go to https://gamblecodez.com/raffles
+2) Make sure you are logged in
+3) Tap the Endless Raffle
+4) See blank state or wrong counts"
+          ></textarea>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">
+            <span>Browser / device / extra context</span>
+            <span>Optional but very helpful</span>
+          </label>
+          <input
+            type="text"
+            name="env"
+            placeholder="Example: Chrome 143 on Android 15, US, WiFi. Or: Admin panel on desktop Chrome."
+          />
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">
+            <span>Links, IDs, or screenshots (if any)</span>
+            <span>Paste URLs or IDs only · no uploads here yet</span>
+          </label>
+          <textarea
+            name="links"
+            placeholder="Example: raffle ID, user ID, redirect slug, Telegram message link, screenshot link (imgur, etc.)."
+          ></textarea>
+        </div>
+
+        <div class="footer-row">
+          <div class="foot-left">
+            <div>
+              <strong>Routing:</strong> User issues go to support; admin & bot issues go to ops.
+            </div>
+            <div>
+              By submitting, you agree we can use this info to debug and improve the stack.
+            </div>
+          </div>
+          <div>
+            <button type="submit" class="submit-btn" id="submit-btn">
+              <span>SEND BUG REPORT</span>
+            </button>
+            <div id="form-msg" class="msg" aria-live="polite"></div>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    // Chip toggle logic (role radio + surface checkboxes)
+    function wireChips(groupId, isRadio) {
+      const group = document.getElementById(groupId);
+      if (!group) return;
+      group.addEventListener("click", (e) => {
+        const chip = e.target.closest(".chip");
+        if (!chip) return;
+        const input = chip.querySelector("input");
+        if (!input) return;
+
+        if (isRadio) {
+          // radio: clear others, set this
+          group.querySelectorAll(".chip").forEach((c) => c.classList.remove("active"));
+          chip.classList.add("active");
+          input.checked = true;
+        } else {
+          // checkbox: toggle
+          const active = chip.classList.toggle("active");
+          input.checked = active;
+        }
+      });
+    }
+
+    wireChips("role-chips", true);
+    wireChips("surface-chips", false);
+
+    // Severity pills
+    const severityInput = document.getElementById("severity-input");
+    const severityRow = document.getElementById("severity-row");
+    if (severityRow && severityInput) {
+      severityRow.addEventListener("click", (e) => {
+        const pill = e.target.closest(".severity-pill");
+        if (!pill) return;
+        const level = pill.getAttribute("data-level");
+        if (!level) return;
+        severityRow.querySelectorAll(".severity-pill").forEach((p) => p.classList.remove("active"));
+        pill.classList.add("active");
+        severityInput.value = level;
+      });
+    }
+
+    // Form submission: POST to /api/bug-report
+    const form = document.getElementById("bug-form");
+    const submitBtn = document.getElementById("submit-btn");
+    const formMsg = document.getElementById("form-msg");
+
+    function gatherSurfaces() {
+      const checked = Array.from(
+        document.querySelectorAll('#surface-chips input[name="surface"]:checked')
+      );
+      return checked.map((i) => i.value);
+    }
+
+    if (form) {
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        formMsg.textContent = "";
+        formMsg.className = "msg";
+        submitBtn.disabled = true;
+
+        const formData = new FormData(form);
+        const payload = {
+          role: formData.get("role") || "user",
+          surfaces: gatherSurfaces(),
+          issue_type: formData.get("issue_type") || null,
+          severity: formData.get("severity") || "medium",
+          reporter_handle: formData.get("reporter_handle") || null,
+          contact: formData.get("contact") || null,
+          title: formData.get("title") || "",
+          description: formData.get("description") || "",
+          steps: formData.get("steps") || "",
+          env: formData.get("env") || "",
+          links: formData.get("links") || ""
+        };
+
+        if (!payload.title.trim() || !payload.description.trim()) {
+          formMsg.textContent = "Title and description are required.";
+          formMsg.className = "msg error";
+          submitBtn.disabled = false;
+          return;
+        }
+
+        // Fallback: if no surfaces selected, mark as generic
+        if (!payload.surfaces || payload.surfaces.length === 0) {
+          payload.surfaces = ["unspecified"];
+        }
+
+        try {
+          const res = await fetch("/api/bug-report", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+          });
+
+          if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            thr

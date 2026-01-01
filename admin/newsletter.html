@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Newsletter Dashboard - GambleCodez Admin</title>
+  <link rel="stylesheet" href="/admin/styles.css" />
+  <style>
+    body {
+      background: #0d0d0d;
+      color: #fff;
+      font-family: Inter, sans-serif;
+      margin: 0;
+      padding: 1rem;
+    }
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    .back-link {
+      display: inline-block;
+      margin-bottom: 1rem;
+      color: #00fff7;
+      text-decoration: none;
+    }
+    .back-link:hover {
+      text-decoration: underline;
+    }
+    .tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+      border-bottom: 2px solid #333;
+    }
+    .tab {
+      padding: 0.75rem 1.5rem;
+      background: transparent;
+      border: none;
+      color: #9FA6B2;
+      cursor: pointer;
+      font-size: 1rem;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      transition: all 0.2s;
+    }
+    .tab:hover {
+      color: #00F5FF;
+    }
+    .tab.active {
+      color: #00F5FF;
+      border-bottom-color: #00F5FF;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    .card {
+      background: #1a1a1a;
+      border: 1px solid #00fff7;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: #00fff7;
+      font-weight: bold;
+    }
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 0.75rem;
+      background: #0a0a0a;
+      border: 1px solid #333;
+      border-radius: 4px;
+      color: #fff;
+      font-family: inherit;
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    .btn {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      margin-right: 0.5rem;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: #00fff7;
+      color: #000;
+    }
+    .btn-primary:hover {
+      background: #00d9e0;
+    }
+    .btn-danger {
+      background: #ff0000;
+      color: #fff;
+    }
+    .btn-secondary {
+      background: #333;
+      color: #fff;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+    th, td {
+      padding: 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid #333;
+    }
+    th {
+      color: #00fff7;
+      font-weight: bold;
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 12px;
+      font-size: 0.875rem;
+      font-weight: bold;
+    }
+    .status-draft { background: #666; color: #fff; }
+    .status-scheduled { background: #ffd600; color: #000; }
+    .status-sending { background: #00f5ff; color: #000; }
+    .status-sent { background: #00ff85; color: #000; }
+    .loading {
+      text-align: center;
+      padding: 2rem;
+      color: #9FA6B2;
+    }
+    .segment-rule {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+    .segment-rule select,
+    .segment-rule input {
+      flex: 1;
+    }
+    .token-hint {
+      font-size: 0.875rem;
+      color: #9FA6B2;
+      margin-top: 0.25rem;
+    }
+    .token-hint code {
+      background: #333;
+      padding: 0.125rem 0.25rem;
+      border-radius: 3px;
+      color: #00fff7;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="/admin/index.html" class="back-link">← Back to Admin Panel</a>
+    <h1>✉️ Newsletter Dashboard</h1>
+
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('campaigns')">Campaigns</button>
+      <button class="tab" onclick="switchTab('audience')">Audience & Segments</button>
+      <button class="tab" onclick="switchTab('templates')">Templates</button>
+      <button class="tab" onclick="switchTab('stats')">Logs & Stats</button>
+    </div>
+
+    <!-- Campaigns Tab -->
+    <div id="campaigns" class="tab-content active">
+      <div style="margin-bottom: 1rem;">
+        <button class="btn btn-primary" onclick="toggleCampaignForm()">+ Create Campaign</button>
+      </div>
+
+      <div id="campaign-form-container" style="display: none;">
+        <div class="card">
+          <h2 id="campaign-form-title">Create Campaign</h2>
+          <form onsubmit="saveCampaign(event)">
+            <div class="form-group">
+              <label>Name *</label>
+              <input type="text" id="campaign-name" required />
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Subject *</label>
+                <input type="text" id="campaign-subject" required />
+              </div>
+              <div class="form-group">
+                <label>Preheader</label>
+                <input type="text" id="campaign-preheader" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Audience Segment *</label>
+              <select id="campaign-segment" required>
+                <option value="">Select segment...</option>
+                <option value="all">All subscribers</option>
+                <option value="jurisdiction-us">Jurisdiction: US</option>
+                <option value="jurisdiction-non-us">Jurisdiction: Non-US</option>
+                <option value="telegram-linked">Telegram linked</option>
+                <option value="telegram-not-linked">Telegram not linked</option>
+                <option value="raffle-active">Raffle-active users</option>
+                <option value="vip">VIP segment</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Content (HTML) *</label>
+              <textarea id="campaign-content" rows="10" required></textarea>
+              <div class="token-hint">
+                Available tokens: <code>{{username}}</code> <code>{{telegram_username}}</code> <code>{{cwallet_id}}</code> <code>{{top_site}}</code>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Schedule</label>
+                <select id="campaign-schedule">
+                  <option value="now">Send now</option>
+                  <option value="scheduled">Schedule for later</option>
+                </select>
+              </div>
+              <div class="form-group" id="schedule-date-group" style="display: none;">
+                <label>Scheduled Date/Time</label>
+                <input type="datetime-local" id="campaign-scheduled-date" />
+              </div>
+            </div>
+            <div>
+              <button type="submit" class="btn btn-primary">Save Campaign</button>
+              <button type="button" class="btn btn-secondary" onclick="toggleCampaignForm()">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div id="campaigns-container">
+        <div class="loading">Loading campaigns...</div>
+      </div>
+    </div>
+
+    <!-- Audience & Segments Tab -->
+    <div id="audience" class="tab-content">
+      <div style="margin-bottom: 1rem;">
+        <button class="btn btn-primary" onclick="toggleSegmentForm()">+ Create Segment</button>
+      </div>
+
+      <div id="segment-form-container" style="display: none;">
+        <div class="card">
+          <h2>Create Segment</h2>
+          <form onsubmit="saveSegment(event)">
+            <div class="form-group">
+              <label>Segment Name *</label>
+              <input type="text" id="segment-name" required />
+            </div>
+            <div class="form-group">
+              <label>Description</label>
+              <textarea id="segment-description" rows="3"></textarea>
+            </div>
+            <div class="form-group">
+              <label>Rules</label>
+              <div id="segment-rules">
+                <div class="segment-rule">
+                  <select class="rule-field">
+                    <option value="jurisdiction">Jurisdiction</option>
+                    <option value="has_site">Has linked site</option>
+                    <option value="has_telegram">Has Telegram</option>
+                    <option value="has_cwallet">Has Cwallet</option>
+                    <option value="raffle_entries">Raffle entries</option>
+                    <option value="wheel_spins">Wheel spins</option>
+                  </select>
+                  <select class="rule-operator">
+                    <option value="equals">equals</option>
+                    <option value="not_equals">not equals</option>
+                    <option value="greater_than">greater than</option>
+                    <option value="less_than">less than</option>
+                  </select>
+                  <input type="text" class="rule-value" placeholder="Value" />
+                  <button type="button" class="btn btn-danger" onclick="removeRule(this)">Remove</button>
+                </div>
+              </div>
+              <button type="button" class="btn btn-secondary" onclick="addRule()">+ Add Rule</button>
+            </div>
+            <div>
+              <button type="submit" class="btn btn-primary">Save Segment</button>
+              <button type="button" class="btn btn-secondary" onclick="toggleSegmentForm()">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Segments</h3>
+        <div id="segments-container">
+          <div class="loading">Loading segments...</div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top: 2rem;">
+        <h3>Audience List</h3>
+        <div style="margin-bottom: 1rem;">
+          <input type="text" id="audience-search" placeholder="Search by email or username..." style="width: 300px; padding: 0.5rem;" />
+        </div>
+        <div id="audience-container">
+          <div class="loading">Loading audience...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Templates Tab -->
+    <div id="templates" class="tab-content">
+      <div style="margin-bottom: 1rem;">
+        <button class="btn btn-primary" onclick="toggleTemplateForm()">+ Create Template</button>
+      </div>
+
+      <div id="template-form-container" style="display: none;">
+        <div class="card">
+          <h2 id="template-form-title">Create Template</h2>
+          <form onsubmit="saveTemplate(event)">
+            <div class="form-group">
+              <label>Template Name *</label>
+              <input type="text" id="template-name" required />
+            </div>
+            <div class="form-group">
+              <label>Type *</label>
+              <select id="template-type" required>
+                <option value="raffle-announcement">Raffle announcement</option>
+                <option value="secret-code">Secret code drop</option>
+                <option value="new-site">New site added</option>
+                <option value="sc-blitz">Runewager SC blitz</option>
+                <option value="crypto-campaign">Crypto tip campaigns</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Subject *</label>
+              <input type="text" id="template-subject" required />
+            </div>
+            <div class="form-group">
+              <label>Body (HTML) *</label>
+              <textarea id="template-body" rows="15" required></textarea>
+              <div class="token-hint">
+                Available tokens: <code>{{username}}</code> <code>{{telegram_username}}</code> <code>{{cwallet_id}}</code> <code>{{top_site}}</code> <code>{{raffle_name}}</code> <code>{{prize}}</code>
+              </div>
+            </div>
+            <div>
+              <button type="submit" class="btn btn-primary">Save Template</button>
+              <button type="button" class="btn btn-secondary" onclick="toggleTemplateForm()">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div id="templates-container">
+        <div class="loading">Loading templates...</div>
+      </div>
+    </div>
+
+    <!-- Stats Tab -->
+    <div id="stats" class="tab-content">
+      <div class="card">
+        <h3>Global Stats</h3>
+        <div id="global-stats" class="loading">Loading stats...</div>
+      </div>
+      <div class="card" style="margin-top: 2rem;">
+        <h3>Campaign Performance</h3>
+        <div id="campaign-stats" class="loading">Loading campaign stats...</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = window.location.origin;
+    let editingCampaignId = null;
+    let editingTemplateId = null;
+    let editingSegmentId = null;
+
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      event.target.classList.add('active');
+      document.getElementById(tabName).classList.add('active');
+      
+      if (tabName === 'campaigns') loadCampaigns();
+      if (tabName === 'audience') {
+        loadSegments();
+        loadAudience();
+      }
+      if (tabName === 'templates') loadTemplates();
+      if (tabName === 'stats') loadStats();
+    }
+
+    // Campaigns
+    function toggleCampaignForm() {
+      const container = document.getElementById('campaign-form-container');
+      container.style.display = container.style.display === 'none' ? 'block' : 'none';
+      if (container.style.display === 'none') {
+        editingCampaignId = null;
+        document.querySelector('#campaign-form-container form').reset();
+        document.getElementById('campaign-form-title').textContent = 'Create Campaign';
+      }
+    }
+
+    document.getElementById('campaign-schedule').addEventListener('change', (e) => {
+      document.getElementById('schedule-date-group').style.display = 
+        e.target.value === 'scheduled' ? 'block' : 'none';
+    });
+
+    async function saveCampaign(e) {
+      e.preventDefault();
+      const data = {
+        name: document.getElementById('campaign-name').value,
+        subject: document.getElementById('campaign-subject').value,
+        preheader: document.getElementById('campaign-preheader').value || null,
+        segment: document.getElementById('campaign-segment').value,
+        content: document.getElementById('campaign-content').value,
+        schedule: document.getElementById('campaign-schedule').value,
+        scheduled_date: document.getElementById('campaign-scheduled-date').value || null
+      };
+
+      try {
+        const url = editingCampaignId 
+          ? `${API_BASE}/api/admin/newsletter/campaigns/${editingCampaignId}`
+          : `${API_BASE}/api/admin/newsletter/campaigns`;
+        const method = editingCampaignId ? 'PUT' : 'POST';
+
+        const res = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        if (!res.ok) throw new Error('Failed');
+        showToast('Campaign saved', 'success');
+        toggleCampaignForm();
+        loadCampaigns();
+      } catch (error) {
+        showToast('Error saving campaign', 'error');
+      }
+    }
+
+    async function loadCampaigns() {
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/newsletter/campaigns`);
+        const data = await res.json();
+        const container = document.getElementById('campaigns-container');
+        if (data.campaigns && data.campaigns.length > 0) {
+          container.innerHTML = data.campaigns.map(c => `
+            <div class="card">
+              <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div>
+                  <h3>${escapeHtml(c.name)}</h3>
+                  <p><strong>Subject:</strong> ${escapeHtml(c.subject)}</p>
+                  <p><strong>Segment:</strong> ${escapeHtml(c.segment)}</p>
+                  <p><strong>Sent:</strong> ${c.sent_count || 0} | <strong>Open Rate:</strong> ${c.open_rate || '0%'} | <strong>Click Rate:</strong> ${c.click_rate || '0%'}</p>
+                  <p><strong>Created:</strong> ${new Date(c.created_at).toLocaleString()}</p>
+                  <span class="status-badge status-${c.status.toLowerCase()}">${c.status}</span>
+                </div>
+                <div>
+                  <button class="btn btn-primary" onclick="editCampaign(${c.id})">Edit</button>
+                  <button class="btn btn-danger" onclick="deleteCampaign(${c.id})">Delete</button>
+                </div>
+              </div>
+            </div>
+          `).join('');
+        } else {
+          container.innerHTML = '<div class="loading">No campaigns yet</div>';
+        }
+      } catch (error) {
+        document.getElementById('campaigns-container').innerHTML = '<div class="loading">Error loading campaigns</div>';
+      }
+    }
+
+    async function editCampaign(id) {
+      const res = await fetch(`${API_BASE}/api/admin/newsletter/campaigns/${id}`);
+      const campaign = await res.json();
+      document.getElementById('campaign-name').value = campaign.name;
+      document.getElementById('campaign-subject').value = campaign.subject;
+      document.getElementById('campaign-preheader').value = campaign.preheader || '';
+      document.getElementById('campaign-segment').value = campaign.segment;
+      document.getElementById('campaign-content').value = campaign.content;
+      editingCampaignId = id;
+      document.getElementById('campaign-form-title').textContent = 'Edit Campaign';
+      document.getElementById('campaign-form-container').style.display = 'block';
+    }
+
+    async function deleteCampaign(id) {
+      if (!confirm('Delete this campaign?')) return;
+      await fetch(`${API_BASE}/api/admin/newsletter/campaigns/${id}`, { method: 'DELETE' });
+      showToast('Campaign deleted', 'success');
+      loadCampaigns();
+    }
+
+    // Segments
+    function toggleSegmentForm() {
+      const container = document.getElementById('segment-form-container');
+      container.style.display = container.style.display === 'none' ? 'block' : 'none';
+      if (container.style.display === 'none') {
+        editingSegmentId = null;
+        document.querySelector('#segment-form-container form').reset();
+        document.getElementById('segment-rules').innerHTML = '<div class="segment-rule"><select class="rule-field"><option value="jurisdiction">Jurisdiction</option><option value="has_site">Has linked site</option><option value="has_telegram">Has Telegram</option><option value="has_cwallet">Has Cwallet</option><option value="raffle_entries">Raffle entries</option><option value="wheel_spins">Wheel spins</option></select><select class="rule-operator"><option value="equals">equals</option><option value="not_equals">not equals</option><option value="greater_than">greater than</option><option value="less_than">less than</option></select><input type="text" class="rule-value" placeholder="Value" /><button type="button" class="btn btn-danger" onclick="removeRule(this)">Remove</button></div>';
+      }
+    }
+
+    function addRule() {
+      const rules = document.getElementById('segment-rules');
+      const rule = document.createElement('div');
+      rule.className = 'segment-rule';
+      rule.innerHTML = `
+        <select class="rule-field">
+          <option value="jurisdiction">Jurisdiction</option>
+          <option value="has_site">Has linked site</option>
+          <option value="has_telegram">Has Telegram</option>
+          <option value="has_cwallet">Has Cwallet</option>
+          <option value="raffle_entries">Raffle entries</option>
+          <option value="wheel_spins">Wheel spins</option>
+        </select>
+        <select class="rule-operator">
+          <option value="equals">equals</option>
+          <option value="not_equals">not equals</option>
+          <option value="greater_than">greater than</option>
+          <option value="less_than">less than</option>
+        </select>
+        <input type="text" class="rule-value" placeholder="Value" />
+        <button type="button" class="btn btn-danger" onclick="removeRule(this)">Remove</button>
+      `;
+      rules.appendChild(rule);
+    }
+
+    function removeRule(btn) {
+      btn.parentElement.remove();
+    }
+
+    async function saveSegment(e) {
+      e.preventDefault();
+      const rules = Array.from(document.querySelectorAll('.segment-rule')).map(rule => ({
+        field: rule.querySelector('.rule-field').value,
+        operator: rule.querySelector('.rule-operator').value,
+        value: rule.querySelector('.rule-value').value
+      }));
+
+      const data = {
+        name: document.getElementById('segment-name').value,
+        description: document.getElementById('segment-description').value,
+        rules
+      };
+
+      try {
+        const url = editingSegmentId 
+          ? `${API_BASE}/api/admin/newsletter/segments/${editingSegmentId}`
+          : `${API_BASE}/api/admin/newsletter/segments`;
+        const method = editingSegmentId ? 'PUT' : 'POST';
+
+        const res = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        if (!res.ok) throw new Error('Failed');
+        showToast('Segment saved', 'success');
+        toggleSegmentForm();
+        loadSegments();
+      } catch (error) {
+        showToast('Error saving segment', 'error');
+      }
+    }
+
+    async function loadSegments() {
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/newsletter/segments`);
+        const data = await res.json();
+        const container = document.getElementById('segments-container');
+        if (data.segments && data.segments.length > 0) {
+          container.innerHTML = data.segments.map(s => `
+            <div class="card">
+              <h4>${escapeHtml(s.name)}</h4>
+              <p>${escapeHtml(s.description || 'No description')}</p>
+              <p><strong>Approx count:</strong> ${s.approx_count || 'N/A'}</p>
+              <button class="btn btn-primary" onclick="editSegment(${s.id})">Edit</button>
+              <button class="btn btn-danger" onclick="deleteSegment(${s.id})">Delete</button>
+            </div>
+          `).join('');
+        } else {
+          container.innerHTML = '<div class="loading">No segments yet</div>';
+        }
+      } catch (error) {
+        document.getElementById('segments-container').innerHTML = '<div class="loading">Error loading segments</div>';
+      }
+    }
+
+    async function editSegment(id) {
+      const res = await fetch(`${API_BASE}/api/admin/newsletter/segments/${id}`);
+      const segment = await res.json();
+      document.getElementById('segment-name').value = segment.name;
+      document.getElementById('segment-description').value = segment.description || '';
+      editingSegmentId = id;
+      // TODO: Load rules into form
+      document.getElementById('segment-form-container').style.display = 'block';
+    }
+
+    async function deleteSegment(id) {
+      if (!confirm('Delete this segment?')) return;
+      await fetch(`${API_BASE}/api/admin/newsletter/segments/${id}`, { method: 'DELETE' });
+      showToast('Segment deleted', 'success');
+      loadSegments();
+    }
+
+    async function loadAudience() {
+      try {
+        const search = document.getElementById('audience-search')?.value || '';
+        const res = await fetch(`${API_BASE}/api/admin/newsletter/audience?search=${encodeURIComponent(search)}`);
+        const data = await res.json();
+        const container = document.getElementById('audience-container');
+        if (data.audience && data.audience.length > 0) {
+          container.innerHTML = `
+            <table>
+              <thead>
+                <tr>
+                  <th>Email</th>
+                  <th>Username</th>
+                  <th>Jurisdiction</th>
+                  <th>Telegram</th>
+                  <th>Cwallet</th>
+                  <th>Linked Sites</th>
+                  <th>Last Opened</th>
+                  <th>Unsubscribed</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${data.audience.map(a => `
+                  <tr>
+                    <td>${escapeHtml(a.email || 'N/A')}</td>
+                    <td>${escapeHtml(a.username || 'N/A')}</td>
+                    <td>${escapeHtml(a.jurisdiction || 'N/A')}</td>
+                    <td>${a.telegram_linked ? '✓' : '✗'}</td>
+                    <td>${a.cwallet_linked ? '✓' : '✗'}</td>
+                    <td>${a.linked_sites_count || 0}</td>
+                    <td>${a.last_opened ? new Date(a.last_opened).toLocaleDateString() : 'Never'}</td>
+                    <td>${a.unsubscribed ? 'Yes' : 'No'}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          `;
+        } else {
+          container.innerHTML = '<div class="loading">No audience data</div>';
+        }
+      } catch (error) {
+        document.getElementById('audience-container').innerHTML = '<div class="loading">Error loading audience</div>';
+      }
+    }
+
+    document.getElementById('audience-search')?.addEventListener('input', loadAudience);
+
+    // Templates
+    function toggleTemplateForm() {
+      const container = document.getElementById('template-form-container');
+      container.style.display = container.style.display === 'none' ? 'block' : 'none';
+      if (container.style.display === 'none') {
+        editingTemplateId = null;
+        document.querySelector('#template-form-container form').reset();
+        document.getElementById('template-form-title').textContent = 'Create Template';
+      }
+    }
+
+    async function saveTemplate(e) {
+      e.preventDefault();
+      const data = {
+        name: document.getElementById('template-name').value,
+        type: document.getElementById('template-type').value,
+        subject: document.getElementById('template-subject').value,
+        body: document.getElementById('template-body').value
+      };
+
+      try {
+        const url = editingTemplateId 
+          ? `${API_BASE}/api/admin/newsletter/templates/${editingTemplateId}`
+          : `${API_BASE}/api/admin/newsletter/templates`;
+        const method = editingTemplateId ? 'PUT' : 'POST';
+
+        const res = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        if (!res.ok) throw new Error('Failed');
+        showToast('Template saved', 'success');
+        toggleTemplateForm();
+        loadTemplates();
+      } catch (error) {
+        showToast('Error saving template', 'error');
+      }
+    }
+
+    async function loadTemplates() {
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/newsletter/templates`);
+        const data = await res.json();
+        const container = document.getElementById('templates-container');
+        if (data.templates && data.templates.length > 0) {
+          container.innerHTML = data.templates.map(t => `
+            <div class="card">
+              <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div>
+                  <h3>${escapeHtml(t.name)}</h3>
+                  <p><strong>Type:</strong> ${escapeHtml(t.type)}</p>
+                  <p><strong>Subject:</strong> ${escapeHtml(t.subject)}</p>
+                  <p><strong>Last used:</strong> ${t.last_used ? new Date(t.last_used).toLocaleString() : 'Never'}</p>
+                </div>
+                <div>
+                  <button class="btn btn-primary" onclick="editTemplate(${t.id})">Edit</button>
+                  <button class="btn btn-danger" onclick="deleteTemplate(${t.id})">Delete</button>
+                </div>
+              </div>
+            </div>
+          `).join('');
+        } else {
+          container.innerHTML = '<div class="loading">No templates yet</div>';
+        }
+      } catch (error) {
+        document.getElementById('templates-container').innerHTML = '<div class="loading">Error loading templates</div>';
+      }
+    }
+
+    async function editTemplate(id) {
+      const res = await fetch(`${API_BASE}/api/admin/newsletter/templates/${id}`);
+      const template = await res.json();
+      document.getElementById('template-name').value = template.name;
+      document.getElementById('template-type').value = template.type;
+      document.getElementById('template-subject').value = template.subject;
+      document.getElementById('template-body').value = template.body;
+      editingTemplateId = id;
+      document.getElementById('template-form-title').textContent = 'Edit Template';
+      document.getElementById('template-form-container').style.display = 'block';
+    }
+
+    async function deleteTemplate(id) {
+      if (!confirm('Delete this template?')) return;
+      await fetch(`${API_BASE}/api/admin/newsletter/templates/${id}`, { method: 'DELETE' });
+      showToast('Template deleted', 'success');
+      loadTemplates();
+    }
+
+    // Stats
+    async function loadStats() {
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/newsletter/stats`);
+        const data = await res.json();
+        document.getElementById('global-stats').innerHTML = `
+          <p><strong>Total subscribers:</strong> ${data.total_subscribers || 0}</p>
+          <p><strong>New signups (7 days):</strong> ${data.new_signups_7d || 0}</p>
+          <p><strong>Unsubscribes (7 days):</strong> ${data.unsubscribes_7d || 0}</p>
+        `;
+        document.getElementById('campaign-stats').innerHTML = data.campaign_stats ? 
+          data.campaign_stats.map(c => `
+            <div class="card">
+              <h4>${escapeHtml(c.name)}</h4>
+              <p>Open rate: ${c.open_rate || '0%'} | Click rate: ${c.click_rate || '0%'}</p>
+            </div>
+          `).join('') : '<div class="loading">No campaign stats</div>';
+      } catch (error) {
+        document.getElementById('global-stats').innerHTML = '<div class="loading">Error loading stats</div>';
+      }
+    }
+
+    function showToast(msg, type) {
+      const toast = document.createElement('div');
+      toast.textContent = msg;
+      toast.style.cssText = `position: fixed; top: 20px; right: 20px; padding: 1rem; border-radius: 4px; color: #fff; background: ${type === 'success' ? '#00ff00' : '#ff0000'}; z-index: 1000;`;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Initial load
+    loadCampaigns();
+  </script>
+</body>
+</html>

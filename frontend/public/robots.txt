@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /admin/
+Disallow: /api
+Disallow: /api/
+Disallow: /auth
+Disallow: /auth/
+Disallow: /profile
+Disallow: /dashboard
+Disallow: /api/profile
+Disallow: /api/admin
+
+# Sitemap location
+Sitemap: https://gamblecodez.com/sitemap.xml

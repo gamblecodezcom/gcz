@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bug Report – GambleCodez</title>
+  <style>
+    body {
+      background: #0d0d0d;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+    select, textarea, input {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border-radius: 6px;
+      border: none;
+      background: #1a1a1a;
+      color: #fff;
+      font-size: 15px;
+    }
+    textarea {
+      height: 140px;
+      resize: vertical;
+    }
+    button {
+      margin-top: 20px;
+      width: 100%;
+      padding: 14px;
+      background: #ff0066;
+      border: none;
+      border-radius: 6px;
+      color: #fff;
+      font-size: 16px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    button:hover {
+      background: #ff3385;
+    }
+    .success {
+      margin-top: 20px;
+      padding: 12px;
+      background: #0f7;
+      color: #000;
+      border-radius: 6px;
+      display: none;
+    }
+    .error {
+      margin-top: 20px;
+      padding: 12px;
+      background: #f33;
+      color: #fff;
+      border-radius: 6px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Report an Issue</h1>
+
+  <div id="success" class="success">Your report has been submitted. Thank you.</div>
+  <div id="error" class="error">Failed to submit report. Try again later.</div>
+
+  <form id="bugForm">
+    <label for="role">Your Role</label>
+    <select id="role">
+      <option value="user">User</option>
+      <option value="admin">Admin</option>
+    </select>
+
+    <label for="surface">Where did the issue occur?</label>
+    <select id="surface">
+      <option value="website">Website</option>
+      <option value="telegram">Telegram</option>
+      <option value="bot">Bot</option>
+      <option value="admin-panel">Admin Panel</option>
+      <option value="other">Other</option>
+    </select>
+
+    <label for="issue_type">Issue Type</label>
+    <select id="issue_type">
+      <option value="ui">UI</option>
+      <option value="bug">Bug</option>
+      <option value="performance">Performance</option>
+      <option value="login">Login</option>
+      <option value="payment">Payment</option>
+      <option value="other">Other</option>
+    </select>
+
+    <label for="severity">Severity</label>
+    <select id="severity">
+      <option value="low">Low</option>
+      <option value="medium">Medium</option>
+      <option value="high">High</option>
+      <option value="critical">Critical</option>
+    </select>
+
+    <label for="description">Describe the Issue</label>
+    <textarea id="description" placeholder="Explain what happened..."></textarea>
+
+    <button type="submit">Submit Report</button>
+  </form>
+
+  <script>
+    document.getElementById("bugForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const payload = {
+        role: document.getElementById("role").value,
+        surface: document.getElementById("surface").value,
+        issue_type: document.getElementById("issue_type").value,
+        severity: document.getElementById("severity").value,
+        description: document.getElementById("description").value,
+        metadata: {
+          url: window.location.href,
+          userAgent: navigator.userAgent
+        }
+      };
+
+      const res = await fetch("/api/bug-report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      const success = document.getElementById("success");
+      const error = document.getElementById("error");
+
+      if (res.ok) {
+        success.style.display = "block";
+        error.style.display = "none";
+        document.getElementById("bugForm").reset();
+      } else {
+        success.style.display = "none";
+        error.style.display = "block";
+      }
+    });
+  </script>
+
+</body>
+</html>

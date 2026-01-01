@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manage Raffles - GambleCodez Admin</title>
+  <link rel="stylesheet" href="/admin/styles.css" />
+  <style>
+    .raffle-form {
+      background: #1a1a1a;
+      border: 1px solid #00fff7;
+      border-radius: 8px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: #00fff7;
+      font-weight: bold;
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 0.75rem;
+      background: #0a0a0a;
+      border: 1px solid #333;
+      border-radius: 4px;
+      color: #fff;
+      font-family: inherit;
+    }
+    .form-group textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .checkbox-group input[type="checkbox"] {
+      width: auto;
+    }
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.2s;
+      margin-right: 0.5rem;
+    }
+    .btn-primary {
+      background: #00fff7;
+      color: #000;
+    }
+    .btn-danger {
+      background: #ff0000;
+      color: #fff;
+    }
+    .btn-success {
+      background: #00ff00;
+      color: #000;
+    }
+    .raffle-card {
+      background: #1a1a1a;
+      border: 1px solid #00fff7;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    .raffle-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 1rem;
+    }
+    .raffle-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      font-weight: bold;
+      margin-left: 0.5rem;
+    }
+    .badge-secret {
+      background: #9200ff;
+      color: #fff;
+    }
+    .badge-hidden {
+      background: #ff6600;
+      color: #fff;
+    }
+    .badge-active {
+      background: #00ff00;
+      color: #000;
+    }
+    .badge-ended {
+      background: #888;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎟️ Manage Raffles</h1>
+    <div style="margin-bottom: 1rem;">
+      <a href="/admin/index.html" style="color: #00fff7;">← Back to Admin Panel</a>
+    </div>
+
+    <button class="btn btn-primary" onclick="toggleForm()">+ Create New Raffle</button>
+
+    <div id="raffle-form-container" style="display: none;">
+      <div class="raffle-form">
+        <h2 id="form-title">Create New Raffle</h2>
+        <form id="raffle-form" onsubmit="saveRaffle(event)">
+          <div class="form-group">
+            <label>Title *</label>
+            <input type="text" id="raffle-title" required />
+          </div>
+          <div class="form-group">
+            <label>Description *</label>
+            <textarea id="raffle-description" required></textarea>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Prize Type *</label>
+              <select id="raffle-prize-type" required onchange="updatePrizeFields()">
+                <option value="">Select type...</option>
+                <option value="sweeps">Sweeps Coins (Site)</option>
+                <option value="crypto-tip">Crypto Tip (Cwallet ID)</option>
+                <option value="cwallet-box">Cwallet Giveaway Box (URL)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Prize Value *</label>
+              <input type="text" id="raffle-prize-value" required placeholder="e.g., 1000, BTC address, or box URL" />
+            </div>
+          </div>
+          <div id="prize-site-group" class="form-group" style="display: none;">
+            <label>Affiliate Site (for Sweeps)</label>
+            <select id="raffle-prize-site">
+              <option value="">Select site...</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Number of Winners *</label>
+              <input type="number" id="raffle-winners" min="1" required />
+            </div>
+            <div class="form-group">
+              <label>Raffle Type *</label>
+              <select id="raffle-type" required>
+                <option value="timed">Timed (ends at specific date)</option>
+                <option value="manual">Manual (admin picks winner)</option>
+                <option value="daily">Daily (grows until picked)</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group" id="end-date-group">
+            <label>End Date (for timed raffles)</label>
+            <input type="datetime-local" id="raffle-end-date" />
+          </div>
+          <div class="form-group">
+            <div class="checkbox-group">
+              <input type="checkbox" id="raffle-secret" />
+              <label for="raffle-secret">Secret Raffle (requires code to join)</label>
+            </div>
+          </div>
+          <div class="form-group" id="secret-code-group" style="display: none;">
+            <label>Secret Code</label>
+            <input type="text" id="raffle-secret-code" placeholder="Enter secret phrase/code" />
+          </div>
+          <div class="form-group">
+            <div class="checkbox-group">
+              <input type="checkbox" id="raffle-hidden" />
+              <label for="raffle-hidden">Hidden (not visible in public list)</label>
+            </div>
+          </div>
+          <div class="form-group">
+            <div class="checkbox-group">
+              <input type="checkbox" id="raffle-active" checked />
+              <label for="raffle-active">Active</label>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Terms & Conditions</label>
+            <textarea id="raffle-terms" placeholder="Terms: Single-use URLs, no admin distribution, etc."></textarea>
+          </div>
+          <div>
+            <button type="submit" class="btn btn-primary">Save Raffle</button>
+            <button type="button" class="btn" onclick="toggleForm()">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div id="raffles-container">
+      <div class="loading">Loading raffles...</div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = window.location.origin;
+    let editingRaffleId = null;
+    let affiliates = [];
+
+    async function loadAffiliates() {
+      try {
+        const res = await fetch(`${API_BASE}/api/affiliates`);
+        const data = await res.json();
+        affiliates = data.affiliates || [];
+        const select = document.getElementById('raffle-prize-site');
+        select.innerHTML = '<option value="">Select site...</option>' +
+          affiliates.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
+      } catch (error) {
+        console.error('Failed to load affiliates:', error);
+      }
+    }
+
+    function updatePrizeFields() {
+      const prizeType = document.getElementById('raffle-prize-type').value;
+      const siteGroup = document.getElementById('prize-site-group');
+      if (prizeType === 'sweeps') {
+        siteGroup.style.display = 'block';
+      } else {
+        siteGroup.style.display = 'none';
+      }
+    }
+
+    document.getElementById('raffle-secret').addEventListener('change', (e) => {
+      document.getElementById('secret-code-group').style.display = e.target.checked ? 'block' : 'none';
+    });
+
+    document.getElementById('raffle-type').addEventListener('change', (e) => {
+      document.getElementById('end-date-group').style.display = 
+        e.target.value === 'timed' ? 'block' : 'none';
+    });
+
+    function toggleForm() {
+      const container = document.getElementById('raffle-form-container');
+      container.style.display = container.style.display === 'none' ? 'block' : 'none';
+      if (container.style.display === 'none') {
+        editingRaffleId = null;
+        document.getElementById('raffle-form').reset();
+        document.getElementById('form-title').textContent = 'Create New Raffle';
+      }
+    }
+
+    async function saveRaffle(e) {
+      e.preventDefault();
+      
+      const formData = {
+        title: document.getElementById('raffle-title').value,
+        description: document.getElementById('raffle-description').value,
+        prize_type: document.getElementById('raffle-prize-type').value,
+        prize_value: document.getElementById('raffle-prize-value').value,
+        prize_site_id: document.getElementById('raffle-prize-site').value || null,
+        num_winners: parseInt(document.getElementById('raffle-winners').value),
+        raffle_type: document.getElementById('raffle-type').value,
+        end_date: document.getElementById('raffle-end-date').value || null,
+        is_secret: document.getElementById('raffle-secret').checked,
+        secret_code: document.getElementById('raffle-secret-code').value || null,
+        hidden: document.getElementById('raffle-hidden').checked,
+        active: document.getElementById('raffle-active').checked,
+        terms: document.getElementById('raffle-terms').value || null,
+      };
+
+      try {
+        const url = editingRaffleId 
+          ? `${API_BASE}/api/admin/raffles/${editingRaffleId}`
+          : `${API_BASE}/api/admin/raffles`;
+        const method = editingRaffleId ? 'PUT' : 'POST';
+
+        const res = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
+        });
+
+        if (!res.ok) {
+          throw new Error('Failed to save raffle');
+        }
+
+        showToast('Raffle saved successfully', 'success');
+        toggleForm();
+        loadRaffles();
+      } catch (error) {
+        showToast(`Error: ${error.message}`, 'error');
+      }
+    }
+
+    async function loadRaffles() {
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/raffles`);
+        const data = await res.json();
+        displayRaffles(data.raffles || []);
+      } catch (error) {
+        console.error('Failed to load raffles:', error);
+        showToast('Failed to load raffles', 'error');
+      }
+    }
+
+    function displayRaffles(raffles) {
+      const container = document.getElementById('raffles-container');
+      
+      if (raffles.length === 0) {
+        container.innerHTML = '<div class="loading">No raffles found</div>';
+        return;
+      }
+
+      container.innerHTML = raffles.map(raffle => {
+        const badges = [];
+        if (raffle.is_secret) badges.push('<span class="badge badge-secret">SECRET</span>');
+        if (raffle.hidden) badges.push('<span class="badge badge-hidden">HIDDEN</span>');
+        if (raffle.active) badges.push('<span class="badge badge-active">ACTIVE</span>');
+        else badges.push('<span class="badge badge-ended">ENDED</span>');
+
+        return `
+          <div class="raffle-card">
+            <div class="raffle-header">
+              <div>
+                <h3>${escapeHtml(raffle.title)} ${badges.join('')}</h3>
+                <p style="color: #888; margin: 0.5rem 0;">${escapeHtml(raffle.description)}</p>
+                <p style="margin: 0.5rem 0;">
+                  <strong>Prize:</strong> ${escapeHtml(raffle.prize)} | 
+                  <strong>Winners:</strong> ${raffle.winners_count || 0} / ${raffle.num_winners} | 
+                  <strong>Type:</strong> ${raffle.raffle_type}
+                </p>
+                ${raffle.secret_code ? `<p style="color: #9200ff; margin: 0.5rem 0;"><strong>Secret Code:</strong> ${escapeHtml(raffle.secret_code)}</p>` : ''}
+              </div>
+              <div class="raffle-actions">
+                <button class="btn btn-primary" onclick="editRaffle(${raffle.id})">Edit</button>
+                ${raffle.raffle_type === 'manual' || raffle.raffle_type === 'daily' ? 
+                  `<button class="btn btn-success" onclick="pickWinner(${raffle.id})">Pick Winner</button>` : ''
+                }
+                <button class="btn btn-danger" onclick="deleteRaffle(${raffle.id})">Delete</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function editRaffle(id) {
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/raffles/${id}`);
+        const raffle = await res.json();
+        
+        document.getElementById('raffle-title').value = raffle.title;
+        document.getElementById('raffle-description').value = raffle.description;
+        document.getElementById('raffle-prize-type').value = raffle.prize_type;
+        document.getElementById('raffle-prize-value').value = raffle.prize_value;
+        document.getElementById('raffle-prize-site').value = raffle.prize_site_id || '';
+        document.getElementById('raffle-winners').value = raffle.num_winners;
+        document.getElementById('raffle-type').value = raffle.raffle_type;
+        document.getElementById('raffle-end-date').value = raffle.end_date ? new Date(raffle.end_date).toISOString().slice(0, 16) : '';
+        document.getElementById('raffle-secret').checked = raffle.is_secret;
+        document.getElementById('raffle-secret-code').value = raffle.secret_code || '';
+        document.getElementById('raffle-hidden').checked = raffle.hidden;
+        document.getElementById('raffle-active').checked = raffle.active;
+        document.getElementById('raffle-terms').value = raffle.terms || '';
+
+        updatePrizeFields();
+        document.getElementById('secret-code-group').style.display = raffle.is_secret ? 'block' : 'none';
+        document.getElementById('end-date-group').style.display = raffle.raffle_type === 'timed' ? 'block' : 'none';
+
+        editingRaffleId = id;
+        document.getElementById('form-title').textContent = 'Edit Raffle';
+        document.getElementById('raffle-form-container').style.display = 'block';
+      } catch (error) {
+        showToast(`Error loading raffle: ${error.message}`, 'error');
+      }
+    }
+
+    async function pickWinner(raffleId) {
+      if (!confirm('Pick a random winner from all entries?')) {
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/raffles/${raffleId}/pick-winner`, {
+          method: 'POST'
+        });
+
+        if (!res.ok) {
+          throw new Error('Failed to pick winner');
+        }
+
+        const data = await res.json();
+        showToast(`Winner picked: ${data.winner_id}`, 'success');
+        
+        if (confirm('Send push notification to winner?')) {
+          await fetch(`${API_BASE}/api/admin/raffles/${raffleId}/notify-winner`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ winner_id: data.winner_id })
+          });
+        }
+
+        loadRaffles();
+      } catch (error) {
+        showToast(`Error: ${error.message}`, 'error');
+      }
+    }
+
+    async function deleteRaffle(id) {
+      if (!confirm('Are you sure you want to delete this raffle?')) {
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/raffles/${id}`, {
+          method: 'DELETE'
+        });
+
+        if (!res.ok) {
+          throw new Error('Failed to delete raffle');
+        }
+
+        showToast('Raffle deleted successfully', 'success');
+        loadRaffles();
+      } catch (error) {
+        showToast(`Error: ${error.message}`, 'error');
+      }
+    }
+
+    function showToast(message, type) {
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.textContent = message;
+      toast.style.cssText = 'position: fixed; top: 20px; right: 20px; padding: 1rem 1.5rem; border-radius: 4px; color: #fff; font-weight: bold; z-index: 1000;';
+      if (type === 'success') toast.style.background = '#00ff00';
+      if (type === 'error') toast.style.background = '#ff0000';
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    loadAffiliates();
+    loadRaffles();
+  </script>
+</body>
+</html>

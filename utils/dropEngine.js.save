@@ -1,0 +1,49 @@
+// utils/dropEngine.js
+// GambleCodez Drop Engine — AI‑Powered, Privacy‑Safe, Pipeline‑Ready, ESM‑Safe
+
+import logger from "./logger.js";
+import crypto from "crypto";
+
+// ---------- In‑memory dedupe cache (non‑fatal) ----------
+const RECENT_HASHES = new Set();
+const RECENT_LIMIT = 500; // max recent drops tracked
+const recentQueue = [];
+
+// ---------- Optional AI client (OpenAI‑style) ----------
+let aiClient = null;
+
+async function initAI() {
+  if (aiClient) return aiClient;
+
+  const apiKey = process.env.OPENAI_API_KEY || process.env.AI_API_KEY;
+  if (!apiKey) {
+    logger.warn("DropEngine: No AI API key found, using fallback classifier");
+    return null;
+  }
+
+  try {
+    const { default: OpenAI } = await import("openai");
+    aiClient = new OpenAI({ apiKey });
+    logger.info("DropEngine: AI client initialized");
+    return aiClient;
+  } catch (err) {
+    logger.error("DropEngine: Failed to initialize AI client:", err.message || err);
+    aiClient = null;
+    return null;
+  }
+}
+
+// ---------- Privacy & sanitization ----------
+
+/**
+ * Strip Discord‑style usernames, channel/server names, and odd symbols
+ * from the text while keeping semantic meaning.
+ */
+function sanitizeText(rawText) {
+  if (!rawText) return "";
+
+  let text = String(rawText);
+
+  // Remove Discord-style mentions and IDs: <@123>, <@!123>, <#123>, <@&123>
+  text = text.replace(/<@[!&]?\d+>/g, "[user]");
+  text = text.replace(/

@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sites & Affiliates - GambleCodez Admin</title>
+  <link rel="stylesheet" href="/admin/styles.css" />
+  <style>
+    body {
+      background: linear-gradient(135deg, #02040A 0%, #050816 100%);
+      color: #F5F5F5;
+      font-family: 'Inter', sans-serif;
+    }
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    h1 {
+      color: #00F5FF;
+      margin-bottom: 1rem;
+      font-size: 2rem;
+    }
+    .sites-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: rgba(26, 26, 26, 0.8);
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid rgba(0, 245, 255, 0.3);
+    }
+    .sites-table th {
+      background: rgba(0, 245, 255, 0.1);
+      color: #00F5FF;
+      padding: 1rem;
+      text-align: left;
+      font-weight: bold;
+      border-bottom: 2px solid rgba(0, 245, 255, 0.3);
+    }
+    .sites-table td {
+      padding: 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .sites-table tr:hover {
+      background: rgba(0, 245, 255, 0.05);
+    }
+    .site-logo {
+      width: 40px;
+      height: 40px;
+      border-radius: 4px;
+      object-fit: cover;
+    }
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: bold;
+      margin: 0.25rem;
+    }
+    .badge-hero { background: #FFD600; color: #000; }
+    .badge-active { background: #00FF85; color: #000; }
+    .badge-paused { background: #FFD600; color: #000; }
+    .badge-blacklisted { background: #FF3B3B; color: #fff; }
+    .badge-eligibility {
+      background: rgba(0, 245, 255, 0.2);
+      color: #00F5FF;
+      border: 1px solid rgba(0, 245, 255, 0.3);
+    }
+    .btn {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.2s;
+      margin: 0.25rem;
+      background: rgba(0, 245, 255, 0.2);
+      color: #00F5FF;
+      border: 1px solid rgba(0, 245, 255, 0.3);
+    }
+    .btn:hover {
+      background: rgba(0, 245, 255, 0.3);
+      box-shadow: 0 0 10px rgba(0, 245, 255, 0.3);
+    }
+    .btn-primary { background: #00F5FF; color: #000; }
+    .btn-danger { background: #FF3B3B; color: #fff; }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 1000;
+      overflow-y: auto;
+    }
+    .modal-content {
+      background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+      margin: 2rem auto;
+      padding: 2rem;
+      max-width: 800px;
+      border-radius: 12px;
+      border: 2px solid rgba(0, 245, 255, 0.3);
+      box-shadow: 0 0 30px rgba(0, 245, 255, 0.2);
+    }
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: #00F5FF;
+      font-weight: bold;
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 0.75rem;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(0, 245, 255, 0.3);
+      border-radius: 4px;
+      color: #fff;
+      font-family: inherit;
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin: 0.5rem 0;
+    }
+    .checkbox-group input[type="checkbox"] {
+      width: auto;
+    }
+    .section-title {
+      color: #00F5FF;
+      font-size: 1.2rem;
+      margin: 1.5rem 0 1rem 0;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid rgba(0, 245, 255, 0.3);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🏷️ Sites & Affiliates</h1>
+    <div style="margin-bottom: 1rem;">
+      <a href="/admin/index.html" style="color: #00F5FF;">← Back to Admin Panel</a>
+    </div>
+
+    <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap;">
+      <button class="btn btn-primary" onclick="showAddModal()">+ Add Site</button>
+      <button class="btn" onclick="exportCSV()">📥 Export CSV</button>
+    </div>
+
+    <table class="sites-table">
+      <thead>
+        <tr>
+          <th>Logo</th>
+          <th>Name</th>
+          <th>URL</th>
+          <th>Category</th>
+          <th>Jurisdiction</th>
+          <th>Hero</th>
+          <th>Giveaway Eligibility</th>
+          <th>Status</th>
+          <th>Linked Players</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="sites-tbody">
+        <tr><td colspan="10" style="text-align: center; padding: 2rem;">Loading sites...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Site Detail Modal -->
+  <div id="site-modal" class="modal">
+    <div class="modal-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h2 id="modal-title" style="color: #00F5FF; margin: 0;">Site Details</h2>
+        <button class="btn btn-danger" onclick="closeModal()" style="margin: 0;">✕ Close</button>
+      </div>
+
+      <form id="site-form" onsubmit="saveSite(event)">
+        <div class="section-title">Basic Info</div>
+        <div class="form-group">
+          <label>Name *</label>
+          <input type="text" id="site-name" required />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Slug</label>
+            <input type="text" id="site-slug" />
+          </div>
+          <div class="form-group">
+            <label>URL *</label>
+            <input type="url" id="site-url" required />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <textarea id="site-description" rows="3"></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Category *</label>
+            <select id="site-category" required>
+              <option value="">Select...</option>
+              <option value="sweeps">Sweeps</option>
+              <option value="crypto">Crypto</option>
+              <option value="hybrid">Hybrid</option>
+              <option value="lootbox">Lootbox</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Jurisdiction *</label>
+            <select id="site-jurisdiction" required>
+              <option value="US">US</option>
+              <option value="NON_US">Non-US</option>
+              <option value="GLOBAL">Global</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="section-title">Display Preferences</div>
+        <div class="form-row">
+          <div class="checkbox-group">
+            <input type="checkbox" id="site-hero" />
+            <label for="site-hero">Hero Site (Priority Display)</label>
+          </div>
+          <div class="checkbox-group">
+            <input type="checkbox" id="site-show-in-profile" checked />
+            <label for="site-show-in-profile">Show in Degen Profile</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Sort Order</label>
+          <input type="number" id="site-sort-order" value="0" />
+        </div>
+
+        <div class="section-title">Giveaway Eligibility</div>
+        <div class="checkbox-group">
+          <input type="checkbox" id="site-sc-allowed" />
+          <label for="site-sc-allowed">SC Tips Allowed (Runewager only)</label>
+        </div>
+        <div class="checkbox-group">
+          <input type="checkbox" id="site-crypto-allowed" />
+          <label for="site-crypto-allowed">Crypto Tips Allowed</label>
+        </div>
+        <div class="checkbox-group">
+          <input type="checkbox" id="site-cwallet-allowed" />
+          <label for="site-cwallet-allowed">Cwallet ID Mapping Allowed</label>
+        </div>
+        <div class="checkbox-group">
+          <input type="checkbox" id="site-lootbox-allowed" />
+          <label for="site-lootbox-allowed">Lootbox URL Sponsor</label>
+        </div>
+
+        <div class="section-title">Safety & Status</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Status *</label>
+            <select id="site-status" required>
+              <option value="active">Active</option>
+              <option value="paused">Paused</option>
+              <option value="blacklisted">Blacklisted</option>
+            </select>
+          </div>
+          <div class="checkbox-group">
+            <input type="checkbox" id="site-top-pick" />
+            <label for="site-top-pick">Top Pick</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Blacklist Reason (if blacklisted)</label>
+          <textarea id="site-blacklist-reason" rows="2"></textarea>
+        </div>
+
+        <div style="margin-top: 2rem; display: flex; gap: 0.5rem;">
+          <button type="submit" class="btn btn-primary">Save Site</button>
+          <button type="button" class="btn" onclick="testRedirect()">Test Redirect</button>
+          <button type="button" class="btn btn-danger" onclick="closeModal()">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/admin/js/admin-utils.js"></script>
+  <script>
+    const API_BASE = window.location.origin;
+    let editingSiteId = null;
+    let allSites = [];
+
+    async function loadSites() {
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/affiliates`);
+        const data = await res.json();
+        allSites = data.affiliates || [];
+        displaySites(allSites);
+      } catch (error) {
+        console.error('Failed to load sites:', error);
+        showToast('Failed to load sites', 'error');
+      }
+    }
+
+    function displaySites(sites) {
+      const tbody = document.getElementById('sites-tbody');
+      if (sites.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; padding: 2rem;">No sites found</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = sites.map(site => {
+        const eligibility = [];
+        if (site.sc_allowed) eligibility.push('<span class="badge badge-eligibility">SC</span>');
+        if (site.crypto_allowed) eligibility.push('<span class="badge badge-eligibility">Crypto</span>');
+        if (site.cwallet_allowed) eligibility.push('<span class="badge badge-eligibility">Cwallet</span>');
+        if (site.lootbox_allowed) eligibility.push('<span class="badge badge-eligibility">Lootbox</span>');
+        if (eligibility.length === 0) eligibility.push('<span style="color: #888;">None</span>');
+
+        const statusBadge = site.status === 'active' ? 'badge-active' : 
+                           site.status === 'paused' ? 'badge-paused' : 'badge-blacklisted';
+        const statusText = site.status === 'active' ? 'Active' : 
+                          site.status === 'paused' ? 'Paused' : 'Blacklisted';
+
+        return `
+          <tr>
+            <td><img src="${site.icon_url || '/icon.svg'}" class="site-logo" alt="${site.name}" onerror="this.src='/icon.svg'" /></td>
+            <td><strong>${escapeHtml(site.name)}</strong> ${site.top_pick ? '<span class="badge badge-hero">TOP PICK</span>' : ''}</td>
+            <td><a href="${site.affiliate_url}" target="_blank" style="color: #00F5FF;">${escapeHtml(site.affiliate_url.substring(0, 40))}...</a></td>
+            <td>${escapeHtml(site.category || 'N/A')}</td>
+            <td>${escapeHtml(site.jurisdiction || 'N/A')}</td>
+            <td>${site.top_pick ? '<span class="badge badge-hero">HERO</span>' : '-'}</td>
+            <td>${eligibility.join('')}</td>
+            <td><span class="badge ${statusBadge}">${statusText}</span></td>
+            <td><strong id="linked-count-${site.id}">Loading...</strong></td>
+            <td>
+              <button class="btn" onclick="editSite(${site.id})">Edit</button>
+              <button class="btn" onclick="togglePause(${site.id}, '${site.status}')">${site.status === 'paused' ? 'Resume' : 'Pause'}</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      // Load linked players count for each site
+      sites.forEach(site => loadLinkedCount(site.id));
+    }
+
+    async function loadLinkedCount(siteId) {
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/sites/${siteId}/linked-count`);
+        const data = await res.json();
+        const elem = document.getElementById(`linked-count-${siteId}`);
+        if (elem) elem.textContent = data.count || 0;
+      } catch (error) {
+        const elem = document.getElementById(`linked-count-${siteId}`);
+        if (elem) elem.textContent = '0';
+      }
+    }
+
+    function showAddModal() {
+      editingSiteId = null;
+      document.getElementById('modal-title').textContent = 'Add New Site';
+      document.getElementById('site-form').reset();
+      document.getElementById('site-modal').style.display = 'block';
+    }
+
+    function editSite(id) {
+      const site = allSites.find(s => s.id === id);
+      if (!site) return;
+
+      editingSiteId = id;
+      document.getElementById('modal-title').textContent = `Edit: ${site.name}`;
+      document.getElementById('site-name').value = site.name || '';
+      document.getElementById('site-slug').value = site.slug || '';
+      document.getElementById('site-url').value = site.affiliate_url || '';
+      document.getElementById('site-description').value = site.description || '';
+      document.getElementById('site-category').value = site.category || '';
+      document.getElementById('site-jurisdiction').value = site.jurisdiction || 'US';
+      document.getElementById('site-hero').checked = site.top_pick || false;
+      document.getElementById('site-show-in-profile').checked = site.show_in_profile !== false;
+      document.getElementById('site-sort-order').value = site.sort_order || 0;
+      document.getElementById('site-sc-allowed').checked = site.sc_allowed || false;
+      document.getElementById('site-crypto-allowed').checked = site.crypto_allowed || false;
+      document.getElementById('site-cwallet-allowed').checked = site.cwallet_allowed || false;
+      document.getElementById('site-lootbox-allowed').checked = site.lootbox_allowed || false;
+      document.getElementById('site-status').value = site.status || 'active';
+      document.getElementById('site-top-pick').checked = site.top_pick || false;
+      document.getElementById('site-blacklist-reason').value = site.blacklist_reason || '';
+      document.getElementById('site-modal').style.display = 'block';
+    }
+
+    async function saveSite(e) {
+      e.preventDefault();
+      const formData = {
+        name: document.getElementById('site-name').value,
+        slug: document.getElementById('site-slug').value,
+        affiliate_url: document.getElementById('site-url').value,
+        description: document.getElementById('site-description').value,
+        category: document.getElementById('site-category').value,
+        jurisdiction: document.getElementById('site-jurisdiction').value,
+        top_pick: document.getElementById('site-hero').checked,
+        show_in_profile: document.getElementById('site-show-in-profile').checked,
+        sort_order: parseInt(document.getElementById('site-sort-order').value) || 0,
+        sc_allowed: document.getElementById('site-sc-allowed').checked,
+        crypto_allowed: document.getElementById('site-crypto-allowed').checked,
+        cwallet_allowed: document.getElementById('site-cwallet-allowed').checked,
+        lootbox_allowed: document.getElementById('site-lootbox-allowed').checked,
+        status: document.getElementById('site-status').value,
+        top_pick: document.getElementById('site-top-pick').checked,
+      };
+
+      try {
+        const url = editingSiteId 
+          ? `${API_BASE}/api/admin/affiliates/${editingSiteId}`
+          : `${API_BASE}/api/admin/affiliates`;
+        const method = editingSiteId ? 'PUT' : 'POST';
+
+        const res = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
+        });
+
+        if (!res.ok) throw new Error('Failed to save site');
+        showToast('Site saved successfully', 'success');
+        closeModal();
+        loadSites();
+      } catch (error) {
+        showToast(`Error: ${error.message}`, 'error');
+      }
+    }
+
+    async function togglePause(id, currentStatus) {
+      const newStatus = currentStatus === 'paused' ? 'active' : 'paused';
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/affiliates/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: newStatus })
+        });
+        if (!res.ok) throw new Error('Failed to update status');
+        showToast(`Site ${newStatus}`, 'success');
+        loadSites();
+      } catch (error) {
+        showToast(`Error: ${error.message}`, 'error');
+      }
+    }
+
+    function testRedirect() {
+      const url = document.getElementById('site-url').value;
+      if (!url) {
+        showToast('Please enter a URL first', 'error');
+        return;
+      }
+      window.open(url, '_blank');
+    }
+
+    function closeModal() {
+      document.getElementById('site-modal').style.display = 'none';
+    }
+
+    function exportCSV() {
+      adminUtils.exportToCSV(allSites, `sites-${new Date().toISOString().split('T')[0]}.csv`);
+    }
+
+    function showToast(msg, type) {
+      const toast = document.createElement('div');
+      toast.textContent = msg;
+      toast.style.cssText = `position: fixed; top: 20px; right: 20px; padding: 1rem 1.5rem; border-radius: 4px; color: #fff; font-weight: bold; z-index: 2000; background: ${type === 'success' ? '#00FF85' : '#FF3B3B'};`;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Close modal on outside click
+    window.onclick = function(event) {
+      const modal = document.getElementById('site-modal');
+      if (event.target === modal) {
+        closeModal();
+      }
+    };
+
+    loadSites();
+  </script>
+</body>
+</html>

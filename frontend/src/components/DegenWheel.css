@@ -1,0 +1,249 @@
+.wheel-container {
+  margin-top: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.wheel-wrapper {
+  position: relative;
+  width: 300px;
+  height: 300px;
+  margin-bottom: 40px;
+}
+
+.wheel {
+  width: 300px;
+  height: 300px;
+  border: 8px solid #0ff;
+  border-radius: 50%;
+  background: conic-gradient(
+    #0ff 0deg 45deg,
+    #00ffff88 45deg 90deg,
+    #0ff 90deg 135deg,
+    #00ffff88 135deg 180deg,
+    #0ff 180deg 225deg,
+    #00ffff88 225deg 270deg,
+    #0ff 270deg 315deg,
+    #00ffff88 315deg 360deg
+  );
+  position: relative;
+  box-shadow: 
+    0 0 20px #0ff,
+    inset 0 0 20px rgba(0, 255, 255, 0.3);
+  animation-duration: 3s;
+  animation-fill-mode: forwards;
+  animation-timing-function: cubic-bezier(0.17, 0.67, 0.12, 0.99);
+}
+
+.wheel-inner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 280px;
+  height: 280px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #000 40%, #111 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wheel-segment {
+  position: absolute;
+  width: 2px;
+  height: 140px;
+  background: linear-gradient(to bottom, transparent, #0ff, transparent);
+  top: 50%;
+  left: 50%;
+  transform-origin: bottom center;
+  opacity: 0.6;
+}
+
+.wheel-segment:nth-child(1) { transform: translate(-50%, -100%) rotate(0deg); }
+.wheel-segment:nth-child(2) { transform: translate(-50%, -100%) rotate(45deg); }
+.wheel-segment:nth-child(3) { transform: translate(-50%, -100%) rotate(90deg); }
+.wheel-segment:nth-child(4) { transform: translate(-50%, -100%) rotate(135deg); }
+.wheel-segment:nth-child(5) { transform: translate(-50%, -100%) rotate(180deg); }
+.wheel-segment:nth-child(6) { transform: translate(-50%, -100%) rotate(225deg); }
+.wheel-segment:nth-child(7) { transform: translate(-50%, -100%) rotate(270deg); }
+.wheel-segment:nth-child(8) { transform: translate(-50%, -100%) rotate(315deg); }
+
+.wheel-pointer {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 15px solid transparent;
+  border-right: 15px solid transparent;
+  border-top: 30px solid #ff00ff;
+  filter: drop-shadow(0 0 10px #ff00ff);
+  z-index: 10;
+}
+
+.spin {
+  animation-name: spinAnimation;
+}
+
+@keyframes spinAnimation {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(1440deg);
+  }
+}
+
+.reward-text {
+  margin-top: 20px;
+  text-align: center;
+  animation: rewardAppear 0.5s ease-out;
+}
+
+.reward-label {
+  font-size: 1rem;
+  color: #888;
+  margin-bottom: 8px;
+}
+
+.reward-value {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #0ff;
+  text-shadow: 
+    0 0 10px #0ff,
+    0 0 20px #0ff,
+    0 0 30px #0ff;
+  animation: glow 1.5s ease-in-out infinite alternate;
+}
+
+.reward-text.jackpot {
+  animation: jackpotAppear 0.8s ease-out;
+}
+
+.jackpot-title {
+  font-size: 3rem;
+  font-weight: 900;
+  color: #ffd700;
+  text-shadow: 
+    0 0 10px #ffd700,
+    0 0 20px #ffd700,
+    0 0 30px #ffd700,
+    0 0 40px #ffd700;
+  animation: jackpotGlow 1s ease-in-out infinite alternate;
+  margin-bottom: 10px;
+}
+
+.jackpot-subtitle {
+  font-size: 1.2rem;
+  color: #ffaa00;
+  text-shadow: 0 0 10px #ffaa00;
+}
+
+.spinning-text {
+  margin-top: 20px;
+  font-size: 1.2rem;
+  color: #0ff;
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes glow {
+  from {
+    text-shadow: 
+      0 0 10px #0ff,
+      0 0 20px #0ff,
+      0 0 30px #0ff;
+  }
+  to {
+    text-shadow: 
+      0 0 20px #0ff,
+      0 0 30px #0ff,
+      0 0 40px #0ff;
+  }
+}
+
+@keyframes jackpotGlow {
+  from {
+    text-shadow: 
+      0 0 10px #ffd700,
+      0 0 20px #ffd700,
+      0 0 30px #ffd700,
+      0 0 40px #ffd700;
+    transform: scale(0.5);
+  }
+  to {
+    text-shadow: 
+      0 0 20px #ffd700,
+      0 0 30px #ffd700,
+      0 0 40px #ffd700,
+      0 0 50px #ffd700;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes rewardAppear {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes jackpotAppear {
+  0% {
+    opacity: 0;
+    transform: scale(0.5) rotate(-10deg);
+  }
+  50% {
+    transform: scale(1.1) rotate(5deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(0.5) rotate(0deg);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@media (max-width: 640px) {
+  .wheel-wrapper {
+    width: 250px;
+    height: 250px;
+  }
+  
+  .wheel {
+    width: 250px;
+    height: 250px;
+  }
+  
+  .wheel-inner {
+    width: 230px;
+    height: 230px;
+  }
+  
+  .wheel-segment {
+    height: 115px;
+  }
+  
+  .reward-value {
+    font-size: 2rem;
+  }
+  
+  .jackpot-title {
+    font-size: 2.5rem;
+  }
+}

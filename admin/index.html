@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GambleCodez Admin Panel</title>
+  <link rel="stylesheet" href="/admin/styles.css" />
+  <style>
+    body {
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a0a2e 100%);
+      color: #00fff7;
+      font-family: 'Orbitron', sans-serif;
+      margin: 0;
+      padding: 2rem;
+      min-height: 100vh;
+    }
+    
+    .admin-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid rgba(0, 255, 247, 0.3);
+    }
+    
+    .admin-header h1 {
+      font-size: 2rem;
+      margin: 0;
+      text-shadow: 0 0 20px rgba(0, 255, 247, 0.5);
+    }
+    
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    
+    .user-details {
+      text-align: right;
+    }
+    
+    .user-details .username {
+      font-weight: bold;
+      color: #00fff7;
+    }
+    
+    .user-details .roles {
+      font-size: 0.8rem;
+      color: #888;
+    }
+    
+    .btn-logout {
+      padding: 0.5rem 1rem;
+      background: rgba(255, 0, 0, 0.2);
+      border: 1px solid rgba(255, 0, 0, 0.3);
+      border-radius: 8px;
+      color: #ff6b6b;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .btn-logout:hover {
+      background: rgba(255, 0, 0, 0.3);
+      transform: translateY(-2px);
+    }
+    
+    .admin-links {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 1rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .admin-link {
+      text-decoration: none;
+      color: #fff;
+      background: rgba(10, 10, 10, 0.9);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(0, 255, 247, 0.3);
+      padding: 1.5rem;
+      border-radius: 12px;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(0, 255, 247, 0.1);
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    
+    .admin-link:hover {
+      transform: translateY(-4px);
+      border-color: #00fff7;
+      box-shadow: 0 8px 24px rgba(0, 255, 247, 0.3);
+    }
+    
+    .admin-link.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+    
+    .admin-link .icon {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .admin-link .title {
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: #00fff7;
+    }
+    
+    .admin-link .description {
+      font-size: 0.9rem;
+      color: #888;
+    }
+    
+    .loading {
+      text-align: center;
+      padding: 2rem;
+      color: #00fff7;
+    }
+    
+    .error {
+      background: rgba(255, 0, 0, 0.1);
+      border: 1px solid rgba(255, 0, 0, 0.3);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 2rem;
+      color: #ff6b6b;
+    }
+  </style>
+</head>
+<body>
+  <div id="loading" class="loading">Loading admin panel...</div>
+  <div id="content" style="display: none;">
+    <div class="admin-header">
+      <h1>👑 GambleCodez Admin Panel</h1>
+      <div class="user-info">
+        <div class="user-details">
+          <div class="username" id="username">Loading...</div>
+          <div class="roles" id="roles"></div>
+        </div>
+        <button class="btn-logout" onclick="logout()">Logout</button>
+      </div>
+    </div>
+    
+    <div id="errorMessage" class="error" style="display: none;"></div>
+    
+    <div class="admin-links" id="adminLinks"></div>
+  </div>
+  
+  <script>
+    const sessionToken = localStorage.getItem('admin_session');
+    let userPermissions = [];
+    let userRoles = [];
+    
+    // Permission mapping: permission -> [links to show]
+    const permissionMap = {
+      'drops:view': ['/admin/drops.html', '/admin/promo-candidates.html'],
+      'daily_drops:view': ['/admin/daily-drops.html'],
+      'raffles:view': ['/admin/raffles-wheel.html', '/admin/winners.html'],
+      'affiliates:view': ['/admin/sites.html', '/admin/affiliates.html'],
+      'redirects:view': ['/admin/redirects.html'],
+      'ads:view': ['/admin/ads.html', '/admin/ads-dashboard.html'],
+      'blacklist:view': ['/admin/blacklist.html'],
+      'live_banner:view': ['/admin/live-banner.html'],
+      'push:view': ['/admin/site-push.html'],
+      'settings:view': ['/admin/settings.html'],
+      'audit_logs:view': ['/admin/logs.html'],
+      'newsletter:view': ['/admin/newsletter.html'],
+      'telegram_bot:view': ['/admin/telegram-bot.html'],
+      'users:view': ['/admin/users.html'],
+      'admin_users:view': ['/admin/admin-users.html']
+    };
+    
+    // All available admin links
+    const allLinks = [
+      { url: '/admin/drops.html', icon: '🎯', title: 'Drops Command Center', description: 'Manage drops and promotions', perm: 'drops:view' },
+      { url: '/admin/promo-candidates.html', icon: '🎫', title: 'Promo Review Queue', description: 'Review and approve promo candidates', perm: 'drops:approve' },
+      { url: '/admin/daily-drops.html', icon: '📅', title: 'Daily Drops', description: 'Manage daily drop schedule', perm: 'daily_drops:view' },
+      { url: '/admin/spinlogs.html', icon: '🎰', title: 'Daily Spin Logs', description: 'View wheel spin logs', perm: 'wheel:view' },
+      { url: '/admin/raffles-wheel.html', icon: '🎟️', title: 'Raffles & Wheel', description: 'Manage raffles and wheel configuration', perm: 'raffles:view' },
+      { url: '/admin/winners.html', icon: '🏆', title: 'Raffle Winners', description: 'View and manage raffle winners', perm: 'raffles:view' },
+      { url: '/admin/sites.html', icon: '🏷️', title: 'Sites & Affiliates', description: 'Manage affiliate sites', perm: 'affiliates:view' },
+      { url: '/admin/affiliates.html', icon: '🏢', title: 'Manage Affiliates', description: 'Full affiliate management', perm: 'affiliates:view' },
+      { url: '/admin/users.html', icon: '👥', title: 'Manage Users', description: 'User account management', perm: 'users:view' },
+      { url: '/admin/admin-users.html', icon: '👑', title: 'Admin Users', description: 'Manage admin accounts and permissions', perm: 'admin_users:view' },
+      { url: '/admin/redirects.html', icon: '🔗', title: 'Manage Redirects', description: 'URL redirect management', perm: 'redirects:view' },
+      { url: '/admin/ads.html', icon: '📢', title: 'Manage Ads', description: 'Advertisement management', perm: 'ads:view' },
+      { url: '/admin/ads-dashboard.html', icon: '🧲', title: 'Ads Dashboard', description: 'Ad analytics and performance', perm: 'ads:view' },
+      { url: '/admin/blacklist.html', icon: '🚫', title: 'Manage Blacklist', description: 'User blacklist management', perm: 'blacklist:view' },
+      { url: '/admin/live-banner.html', icon: '📢', title: 'Live Banner', description: 'Manage live banner notifications', perm: 'live_banner:view' },
+      { url: '/admin/site-push.html', icon: '📲', title: 'Push Notifications', description: 'Send push notifications', perm: 'push:view' },
+      { url: '/admin/settings.html', icon: '⚙️', title: 'Settings', description: 'System settings', perm: 'settings:view' },
+      { url: '/admin/logs.html', icon: '📜', title: 'System Logs', description: 'View audit logs', perm: 'audit_logs:view' },
+      { url: '/admin/newsletter.html', icon: '✉️', title: 'Newsletter', description: 'Newsletter campaign management', perm: 'newsletter:view' },
+      { url: '/admin/telegram-bot.html', icon: '🤖', title: 'Telegram Bot', description: 'Telegram bot configuration', perm: 'telegram_bot:view' },
+      { url: '/', icon: '🔙', title: 'Return to Site', description: 'Go back to main site', perm: null }
+    ];
+    
+    async function loadUserInfo() {
+      if (!sessionToken) {
+        window.location.href = '/admin/login.html';
+        return;
+      }
+      
+      try {
+        const response = await fetch('/api/admin/auth/me', {
+          headers: {
+            'x-admin-session': sessionToken
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error('Session expired');
+        }
+        
+        const data = await response.json();
+        const user = data.user;
+        
+        // Update user info
+        document.getElementById('username').textContent = user.username + (user.full_name ? ` (${user.full_name})` : '');
+        document.getElementById('roles').textContent = user.roles.map(r => r.display_name).join(', ') || 'No roles assigned';
+        
+        userPermissions = user.permissions || [];
+        userRoles = user.roles || [];
+        
+        // Render links based on permissions
+        renderLinks();
+        
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('content').style.display = 'block';
+      } catch (error) {
+        console.error('Error loading user info:', error);
+        showError('Failed to load user information. Please login again.');
+        setTimeout(() => {
+          window.location.href = '/admin/login.html';
+        }, 2000);
+      }
+    }
+    
+    function hasPermission(permission) {
+      if (!permission) return true; // No permission required
+      return userPermissions.includes(permission);
+    }
+    
+    function renderLinks() {
+      const linksContainer = document.getElementById('adminLinks');
+      linksContainer.innerHTML = '';
+      
+      allLinks.forEach(link => {
+        if (hasPermission(link.perm)) {
+          const linkEl = document.createElement('a');
+          linkEl.href = link.url;
+          linkEl.className = 'admin-link';
+          linkEl.innerHTML = `
+            <div class="icon">${link.icon}</div>
+            <div class="title">${link.title}</div>
+            <div class="description">${link.description}</div>
+          `;
+          linksContainer.appendChild(linkEl);
+        }
+      });
+    }
+    
+    function showError(message) {
+      const errorEl = document.getElementById('errorMessage');
+      errorEl.textContent = message;
+      errorEl.style.display = 'block';
+    }
+    
+    async function logout() {
+      try {
+        await fetch('/api/admin/auth/logout', {
+          method: 'POST',
+          headers: {
+            'x-admin-session': sessionToken
+          }
+        });
+      } catch (error) {
+        console.error('Logout error:', error);
+      } finally {
+        localStorage.removeItem('admin_session');
+        localStorage.removeItem('admin_user');
+        window.location.href = '/admin/login.html';
+      }
+    }
+    
+    // Load user info on page load
+    loadUserInfo();
+  </script>
+</body>
+</html>

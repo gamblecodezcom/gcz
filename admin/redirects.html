@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manage Redirects - GambleCodez Admin</title>
+  <link rel="stylesheet" href="/admin/styles.css" />
+  <style>
+    .redirect-form, .redirect-card {
+      background: #1a1a1a;
+      border: 1px solid #00fff7;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: #00fff7;
+      font-weight: bold;
+    }
+    .form-group input {
+      width: 100%;
+      padding: 0.75rem;
+      background: #0a0a0a;
+      border: 1px solid #333;
+      border-radius: 4px;
+      color: #fff;
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 1rem;
+    }
+    .btn {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      margin-right: 0.5rem;
+    }
+    .btn-primary { background: #00fff7; color: #000; }
+    .btn-danger { background: #ff0000; color: #fff; }
+    .btn-success { background: #00ff00; color: #000; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔗 Manage Redirects</h1>
+    <div style="margin-bottom: 1rem;">
+      <a href="/admin/index.html" style="color: #00fff7;">← Back to Admin Panel</a>
+    </div>
+
+    <button class="btn btn-primary" onclick="toggleForm()">+ Add Redirect</button>
+    <button class="btn btn-success" onclick="triggerWarmup()">Trigger Warmup</button>
+
+    <div id="redirect-form-container" style="display: none;">
+      <div class="redirect-form">
+        <h2>Add Redirect</h2>
+        <form onsubmit="saveRedirect(event)">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Slug *</label>
+              <input type="text" id="redirect-slug" required placeholder="e.g., stake-com" />
+            </div>
+            <div class="form-group">
+              <label>Weight *</label>
+              <input type="number" id="redirect-weight" min="1" value="1" required />
+            </div>
+          </div>
+          <div>
+            <button type="submit" class="btn btn-primary">Save</button>
+            <button type="button" class="btn" onclick="toggleForm()">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div id="redirects-container">
+      <div class="loading">Loading redirects...</div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = window.location.origin;
+    let editingId = null;
+
+    function toggleForm() {
+      document.getElementById('redirect-form-container').style.display = 
+        document.getElementById('redirect-form-container').style.display === 'none' ? 'block' : 'none';
+      if (document.getElementById('redirect-form-container').style.display === 'none') {
+        editingId = null;
+        document.querySelector('#redirect-form-container form').reset();
+      }
+    }
+
+    async function saveRedirect(e) {
+      e.preventDefault();
+      const data = {
+        slug: document.getElementById('redirect-slug').value,
+        weight: parseInt(document.getElementById('redirect-weight').value),
+      };
+
+      try {
+        const url = editingId 
+          ? `${API_BASE}/api/admin/redirects/${editingId}`
+          : `${API_BASE}/api/admin/redirects`;
+        const method = editingId ? 'PUT' : 'POST';
+
+        const res = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        if (!res.ok) throw new Error('Failed');
+        showToast('Saved', 'success');
+        toggleForm();
+        loadRedirects();
+      } catch (error) {
+        showToast('Error', 'error');
+      }
+    }
+
+    async function loadRedirects() {
+      const res = await fetch(`${API_BASE}/api/admin/redirects`);
+      const data = await res.json();
+      const container = document.getElementById('redirects-container');
+      container.innerHTML = (data.redirects || []).map(r => `
+        <div class="redirect-card">
+          <div style="display: flex; justify-content: space-between;">
+            <div>
+              <h3>/${r.slug}</h3>
+              <p>Weight: ${r.weight}</p>
+            </div>
+            <div>
+              <button class="btn btn-primary" onclick="editRedirect(${r.id}, '${r.slug}', ${r.weight})">Edit</button>
+              <button class="btn btn-danger" onclick="deleteRedirect(${r.id})">Delete</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function editRedirect(id, slug, weight) {
+      document.getElementById('redirect-slug').value = slug;
+      document.getElementById('redirect-weight').value = weight;
+      editingId = id;
+      document.getElementById('redirect-form-container').style.display = 'block';
+    }
+
+    async function deleteRedirect(id) {
+      if (!confirm('Delete?')) return;
+      await fetch(`${API_BASE}/api/admin/redirects/${id}`, { method: 'DELETE' });
+      showToast('Deleted', 'success');
+      loadRedirects();
+    }
+
+    async function triggerWarmup() {
+      if (!confirm('Trigger warmup for all redirects?')) return;
+      await fetch(`${API_BASE}/api/admin/warmup`, { method: 'POST' });
+      showToast('Warmup triggered', 'success');
+    }
+
+    function showToast(msg, type) {
+      const toast = document.createElement('div');
+      toast.textContent = msg;
+      toast.style.cssText = `position: fixed; top: 20px; right: 20px; padding: 1rem; border-radius: 4px; color: #fff; background: ${type === 'success' ? '#00ff00' : '#ff0000'}; z-index: 1000;`;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+
+    loadRedirects();
+  </script>
+</body>
+</html>
