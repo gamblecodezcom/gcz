@@ -11,6 +11,14 @@
 gcz-env.sh
 
 # ============================
+# Shell Scripts
+# BLOCK ALL .sh FILES
+# ============================
+*.sh
+
+# (No exceptions — nothing below un-ignores .sh files)
+
+# ============================
 # Node
 # ============================
 node_modules/
@@ -63,21 +71,3 @@ raffle_chunk_*
 daily_spin_chunk_*
 rafflev2*
 bot*.zip
-
-# ============================
-# GCZ Internal Scripts (optional)
-# Keep only the 3 protected scripts tracked
-# ============================
-gcz-bootstrap-degen.sh
-gcz-supermode.sh
-goose-finisher.sh
-install-goose.sh
-deploy.sh
-start-bot.js
-start-discord.js
-watchdog.js
-
-# Allow these:
-!gcz-diagnose.sh
-!gcz-control.sh
-!gcz-profile-report.sh

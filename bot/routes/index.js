@@ -1,48 +1,56 @@
 import { setupRaffleCommands } from './commands.raffle.js';
-import { setupAutoResponse } from './commands.autoresponse.js';
+import { setupAutoResponseCommands } from './commands.autoresponse.js';
 import { setupUserCommands } from './commands.user.js';
 import { setupWheelCommands } from './commands.wheel.js';
 import { setupGiveawayCommands } from './commands.giveaway.js';
 import { setupStatsCommands } from './commands.stats.js';
 import { setupDropsCommands } from './commands.drops.js';
-// import { setupAdminCommands } from './commands.admin.js';
-// import { setupHelpCommands } from './commands.help.js';
+import { setupAdminCommands } from './commands.admin.js';
+import { setupHelpCommands } from './commands.help.js';
 
 export function setupCommands(bot) {
-  // Core user-facing flows
+  // Raffles
   if (typeof setupRaffleCommands === 'function') {
     setupRaffleCommands(bot);
   }
 
-  // Auto-responses, user setup, admin reply flow
-  setupAutoResponse(bot);
+  // Auto-response engine
+  if (typeof setupAutoResponseCommands === 'function') {
+    setupAutoResponseCommands(bot);
+  }
 
-  // User commands (profile, settings)
+  // User commands
   if (typeof setupUserCommands === 'function') {
     setupUserCommands(bot);
   }
 
-  // Wheel commands
+  // Wheel
   if (typeof setupWheelCommands === 'function') {
     setupWheelCommands(bot);
   }
 
-  // Giveaway commands
+  // Giveaways
   if (typeof setupGiveawayCommands === 'function') {
     setupGiveawayCommands(bot);
   }
 
-  // Stats commands
+  // Stats
   if (typeof setupStatsCommands === 'function') {
     setupStatsCommands(bot);
   }
 
-  // Drops commands
+  // Drops engine
   if (typeof setupDropsCommands === 'function') {
     setupDropsCommands(bot);
   }
 
-  // Plug others back in as you finalize them:
-  // if (typeof setupAdminCommands === 'function') setupAdminCommands(bot);
-  // if (typeof setupHelpCommands === 'function') setupHelpCommands(bot);
+  // Admin commands
+  if (typeof setupAdminCommands === 'function') {
+    setupAdminCommands(bot);
+  }
+
+  // Help menu
+  if (typeof setupHelpCommands === 'function') {
+    setupHelpCommands(bot);
+  }
 }

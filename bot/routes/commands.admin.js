@@ -9,23 +9,27 @@ import {
 } from '../services/giveaways.js';
 import { getAllUsers, getUserProfile } from '../utils/storage.js';
 
+// Admin IDs
 const ADMIN_ID = config.TELEGRAM_ADMIN_ID ? parseInt(config.TELEGRAM_ADMIN_ID) : null;
-const SUPER_ADMIN_TELEGRAM_ID = 6668510825; // Super Admin Telegram ID
+const SUPER_ADMIN_TELEGRAM_ID = 6668510825; // Tyler
 
 /**
  * Setup admin-only commands
  */
 export function setupAdminCommands(bot) {
-  // /giveaway start <type> <winners> <value> <minutes>
+
+  // -------------------------------
+  // /giveaway
+  // -------------------------------
   bot.command('giveaway', async (ctx) => {
-    // Only Super Admin Telegram ID (6668510825) can manage giveaways
     if (ctx.from?.id !== SUPER_ADMIN_TELEGRAM_ID) {
       return ctx.reply('This command is restricted to Super Admin only.');
     }
 
-    const parts = ctx.message.text.split(' ').filter(p => p);
+    const parts = ctx.message.text.split(' ').filter(Boolean);
     const subcommand = parts[1]?.toLowerCase();
 
+    // START
     if (subcommand === 'start') {
       if (parts.length < 6) {
         return ctx.reply(
@@ -40,7 +44,7 @@ export function setupAdminCommands(bot) {
       const prizeValue = parts[4];
       const durationMinutes = parseInt(parts[5]);
 
-      if (!type || (type !== 'cwallet' && type !== 'runewager')) {
+      if (!['cwallet', 'runewager'].includes(type)) {
         return ctx.reply('❌ Type must be "cwallet" or "runewager".');
       }
 
@@ -60,46 +64,37 @@ export function setupAdminCommands(bot) {
         adminId: ctx.from.id
       });
 
-      if (result.success) {
-        await ctx.reply('✅ Giveaway started!');
-      } else {
-        await ctx.reply(result.message);
-      }
-      return;
+      return ctx.reply(result.success ? '✅ Giveaway started!' : result.message);
     }
 
+    // CANCEL
     if (subcommand === 'cancel') {
       const result = cancelGiveaway(bot);
-      if (result.success) {
-        await ctx.reply('✅ Giveaway cancelled.');
-      } else {
-        await ctx.reply(result.message);
-      }
-      return;
+      return ctx.reply(result.success ? '✅ Giveaway cancelled.' : result.message);
     }
 
+    // STATUS
     if (subcommand === 'status') {
       const status = getGiveawayStatus();
-      if (!status.active) {
-        return ctx.reply('📭 No active giveaway.');
-      }
+      if (!status.active) return ctx.reply('📭 No active giveaway.');
 
-      const typeLabel = status.type === 'cwallet' 
-        ? '💸 Cwallet USDc' 
+      const typeLabel = status.type === 'cwallet'
+        ? '💸 Cwallet USDc'
         : '🎰 Runewager SC';
 
-      let message = `📊 *Giveaway Status*\n\n`;
-      message += `Type: ${typeLabel}\n`;
-      message += `Winners: ${status.winnersCount}\n`;
-      message += `Prize Each: ${status.prizeValue}\n`;
-      message += `Participants: ${status.participants}\n`;
-      message += `Time Remaining: ${status.timeRemaining}`;
+      const message =
+        `📊 *Giveaway Status*\n\n` +
+        `Type: ${typeLabel}\n` +
+        `Winners: ${status.winnersCount}\n` +
+        `Prize Each: ${status.prizeValue}\n` +
+        `Participants: ${status.participants}\n` +
+        `Time Remaining: ${status.timeRemaining}`;
 
-      await ctx.reply(message, { parse_mode: 'Markdown' });
-      return;
+      return ctx.reply(message, { parse_mode: 'Markdown' });
     }
 
-    ctx.reply(
+    // HELP
+    return ctx.reply(
       '❌ Usage:\n' +
       '`/giveaway start <type> <winners> <value> <minutes>`\n' +
       '`/giveaway cancel`\n' +
@@ -108,16 +103,19 @@ export function setupAdminCommands(bot) {
     );
   });
 
-  // /join command (handled here to check for giveaways)
+  // -------------------------------
+  // /join
+  // -------------------------------
   bot.command('join', async (ctx) => {
-    // Only Super Admin Telegram ID (6668510825) can join giveaways
     if (ctx.from?.id !== SUPER_ADMIN_TELEGRAM_ID) {
       return ctx.reply('This command is restricted to Super Admin only.');
     }
     await joinGiveaway(ctx, bot);
   });
 
-  // /whois command
+  // -------------------------------
+  // /whois
+  // -------------------------------
   bot.command('whois', async (ctx) => {
     if (!isAdmin(ctx, [ADMIN_ID])) {
       return ctx.reply('❌ Admin access required.');
@@ -128,52 +126,54 @@ export function setupAdminCommands(bot) {
     }
 
     const targetUser = ctx.message.reply_to_message.from;
-    if (!targetUser) {
-      return ctx.reply('❌ Could not identify user.');
-    }
+    if (!targetUser) return ctx.reply('❌ Could not identify user.');
 
     const profile = getUserProfile(targetUser.id);
 
-    let message = `👤 *User Information*\n\n`;
-    message += `🆔 Telegram ID: \`${profile.id}\`\n`;
-    message += `👤 Username: ${profile.username ? `@${profile.username}` : 'Not set'}\n`;
-    message += `📝 Name: ${profile.first_name || ''} ${profile.last_name || ''}\n\n`;
-    message += `💸 Cwallet ID: ${profile.cwalletId || 'Not set'}\n`;
-    message += `🎰 Runewager: ${profile.runewager || 'Not set'}\n\n`;
-    message += `✅ Has Started: ${profile.has_started ? 'Yes' : 'No'}\n`;
-    message += `📅 First Seen: ${new Date(profile.created_at).toLocaleString()}\n`;
-    message += `🔄 Last Seen: ${new Date(profile.updated_at).toLocaleString()}`;
+    const message =
+      `👤 *User Information*\n\n` +
+      `🆔 Telegram ID: \`${profile.id}\`\n` +
+      `👤 Username: ${profile.username ? `@${profile.username}` : 'Not set'}\n` +
+      `📝 Name: ${profile.first_name || ''} ${profile.last_name || ''}\n\n` +
+      `💸 Cwallet ID: ${profile.cwalletId || 'Not set'}\n` +
+      `🎰 Runewager: ${profile.runewager || 'Not set'}\n\n` +
+      `✅ Has Started: ${profile.has_started ? 'Yes' : 'No'}\n` +
+      `📅 First Seen: ${new Date(profile.created_at).toLocaleString()}\n` +
+      `🔄 Last Seen: ${new Date(profile.updated_at).toLocaleString()}`;
 
     await ctx.reply(message, { parse_mode: 'Markdown' });
   });
 
-  // /broadcast command
+  // -------------------------------
+  // /broadcast
+  // -------------------------------
   bot.command('broadcast', async (ctx) => {
     if (!isAdmin(ctx, [ADMIN_ID])) {
       return ctx.reply('❌ Admin access required.');
     }
 
-    // Store broadcast session
     ctx.session = ctx.session || {};
     ctx.session.broadcastMode = true;
     ctx.session.broadcastMessage = null;
 
     await ctx.reply(
       '📢 *Broadcast Setup*\n\n' +
-      'Please send the message you want to broadcast.\n' +
-      'You can include text, photos, or documents.\n\n' +
+      'Send the message you want to broadcast.\n' +
+      'Supports text, photos, documents.\n\n' +
       'Type /cancel to abort.',
       { parse_mode: 'Markdown' }
     );
   });
 
-  // Handle broadcast message input
+  // -------------------------------
+  // Broadcast message capture
+  // -------------------------------
   bot.on('message', async (ctx, next) => {
     if (ctx.session?.broadcastMode && !ctx.message.text?.startsWith('/')) {
       const message = ctx.message;
+
       ctx.session.broadcastMessage = message;
       ctx.session.broadcastMode = false;
-      ctx.session.broadcastTarget = null;
 
       const keyboard = {
         inline_keyboard: [
@@ -194,70 +194,84 @@ export function setupAdminCommands(bot) {
     return next();
   });
 
-  // Handle broadcast callback queries
+  // -------------------------------
+  // Broadcast callback handler
+  // -------------------------------
   bot.on('callback_query', async (ctx, next) => {
-    if (ctx.callbackQuery.data?.startsWith('broadcast_')) {
-      if (!isAdmin(ctx, [ADMIN_ID])) {
-        return ctx.answerCbQuery('Admin only.');
-      }
+    if (!ctx.callbackQuery.data?.startsWith('broadcast_')) return next();
 
-      const action = ctx.callbackQuery.data;
-      const message = ctx.session?.broadcastMessage;
-
-      if (!message) {
-        return ctx.answerCbQuery('No message to broadcast.');
-      }
-
-      if (action === 'broadcast_cancel') {
-        ctx.session = {};
-        await ctx.editMessageText('❌ Broadcast cancelled.');
-        return ctx.answerCbQuery();
-      }
-
-      try {
-        const targets = [];
-        if (action === 'broadcast_channel' || action === 'broadcast_both') {
-          if (config.TELEGRAM_CHANNEL_ID) targets.push(config.TELEGRAM_CHANNEL_ID);
-        }
-        if (action === 'broadcast_group' || action === 'broadcast_both') {
-          if (config.TELEGRAM_GROUP_ID) targets.push(config.TELEGRAM_GROUP_ID);
-        }
-
-        if (targets.length === 0) {
-          return ctx.answerCbQuery('No target configured.');
-        }
-
-        for (const targetId of targets) {
-          if (message.photo) {
-            await bot.telegram.sendPhoto(targetId, message.photo[message.photo.length - 1].file_id, {
-              caption: message.caption,
-              parse_mode: message.caption_entities ? 'HTML' : undefined
-            });
-          } else if (message.document) {
-            await bot.telegram.sendDocument(targetId, message.document.file_id, {
-              caption: message.caption,
-              parse_mode: message.caption_entities ? 'HTML' : undefined
-            });
-          } else if (message.text) {
-            await bot.telegram.sendMessage(targetId, message.text, {
-              parse_mode: message.entities ? 'HTML' : undefined
-            });
-          }
-        }
-
-        ctx.session = {};
-        await ctx.editMessageText(`✅ Broadcast sent to ${targets.length} location(s).`);
-        await ctx.answerCbQuery('Broadcast sent!');
-      } catch (err) {
-        logger.error('Broadcast error:', err);
-        await ctx.answerCbQuery('Error sending broadcast.');
-      }
-      return;
+    if (!isAdmin(ctx, [ADMIN_ID])) {
+      return ctx.answerCbQuery('Admin only.');
     }
-    return next();
+
+    const action = ctx.callbackQuery.data;
+    const message = ctx.session?.broadcastMessage;
+
+    if (!message) return ctx.answerCbQuery('No message to broadcast.');
+
+    if (action === 'broadcast_cancel') {
+      ctx.session = {};
+      await ctx.editMessageText('❌ Broadcast cancelled.');
+      return ctx.answerCbQuery();
+    }
+
+    try {
+      const targets = [];
+
+      if (['broadcast_channel', 'broadcast_both'].includes(action)) {
+        if (config.TELEGRAM_CHANNEL_ID) targets.push(config.TELEGRAM_CHANNEL_ID);
+      }
+
+      if (['broadcast_group', 'broadcast_both'].includes(action)) {
+        if (config.TELEGRAM_GROUP_ID) targets.push(config.TELEGRAM_GROUP_ID);
+      }
+
+      if (targets.length === 0) {
+        return ctx.answerCbQuery('No target configured.');
+      }
+
+      for (const targetId of targets) {
+        if (message.photo) {
+          await bot.telegram.sendPhoto(
+            targetId,
+            message.photo.at(-1).file_id,
+            {
+              caption: message.caption,
+              parse_mode: message.caption_entities ? 'HTML' : undefined
+            }
+          );
+        } else if (message.document) {
+          await bot.telegram.sendDocument(
+            targetId,
+            message.document.file_id,
+            {
+              caption: message.caption,
+              parse_mode: message.caption_entities ? 'HTML' : undefined
+            }
+          );
+        } else if (message.text) {
+          await bot.telegram.sendMessage(
+            targetId,
+            message.text,
+            {
+              parse_mode: message.entities ? 'HTML' : undefined
+            }
+          );
+        }
+      }
+
+      ctx.session = {};
+      await ctx.editMessageText(`✅ Broadcast sent to ${targets.length} location(s).`);
+      await ctx.answerCbQuery('Broadcast sent!');
+    } catch (err) {
+      logger.error('Broadcast error:', err);
+      await ctx.answerCbQuery('Error sending broadcast.');
+    }
   });
 
-  // /postpromo command (simplified version)
+  // -------------------------------
+  // /postpromo
+  // -------------------------------
   bot.command('postpromo', async (ctx) => {
     if (!isAdmin(ctx, [ADMIN_ID])) {
       return ctx.reply('❌ Admin access required.');

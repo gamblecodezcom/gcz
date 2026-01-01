@@ -1,13 +1,14 @@
 /**
  * Category color mapping for GambleCodez design system
  */
-export type CategoryType = 
-  | 'sweeps' 
-  | 'crypto' 
-  | 'lootbox' 
-  | 'faucet' 
-  | 'instant' 
-  | 'kyc' 
+
+export type CategoryType =
+  | 'sweeps'
+  | 'crypto'
+  | 'lootbox'
+  | 'faucet'
+  | 'instant'
+  | 'kyc'
   | 'top_pick';
 
 export interface CategoryColorConfig {
@@ -18,6 +19,9 @@ export interface CategoryColorConfig {
   className: string;
 }
 
+/**
+ * Master category → color map
+ */
 export const categoryColorMap: Record<CategoryType, CategoryColorConfig> = {
   sweeps: {
     border: 'border-neon-cyan/50',
@@ -71,17 +75,61 @@ export const categoryColorMap: Record<CategoryType, CategoryColorConfig> = {
 };
 
 /**
- * Get category color configuration
+ * Normalize category strings into valid keys
+ * Handles:
+ *  - uppercase
+ *  - spaces
+ *  - hyphens
+ *  - commas
+ *  - multi-category strings
  */
-export function getCategoryColors(category: CategoryType | string): CategoryColorConfig {
-  const normalized = category.toLowerCase().replace(/\s+/g, '_') as CategoryType;
-  return categoryColorMap[normalized] || categoryColorMap.sweeps;
+export function normalizeCategory(input: string): CategoryType | null {
+  if (!input) return null;
+
+  const cleaned = input
+    .toLowerCase()
+    .replace(/-/g, '_')
+    .replace(/\s+/g, '_')
+    .trim();
+
+  if (cleaned in categoryColorMap) {
+    return cleaned as CategoryType;
+  }
+
+  return null;
 }
 
 /**
- * Get category class names for styling
+ * Get color config for a single category
  */
-export function getCategoryClasses(category: CategoryType | string): string {
-  const config = getCategoryColors(category);
-  return `${config.border} ${config.bg} ${config.text} ${config.className}`;
+export function getCategoryColors(category: string): CategoryColorConfig {
+  const normalized = normalizeCategory(category);
+  return normalized
+    ? categoryColorMap[normalized]
+    : categoryColorMap.sweeps; // fallback
+}
+
+/**
+ * Get merged classes for a category or multi-category string
+ * Example:
+ *   "crypto, instant" → merges both styles
+ */
+export function getCategoryClasses(category: string): string {
+  const parts = category.split(',').map(c => c.trim());
+
+  const configs = parts
+    .map(getCategoryColors)
+    .filter(Boolean);
+
+  // Merge all className + border/bg/text
+  const merged = new Set<string>();
+
+  configs.forEach(cfg => {
+    merged.add(cfg.border);
+    merged.add(cfg.bg);
+    merged.add(cfg.text);
+    merged.add(cfg.className);
+  });
+
+  return Array.from(merged).join(' ');
 }

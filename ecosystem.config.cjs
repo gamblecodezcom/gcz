@@ -1,6 +1,20 @@
 module.exports = {
   apps: [
     {
+      name: "gcz-api",
+      script: "uvicorn",
+      args: "backend.main:app --host 0.0.0.0 --port 3000",
+      cwd: "/var/www/html/gcz",
+      interpreter: "python3",
+      exec_mode: "fork",
+      instances: 1,
+      max_memory_restart: "300M",
+      error_file: "./logs/gcz-api-error.log",
+      out_file: "./logs/gcz-api-out.log",
+      log_date_format: "YYYY-MM-DD HH:mm:ss Z",
+    },
+
+    {
       name: "gcz-redirect",
       script: "uvicorn",
       args: "backend.redirect:app --host 0.0.0.0 --port 8000",
