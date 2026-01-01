@@ -3,7 +3,7 @@ dotenv.config();
 
 export const config = {
   DISCORD_BOT_TOKEN: process.env.DISCORD_BOT_TOKEN,
-  DISCORD_GUILD_ID: process.env.DISCORD_GUILD_ID,
+  DISCORD_SERVER_ID: process.env.DISCORD_SERVER_ID || process.env.DISCORD_GUILD_ID, // Support both names
   DISCORD_SC_LINKS_CHANNEL_ID: process.env.DISCORD_SC_LINKS_CHANNEL_ID,
   DISCORD_SC_CODES_CHANNEL_ID: process.env.DISCORD_SC_CODES_CHANNEL_ID,
   DISCORD_ADMIN_ROLE_ID: process.env.DISCORD_ADMIN_ROLE_ID,
@@ -15,8 +15,8 @@ if (!config.DISCORD_BOT_TOKEN) {
   throw new Error('DISCORD_BOT_TOKEN is required in environment variables');
 }
 
-if (!config.DISCORD_GUILD_ID) {
-  throw new Error('DISCORD_GUILD_ID is required in environment variables');
+if (!config.DISCORD_SERVER_ID) {
+  throw new Error('DISCORD_SERVER_ID (or DISCORD_GUILD_ID) is required in environment variables');
 }
 
 if (!config.DISCORD_SC_LINKS_CHANNEL_ID) {

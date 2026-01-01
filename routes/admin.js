@@ -1,5 +1,7 @@
 import express from "express";
+
 import adminAuth from "../middleware/adminAuth.js";
+
 import adminUsers from "./admin/users.js";
 import adminRaffles from "./admin/raffles.js";
 import adminAffiliates from "./admin/affiliates.js";
@@ -33,7 +35,7 @@ router.use(adminAuth);
 router.use("/users", adminUsers);
 router.use("/raffles", adminRaffles);
 router.use("/affiliates", adminAffiliates);
-router.use("/sites", adminAffiliates); // Alias for semantic clarity
+router.use("/sites", adminAffiliates); // alias
 router.use("/redirects", adminRedirects);
 router.use("/ads", adminAds);
 router.use("/blacklist", adminBlacklist);
@@ -51,20 +53,28 @@ router.use("/affiliate-analytics", adminAffiliateAnalytics);
 router.use("/admin-users", adminAdminUsers);
 router.use("/health", adminHealth);
 
-// Warmup endpoint (moved from redirects sub-router)
+/**
+ * POST /api/admin/warmup
+ * Warmup endpoint (moved from redirects sub-router).
+ */
 router.post("/warmup", async (req, res) => {
   try {
     const pkg = await import("pg");
     const { Pool } = pkg;
-    const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-    
-    const redirectsResult = await pool.query("SELECT slug FROM redirects ORDER BY weight DESC");
-    
-    // TODO: Implement actual warmup logic
+
+    const pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+    });
+
+    const redirectsResult = await pool.query(
+      "SELECT slug FROM redirects ORDER BY weight DESC"
+    );
+
+    // Placeholder: implement real warmup logic here
     res.json({
       success: true,
       message: "Warmup triggered",
-      redirects_count: redirectsResult.rows.length
+      redirects_count: redirectsResult.rows.length,
     });
   } catch (error) {
     console.error("Error triggering warmup:", error);

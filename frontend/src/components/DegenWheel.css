@@ -173,7 +173,7 @@
       0 0 20px #ffd700,
       0 0 30px #ffd700,
       0 0 40px #ffd700;
-    transform: scale(1);
+    transform: scale(0.5);
   }
   to {
     text-shadow: 
@@ -206,7 +206,7 @@
   }
   100% {
     opacity: 1;
-    transform: scale(1) rotate(0deg);
+    transform: scale(0.5) rotate(0deg);
   }
 }
 

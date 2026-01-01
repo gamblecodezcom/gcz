@@ -11,9 +11,49 @@ const client = new Client({
   ],
 });
 
-client.once(Events.ClientReady, (readyClient) => {
+client.once(Events.ClientReady, async (readyClient) => {
   logger.info(`Discord bot ready! Logged in as ${readyClient.user.tag}`);
+  logger.info(`Connected to server: ${config.DISCORD_SERVER_ID}`);
   logger.info(`Monitoring channels: ${config.DISCORD_SC_LINKS_CHANNEL_ID} (links), ${config.DISCORD_SC_CODES_CHANNEL_ID} (codes)`);
+  
+  // Verify bot is in the correct server
+  const guild = readyClient.guilds.cache.get(config.DISCORD_SERVER_ID);
+  if (!guild) {
+    logger.error(`Bot is not in server ${config.DISCORD_SERVER_ID}`);
+    return;
+  }
+  
+  logger.info(`Bot verified in server: ${guild.name}`);
+  
+  // Verify bot has read permissions for both channels
+  try {
+    const linksChannel = guild.channels.cache.get(config.DISCORD_SC_LINKS_CHANNEL_ID);
+    const codesChannel = guild.channels.cache.get(config.DISCORD_SC_CODES_CHANNEL_ID);
+    
+    if (linksChannel) {
+      const permissions = linksChannel.permissionsFor(readyClient.user);
+      if (permissions && permissions.has(['ViewChannels', 'ReadMessageHistory'])) {
+        logger.info(`✓ Bot has read permissions for SC LINKS channel`);
+      } else {
+        logger.warn(`⚠ Bot may lack read permissions for SC LINKS channel`);
+      }
+    } else {
+      logger.warn(`⚠ SC LINKS channel not found (ID: ${config.DISCORD_SC_LINKS_CHANNEL_ID})`);
+    }
+    
+    if (codesChannel) {
+      const permissions = codesChannel.permissionsFor(readyClient.user);
+      if (permissions && permissions.has(['ViewChannels', 'ReadMessageHistory'])) {
+        logger.info(`✓ Bot has read permissions for SC CODES channel`);
+      } else {
+        logger.warn(`⚠ Bot may lack read permissions for SC CODES channel`);
+      }
+    } else {
+      logger.warn(`⚠ SC CODES channel not found (ID: ${config.DISCORD_SC_CODES_CHANNEL_ID})`);
+    }
+  } catch (error) {
+    logger.error(`Error verifying channel permissions: ${error.message}`);
+  }
 });
 
 client.on(Events.MessageCreate, async (message) => {

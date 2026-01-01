@@ -88,6 +88,28 @@ router.post("/spin", async (req, res) => {
     const ip = req.headers["x-forwarded-for"] || req.ip;
     const ua = req.headers["user-agent"] || "unknown";
 
+    // Gating: Require authenticated user with profile
+    if (!user || userId === "guest") {
+      return res.status(401).json({ 
+        error: "Authentication required",
+        message: "Please create a Degen Profile to spin the wheel"
+      });
+    }
+
+    // Gating: Require newsletter subscription
+    const newsletterCheck = await pool.query(
+      `SELECT * FROM newsletter_subscribers 
+       WHERE (user_id = $1 OR email = $2) AND unsubscribed = false`,
+      [userId, user.email || null]
+    );
+
+    if (newsletterCheck.rows.length === 0) {
+      return res.status(403).json({ 
+        error: "Newsletter subscription required",
+        message: "Please subscribe to the newsletter to spin the wheel"
+      });
+    }
+
     const check = await pool.query(
       `SELECT created_at FROM spin_logs 
        WHERE user_id = $1 
@@ -106,13 +128,14 @@ router.post("/spin", async (req, res) => {
     }
 
     // Weighted rewards: [value, chance out of 10,000]
+    // Gold/JACKPOT: 0.01% (1 out of 10,000)
     const rewards = [
-      { value: 5, weight: 5000 },
-      { value: 10, weight: 2500 },
-      { value: 25, weight: 1500 },
-      { value: 50, weight: 700 },
-      { value: 100, weight: 299 },
-      { value: "JACKPOT", weight: 1 }
+      { value: 5, weight: 5000 },      // 50.00%
+      { value: 10, weight: 2500 },     // 25.00%
+      { value: 25, weight: 1500 },     // 15.00%
+      { value: 50, weight: 700 },      // 7.00%
+      { value: 100, weight: 299 },    // 2.99%
+      { value: "JACKPOT", weight: 1 }   // 0.01% (Gold prize)
     ];
 
     function weightedRandom() {

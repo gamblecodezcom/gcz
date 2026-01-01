@@ -1,5 +1,5 @@
 import { setupRaffleCommands } from './commands.raffle.js';
-import { setupAutoResponseCommands } from './commands.autoresponse.js';
+import { setupAutoResponse } from './commands.autoresponse.js';
 import { setupUserCommands } from './commands.user.js';
 import { setupWheelCommands } from './commands.wheel.js';
 import { setupGiveawayCommands } from './commands.giveaway.js';
@@ -15,7 +15,7 @@ export function setupCommands(bot) {
   }
 
   // Auto-responses, user setup, admin reply flow
-  setupAutoResponseCommands(bot);
+  setupAutoResponse(bot);
 
   // User commands (profile, settings)
   if (typeof setupUserCommands === 'function') {

@@ -1,471 +1,519 @@
 === GCZ PROJECT INDEX ===
-Tue Dec 30 21:23:24 UTC 2025
+Re-indexed: 2026-01-01 05:05:08
 
 /var/www/html/gcz
-├── .env
-├── .env.schema
-├── .gczignore
-├── .gitignore
-├── ADMIN_DASH.txt
-├── AIAGENT_MASTERCONTROL.txt
-├── AUDIT_REPORT.md
-├── BACKEND_API_IMPLEMENTATION_REPORT.md
-├── BACKEND_API_SUMMARY.md
-├── BOT_UPGRADE_AUDIT_REPORT.md
-├── DEGENPAN_ADMINDASH.txt
-├── DISCORD_PIPELINE_REPORT.md
-├── Degen_Profile.txt
-├── ENV_VARIABLES.md
-├── FULL_PHASE_IMPLEMENTATION_SUMMARY.md
-├── GAMBLECODEZ_DROPS_IMPLEMENTATION_SUMMARY.md
-├── GCZ_DEPLOY_PLAN.md
-├── GambleCodez_socials.txt
-├── IMPLEMENTATION_COMPLETE_SUMMARY.md
-├── IMPLEMENTATION_SUMMARY.md
-├── NEXT_PHASE_IMPLEMENTATION_SUMMARY.md
-├── README.md
-├── REPAIR_REPORT.md
-├── SEO_UX_DEPLOYMENT_SUMMARY.md
-├── admin
-│   ├── .env -> /var/www/html/gcz/.env
-│   ├── admin
-│   │   └── js
-│   ├── ads-dashboard.html
-│   ├── ads.html
-│   ├── affiliates.html
-│   ├── app.js
-│   ├── blacklist.html
-│   ├── daily-drops.html
-│   ├── drops.html
-│   ├── health.html
-│   ├── index.html
-│   ├── js
-│   │   ├── admin-utils.js
-│   │   └── health.js
-│   ├── live-banner.html
-│   ├── logs.html
-│   ├── newsletter.html
-│   ├── promos.html
-│   ├── raffles-wheel.html
-│   ├── raffles.html
-│   ├── redirects.html
-│   ├── settings.html
-│   ├── site-push.html
-│   ├── sites.html
-│   ├── spinlogs.html
-│   ├── styles.css
-│   ├── telegram-bot.html
-│   ├── users.html
-│   └── winners.html
-├── archive
-├── back
-│   ├── API Routes
-│   ├── affiliates.js
-│   ├── app.js
-│   ├── bash
-│   ├── dailySpin.js
-│   ├── dailySpinController.js
-│   ├── health.html
-│   ├── health.js
-│   ├── index.html
-│   ├── logs.html
-│   ├── main.py
-│   ├── newsletter.js
-│   ├── raffles.js
-│   ├── redirect.py
-│   ├── serveFrontend.js
-│   ├── server1.txt
-│   ├── server2.txt
-│   ├── spinLog.js
-│   ├── stats.js
-│   ├── validateCsv.js
-│   └── winners.html
-├── backend
-│   ├── .env -> /var/www/html/gcz/.env
-│   ├── __init__.py
-│   ├── main.py
-│   └── redirect.py
-├── backups
-├── bot
-│   ├── .env -> /root/gcz/.env
-│   ├── client.js
-│   ├── config.js
-│   ├── routes
-│   │   ├── commands.admin.js
-│   │   ├── commands.autoresponse.js
-│   │   ├── commands.drops.js
-│   │   ├── commands.giveaway.js
-│   │   ├── commands.help.js
-│   │   ├── commands.raffle.js
-│   │   ├── commands.stats.js
-│   │   ├── commands.user.js
-│   │   ├── commands.wheel.js
-│   │   └── index.js
-│   ├── services
-│   │   ├── autoresponses.js
-│   │   ├── channel.js
-│   │   ├── commands.autoresponse.js
-│   │   ├── giveaways.js
-│   │   ├── giveawaysBackend.js
-│   │   ├── messages.js
-│   │   ├── notifications.js
-│   │   ├── raffles.js
-│   │   ├── scheduler.js
-│   │   ├── stats.js
-│   │   └── wheel.js
-│   ├── storage
-│   │   ├── autoresponses.json
-│   │   ├── config.json
-│   │   ├── raffles.json
-│   │   └── scheduled_posts.json
-│   └── utils
-│       ├── apiClient.js
-│       ├── formatters.js
-│       ├── logger.js
-│       ├── permissions.js
-│       └── storage.js
-├── bot.zip
-├── bot_fully_rebuilt_final.zip
-├── chelp.sh
-├── controllers
-│   └── dailySpinController.js
-├── deploy.sh
-├── discord
-│   ├── client.js
-│   ├── config.js
-│   ├── handlers
-│   │   └── messageHandler.js
-│   └── utils
-│       └── logger.js
-├── ecosystem.config.cjs
-├── front
-│   ├── App.jsx
-│   ├── DailySpin.jsx
-│   ├── DegenWheel.css
-│   ├── DegenWheel.jsx
-│   ├── Footer.jsx
-│   ├── Header.jsx
-│   ├── Home.jsx
-│   ├── Raffles.jsx
-│   ├── api.js
-│   ├── global.css
-│   ├── index.html
-│   ├── main.jsx
-│   ├── tailwind.config.js
-│   └── vite.config.js
-├── frontend
-│   ├── .gitignore
-│   ├── README.md
-│   ├── dist
-│   │   ├── ICONS_NEEDED.txt
-│   │   ├── ICONS_README.md
-│   │   ├── assets
-│   │   │   ├── css
-│   │   │   │   └── index-CDkvKJ1m.css
-│   │   │   └── js
-│   │   │       ├── index-C4psV_zo.js
-│   │   │       ├── react-vendor-DdG2JpbZ.js
-│   │   │       └── utils-DNtZt6Xd.js
-│   │   ├── icon-192.png
-│   │   ├── icon-512.png
-│   │   ├── index.html
-│   │   ├── manifest.json
-│   │   ├── maskable-icon-192.png
-│   │   ├── maskable-icon-512.png
-│   │   ├── robots.txt
-│   │   ├── service-worker.js
-│   │   ├── sitemap.xml
-│   │   ├── sw.js
-│   │   └── vite.svg
-│   ├── eslint.config.js
-│   ├── index.html
-│   ├── jest.config.js
-│   ├── package-lock.json
-│   ├── package.json
-│   ├── postcss.config.js
-│   ├── public
-│   │   ├── ICONS_NEEDED.txt
-│   │   ├── ICONS_README.md
-│   │   ├── icon-192.png
-│   │   ├── icon-512.png
-│   │   ├── manifest.json
-│   │   ├── maskable-icon-192.png
-│   │   ├── maskable-icon-512.png
-│   │   ├── robots.txt
-│   │   ├── service-worker.js
-│   │   ├── sitemap.xml
-│   │   ├── sw.js
-│   │   └── vite.svg
-│   ├── src
-│   │   ├── App.tsx
-│   │   ├── __tests__
-│   │   │   ├── pinChange.test.ts
-│   │   │   └── wheel.test.ts
-│   │   ├── assets
-│   │   │   └── react.svg
-│   │   ├── components
-│   │   │   ├── Admin
-│   │   │   │   └── AnalyticsCharts.tsx
-│   │   │   ├── Ads
-│   │   │   │   └── AdSystem.tsx
-│   │   │   ├── Animations
-│   │   │   │   ├── AnimatedDice.tsx
-│   │   │   │   ├── CrownAnimation.tsx
-│   │   │   │   └── RainbowFlash.tsx
-│   │   │   ├── Common
-│   │   │   │   ├── BrandedBadge.tsx
-│   │   │   │   ├── ErrorBoundary.tsx
-│   │   │   │   ├── FallbackUI.tsx
-│   │   │   │   ├── LoadingState.tsx
-│   │   │   │   ├── SEOHead.tsx
-│   │   │   │   └── Tooltip.tsx
-│   │   │   ├── Dashboard
-│   │   │   │   ├── AchievementsPanel.tsx
-│   │   │   │   ├── ActivityLog.tsx
-│   │   │   │   ├── DegenWheelPanel.tsx
-│   │   │   │   ├── GiveawayRewardsPanel.tsx
-│   │   │   │   ├── LinkedCasinoAccountsGrid.tsx
-│   │   │   │   ├── LiveDashboard.tsx
-│   │   │   │   ├── MissionsPanel.tsx
-│   │   │   │   ├── PinUnlockModal.tsx
-│   │   │   │   ├── PlayerIdentityHeader.tsx
-│   │   │   │   ├── RafflesPanel.tsx
-│   │   │   │   ├── SettingsPanel.tsx
-│   │   │   │   └── XPLevelPanel.tsx
-│   │   │   ├── DegenWheel.css
-│   │   │   ├── Drops
-│   │   │   │   └── DropsBoard.tsx
-│   │   │   ├── ErrorBoundary.tsx
-│   │   │   ├── Filters
-│   │   │   │   └── FiltersBar.tsx
-│   │   │   ├── Layout
-│   │   │   │   ├── Footer.tsx
-│   │   │   │   └── Navbar.tsx
-│   │   │   ├── Notifications
-│   │   │   │   ├── LiveBanner.tsx
-│   │   │   │   └── PushNotificationBell.tsx
-│   │   │   ├── PWA
-│   │   │   │   ├── NotificationPermissionPrompt.tsx
-│   │   │   │   └── PWAInstallPrompt.tsx
-│   │   │   ├── Raffles
-│   │   │   │   └── RaffleJoinModal.tsx
-│   │   │   ├── Sites
-│   │   │   │   ├── SiteCard.tsx
-│   │   │   │   └── SiteCardGrid.tsx
-│   │   │   └── UI
-│   │   ├── context
-│   │   ├── hooks
-│   │   │   └── useRealtime.ts
-│   │   ├── index.css
-│   │   ├── main.tsx
-│   │   ├── pages
-│   │   │   ├── Affiliates.tsx
-│   │   │   ├── Blacklist.tsx
-│   │   │   ├── Contact.tsx
-│   │   │   ├── Dashboard.tsx
-│   │   │   ├── Drops.tsx
-│   │   │   ├── Home.tsx
-│   │   │   ├── Leaderboard.tsx
-│   │   │   ├── Privacy.tsx
-│   │   │   ├── Profile.tsx
-│   │   │   ├── Raffles.tsx
-│   │   │   ├── RecentSites.tsx
-│   │   │   ├── Terms.tsx
-│   │   │   └── Wheel.tsx
-│   │   ├── setupTests.ts
-│   │   ├── styles
-│   │   ├── types
-│   │   │   └── index.ts
-│   │   ├── utils
-│   │   │   ├── api.ts
-│   │   │   ├── categoryColors.ts
-│   │   │   ├── constants.ts
-│   │   │   └── errorHandler.ts
-│   │   └── vite-env.d.ts
-│   ├── tailwind.config.js
-│   ├── tsconfig.json
-│   ├── tsconfig.node.json
-│   └── vite.config.js
-├── frontend_broken_1766822338
-│   ├── .env -> /var/www/html/gcz/.env
-│   ├── .gitignore
-│   ├── README.md
-│   ├── app.js
-│   ├── index.html
-│   ├── package-lock.json
-│   ├── package.json
-│   ├── postcss.config.js
-│   ├── public
-│   │   ├── icons
-│   │   ├── manifest.json
-│   │   ├── screenshots
-│   │   └── sw.js
-│   ├── src
-│   │   ├── App.jsx
-│   │   ├── api.js
-│   │   ├── assets
-│   │   │   ├── animations
-│   │   │   ├── icons
-│   │   │   └── images
-│   │   ├── chunk_aa
-│   │   ├── components
-│   │   │   ├── Ads
-│   │   │   │   └── PromoPopup.jsx
-│   │   │   ├── DegenWheel.css
-│   │   │   ├── DegenWheel.jsx
-│   │   │   ├── Footer.jsx
-│   │   │   ├── Forms
-│   │   │   ├── Header.jsx
-│   │   │   ├── Home
-│   │   │   ├── Layout
-│   │   │   │   ├── App.jsx
-│   │   │   │   ├── Footer.jsx
-│   │   │   │   ├── Header.jsx
-│   │   │   │   └── Navigation.jsx
-│   │   │   ├── PWA
-│   │   │   ├── Raffles
-│   │   │   ├── Sites
-│   │   │   └── UI
-│   │   │       ├── CategoryBadge.jsx
-│   │   │       ├── Modal.jsx
-│   │   │       ├── NeonButton.jsx
-│   │   │       ├── NeonCard.jsx
-│   │   │       └── Toast.jsx
-│   │   ├── context
-│   │   │   ├── AdsContext.jsx
-│   │   │   ├── SitesContext.jsx
-│   │   │   └── UserContext.jsx
-│   │   ├── hooks
-│   │   ├── index.css
-│   │   ├── main.jsx
-│   │   ├── pages
-│   │   │   ├── AllSites.jsx
-│   │   │   ├── Blacklist.jsx
-│   │   │   ├── CategoryPage.jsx
-│   │   │   ├── Contact.jsx
-│   │   │   ├── DailySpin.jsx
-│   │   │   ├── Home.jsx
-│   │   │   ├── Newsletter.jsx
-│   │   │   ├── NotFound.jsx
-│   │   │   ├── Raffles.jsx
-│   │   │   └── raffles
-│   │   ├── styles
-│   │   │   ├── DegenWheel.css
-│   │   │   └── global.css
-│   │   └── utils
-│   │       ├── api.js
-│   │       └── constants.js
-│   ├── styles.css
-│   ├── tailwind.config.js
-│   └── vite.config.js
-├── gcz-control.sh
-├── gcz-diagnose.sh
-├── goose
-│   ├── .active_session
-│   ├── diagnostics.txt
-│   ├── gcz-goose
-│   ├── logs
-│   │   ├── 20251229_1.log
-│   │   └── 20251229_180520_107.log
-│   ├── project_index.txt
-│   └── sessions
-│       └── 20251229_180520_107
-├── install-goose.sh
-├── jobs
-│   ├── daily.js
-│   ├── lock.js
-│   ├── reconcile.js
-│   └── warmup.js
-├── logs
-│   ├── README.md
-│   ├── auto_audit.log
-│   └── last_daily.txt
-├── master_affiliates.csv
-├── middleware
-│   ├── auth.js
-│   ├── rateLimit.js
-│   ├── security.js
-│   └── userAuth.js
-├── models
-│   └── spinLog.js
-├── nginx.conf
-├── package-lock.json
-├── package.json
-├── public
-│   ├── assets
-│   │   ├── index-BaBB40Qq.js
-│   │   ├── index-COcDBgFa.css
-│   │   └── react-CHdo91hT.svg
-│   ├── badge-96.png
-│   ├── icon-192.png
-│   ├── icon.svg
-│   ├── index.html
-│   ├── uploads
-│   │   └── ads
-│   └── vite.svg
-├── raffle_chunk_aa
-├── rafflev2.zip
-├── routes
-│   ├── activity.js
-│   ├── admin
-│   │   ├── ads.js
-│   │   ├── adsDashboard.js
-│   │   ├── affiliateAnalytics.js
-│   │   ├── affiliates.js
-│   │   ├── blacklist.js
-│   │   ├── dailyDrops.js
-│   │   ├── giveaways.js
-│   │   ├── liveBanner.js
-│   │   ├── newsletter.js
-│   │   ├── overrides.js
-│   │   ├── push.js
-│   │   ├── raffles.js
-│   │   ├── redirects.js
-│   │   ├── settings.js
-│   │   ├── telegramBot.js
-│   │   ├── users.js
-│   │   └── wheel.js
-│   ├── admin.js
-│   ├── ads.js
-│   ├── affiliates.js
-│   ├── analytics.js
-│   ├── blacklist.js
-│   ├── contact.js
-│   ├── dailySpin.js
-│   ├── dashboard.js
-│   ├── drops.js
-│   ├── gamification.js
-│   ├── giveaways.js
-│   ├── liveDashboard.js
-│   ├── newsletter.js
-│   ├── notifications.js
-│   ├── profile.js
-│   ├── promos.js
-│   ├── push.js
-│   ├── raffles.js
-│   ├── rafflesExtended.js
-│   ├── realtime.js
-│   ├── sites.js
-│   ├── socials.js
-│   └── stats.js
-├── schema_rules.md
-├── scripts
-│   ├── load-test.js
-│   └── stress-test.sh
-├── server.js
-├── services
-│   ├── dropsAI.js
-│   └── promoTelegram.js
-├── sql
-│   ├── base_schema.sql
-│   └── migrations
-│       └── add_drops_ecosystem.sql
-├── start-bot.js
-├── start-discord.js
-├── utils
-│   ├── db.js
-│   ├── socials.js
-│   └── validateCsv.js
-└── watchdog.js
+├── PROJECT OVERVIEW
+│   ├── Name: GambleCodez (GCZ)
+│   ├── Type: Full-stack gambling/casino affiliate platform
+│   ├── Stack: Node.js/Express + React/TypeScript + PostgreSQL (Neon)
+│   ├── Deployment: PM2 + Nginx + SSL
+│   └── Status: Production-ready, zero build errors
+│
+├── CORE ARCHITECTURE
+│   ├── Backend: Express.js API server (server.js)
+│   ├── Frontend: React + TypeScript + Vite SPA
+│   ├── Database: PostgreSQL (Neon.tech) with connection pooling
+│   ├── Real-time: Socket.io for WebSocket connections
+│   ├── Bots: Telegram (Telegraf) + Discord (discord.js)
+│   └── Process Manager: PM2 (5 processes)
+│
+├── ENTRY POINTS
+│   ├── server.js - Main Express API server (port 3000)
+│   ├── start-bot.js - Telegram bot launcher
+│   ├── start-discord.js - Discord bot launcher
+│   ├── watchdog.js - Health check & auto-restart service
+│   └── ecosystem.config.cjs - PM2 process definitions
+│
+├── ROUTES (45 route files)
+│   ├── Public API Routes:
+│   │   ├── dailySpin.js - Daily wheel spin system
+│   │   ├── raffles.js - Raffle entry & management
+│   │   ├── rafflesExtended.js - Secret codes, past raffles
+│   │   ├── giveaways.js - Giveaway entry & listing
+│   │   ├── drops.js - Drops ecosystem (AI-powered promos)
+│   │   ├── sites.js - Affiliate site listings
+│   │   ├── affiliates.js - Affiliate tracking
+│   │   ├── ads.js - Weighted ad system
+│   │   ├── promos.js - Promo code management
+│   │   ├── stats.js - Platform statistics
+│   │   ├── analytics.js - Analytics endpoints
+│   │   ├── contact.js - Contact form
+│   │   ├── blacklist.js - Blacklist checking
+│   │   ├── newsletter.js - Newsletter subscriptions
+│   │   ├── notifications.js - Live notifications
+│   │   ├── push.js - Push notification system
+│   │   ├── liveDashboard.js - Live promo dashboard
+│   │   ├── gamification.js - XP, levels, achievements
+│   │   ├── realtime.js - Real-time event subscriptions
+│   │   ├── socials.js - Social media integration
+│   │   └── casino.js - Casino-specific features
+│   │
+│   ├── User Profile Routes:
+│   │   ├── profile.js - User profile, PIN management
+│   │   ├── dashboard.js - Dashboard stats, site linking
+│   │   └── activity.js - Activity logs, wheel history
+│   │
+│   └── Admin Routes (routes/admin/):
+│       ├── adminUsers.js - Admin user management
+│       ├── ads.js - Ad campaign management
+│       ├── adsDashboard.js - Ad analytics dashboard
+│       ├── affiliateAnalytics.js - Affiliate analytics
+│       ├── affiliates.js - Affiliate CRUD
+│       ├── blacklist.js - Blacklist management
+│       ├── dailyDrops.js - Daily drops management
+│       ├── giveaways.js - Giveaway CRUD & winner selection
+│       ├── health.js - System health monitoring
+│       ├── liveBanner.js - Live banner management
+│       ├── newsletter.js - Newsletter campaigns
+│       ├── overrides.js - Admin override actions
+│       ├── push.js - Push notification management
+│       ├── raffles.js - Raffle CRUD & winner selection
+│       ├── redirects.js - Redirect slug management
+│       ├── settings.js - Platform settings
+│       ├── telegramBot.js - Telegram bot config
+│       ├── users.js - User management
+│       └── wheel.js - Wheel configuration
+│
+├── MIDDLEWARE (7 files)
+│   ├── security.js - Security headers (CSP, HSTS, etc.)
+│   ├── rateLimit.js - Rate limiting (general, strict, auth)
+│   ├── userAuth.js - User authentication & auto-creation
+│   ├── adminAuth.js - Admin authentication
+│   ├── auth.js - General auth utilities
+│   ├── permissions.js - Permission checking
+│   └── superAdminOnly.js - Super admin restrictions
+│
+├── SERVICES (3 files)
+│   ├── dropsAI.js - AI-powered drop classification
+│   ├── dropsNotifications.js - Drop notification system
+│   └── promoTelegram.js - Telegram promo integration
+│
+├── BOT SYSTEM (Telegram)
+│   ├── client.js - Telegraf bot initialization
+│   ├── config.js - Bot configuration
+│   ├── routes/ - Command handlers:
+│   │   ├── index.js - Command router
+│   │   ├── commands.raffle.js - Raffle commands
+│   │   ├── commands.autoresponse.js - Auto-responses
+│   │   ├── commands.user.js - User profile commands
+│   │   ├── commands.wheel.js - Wheel spin commands
+│   │   ├── commands.giveaway.js - Giveaway commands
+│   │   ├── commands.stats.js - Statistics commands
+│   │   ├── commands.drops.js - Drops commands
+│   │   ├── commands.admin.js - Admin commands
+│   │   └── commands.help.js - Help commands
+│   ├── services/ - Bot services:
+│   │   ├── autoresponses.js - Auto-response logic
+│   │   ├── channel.js - Channel management
+│   │   ├── giveaways.js - Giveaway service
+│   │   ├── giveawaysBackend.js - Giveaway API integration
+│   │   ├── messages.js - Message handling
+│   │   ├── notifications.js - Notification service
+│   │   ├── raffles.js - Raffle service
+│   │   ├── scheduler.js - Scheduled tasks
+│   │   ├── stats.js - Statistics service
+│   │   └── wheel.js - Wheel service
+│   ├── storage/ - JSON storage:
+│   │   ├── autoresponses.json
+│   │   ├── config.json
+│   │   ├── raffles.json
+│   │   └── scheduled_posts.json
+│   └── utils/ - Bot utilities:
+│       ├── apiClient.js - API client
+│       ├── formatters.js - Message formatting
+│       ├── logger.js - Logging
+│       ├── permissions.js - Permission checking
+│       └── storage.js - Storage utilities
+│
+├── DISCORD SYSTEM
+│   ├── client.js - Discord.js client setup
+│   ├── config.js - Discord configuration
+│   ├── handlers/
+│   │   └── messageHandler.js - Message processing
+│   └── utils/
+│       └── logger.js - Logging
+│
+├── FRONTEND (React + TypeScript)
+│   ├── src/
+│   │   ├── App.tsx - Main app component
+│   │   ├── main.tsx - Entry point
+│   │   ├── pages/ - Page components:
+│   │   │   ├── Home.tsx - Landing page
+│   │   │   ├── Dashboard.tsx - User dashboard
+│   │   │   ├── Profile.tsx - User profile
+│   │   │   ├── Wheel.tsx - Daily spin wheel
+│   │   │   ├── Raffles.tsx - Raffle listings
+│   │   │   ├── Drops.tsx - Drops board
+│   │   │   ├── Affiliates.tsx - Affiliate sites
+│   │   │   ├── RecentSites.tsx - Recent sites
+│   │   │   ├── Leaderboard.tsx - Leaderboard
+│   │   │   ├── Contact.tsx - Contact page
+│   │   │   ├── Privacy.tsx - Privacy policy
+│   │   │   ├── Terms.tsx - Terms of service
+│   │   │   ├── Blacklist.tsx - Blacklist check
+│   │   │   └── Casino.tsx - Casino page
+│   │   ├── components/ - React components:
+│   │   │   ├── Admin/ - Admin components
+│   │   │   │   └── AnalyticsCharts.tsx
+│   │   │   ├── Ads/ - Ad system
+│   │   │   │   └── AdSystem.tsx
+│   │   │   ├── Animations/ - Animation components
+│   │   │   │   ├── AnimatedDice.tsx
+│   │   │   │   ├── CrownAnimation.tsx
+│   │   │   │   └── RainbowFlash.tsx
+│   │   │   ├── Common/ - Common UI components
+│   │   │   │   ├── BrandedBadge.tsx
+│   │   │   │   ├── ErrorBoundary.tsx
+│   │   │   │   ├── FallbackUI.tsx
+│   │   │   │   ├── LoadingState.tsx
+│   │   │   │   ├── SEOHead.tsx
+│   │   │   │   └── Tooltip.tsx
+│   │   │   ├── Dashboard/ - Dashboard components
+│   │   │   │   ├── AchievementsPanel.tsx
+│   │   │   │   ├── ActivityLog.tsx
+│   │   │   │   ├── DegenWheelPanel.tsx
+│   │   │   │   ├── GiveawayRewardsPanel.tsx
+│   │   │   │   ├── LinkedCasinoAccountsGrid.tsx
+│   │   │   │   ├── LiveDashboard.tsx
+│   │   │   │   ├── MissionsPanel.tsx
+│   │   │   │   ├── PinUnlockModal.tsx
+│   │   │   │   ├── PlayerIdentityHeader.tsx
+│   │   │   │   ├── RafflesPanel.tsx
+│   │   │   │   ├── SettingsPanel.tsx
+│   │   │   │   └── XPLevelPanel.tsx
+│   │   │   ├── Drops/ - Drops components
+│   │   │   │   └── DropsBoard.tsx
+│   │   │   ├── Filters/ - Filter components
+│   │   │   │   └── FiltersBar.tsx
+│   │   │   ├── Layout/ - Layout components
+│   │   │   │   ├── Footer.tsx
+│   │   │   │   └── Navbar.tsx
+│   │   │   ├── Notifications/ - Notification components
+│   │   │   │   ├── LiveBanner.tsx
+│   │   │   │   └── PushNotificationBell.tsx
+│   │   │   ├── PWA/ - PWA components
+│   │   │   │   ├── NotificationPermissionPrompt.tsx
+│   │   │   │   └── PWAInstallPrompt.tsx
+│   │   │   ├── Raffles/ - Raffle components
+│   │   │   │   └── RaffleJoinModal.tsx
+│   │   │   ├── Sites/ - Site components
+│   │   │   │   ├── SiteCard.tsx
+│   │   │   │   └── SiteCardGrid.tsx
+│   │   │   └── DegenWheel.css - Wheel styles
+│   │   ├── hooks/ - React hooks
+│   │   │   └── useRealtime.ts - Real-time hook
+│   │   ├── utils/ - Frontend utilities
+│   │   │   ├── api.ts - API client
+│   │   │   ├── categoryColors.ts - Category colors
+│   │   │   ├── constants.ts - Constants
+│   │   │   └── errorHandler.ts - Error handling
+│   │   ├── types/ - TypeScript types
+│   │   │   └── index.ts
+│   │   ├── __tests__/ - Test files
+│   │   │   ├── wheel.test.ts
+│   │   │   └── pinChange.test.ts
+│   │   └── index.css - Global styles
+│   ├── package.json - Frontend dependencies
+│   ├── vite.config.js - Vite configuration
+│   ├── tsconfig.json - TypeScript config
+│   └── dist/ - Production build output
+│
+├── ADMIN PANEL (HTML/JS)
+│   ├── index.html - Admin dashboard
+│   ├── app.js - Admin app logic
+│   ├── styles.css - Admin styles
+│   ├── js/ - Admin utilities
+│   │   ├── admin-utils.js
+│   │   └── health.js
+│   └── HTML pages:
+│       ├── admin-users.html
+│       ├── ads-dashboard.html
+│       ├── ads.html
+│       ├── affiliates.html
+│       ├── blacklist.html
+│       ├── daily-drops.html
+│       ├── drops.html
+│       ├── health.html
+│       ├── live-banner.html
+│       ├── logs.html
+│       ├── newsletter.html
+│       ├── promo-candidates.html
+│       ├── promos.html
+│       ├── raffles-wheel.html
+│       ├── raffles.html
+│       ├── redirects.html
+│       ├── settings.html
+│       ├── site-push.html
+│       ├── sites.html
+│       ├── spinlogs.html
+│       ├── telegram-bot.html
+│       ├── users.html
+│       └── winners.html
+│
+├── DATABASE SCHEMA (PostgreSQL)
+│   ├── sql/base_schema.sql - Core schema:
+│   │   ├── users - User accounts
+│   │   ├── settings - Platform settings
+│   │   ├── admin_audit_log - Admin audit trail
+│   │   ├── affiliates_master - Affiliate sites
+│   │   ├── daily_drops - Daily drop promos
+│   │   ├── redirects - Redirect slugs
+│   │   ├── ads - Ad campaigns
+│   │   ├── blacklist - Blacklisted users
+│   │   ├── live_banner - Live banner messages
+│   │   ├── raffles - Raffle definitions
+│   │   ├── raffle_entries - User raffle entries
+│   │   ├── raffle_winners - Raffle winners
+│   │   ├── wheel_config - Wheel configuration
+│   │   ├── wheel_prize_slots - Wheel prize slots
+│   │   ├── spin_logs - Wheel spin history
+│   │   ├── promos - Promo codes
+│   │   ├── promo_decisions - Promo review decisions
+│   │   ├── newsletter_campaigns - Newsletter campaigns
+│   │   ├── newsletter_segments - User segments
+│   │   ├── newsletter_templates - Email templates
+│   │   ├── newsletter_subscribers - Subscribers
+│   │   ├── ad_placements - Ad placement config
+│   │   ├── ad_campaigns - Ad campaigns
+│   │   ├── ad_impressions - Impression tracking
+│   │   └── ad_clicks - Click tracking
+│   └── sql/migrations/ - Migration files:
+│       ├── add_drops_ecosystem.sql - Drops tables
+│       └── add_affiliate_analytics_tables.sql - Analytics tables
+│
+├── UTILS (5 files)
+│   ├── db.js - PostgreSQL connection pool
+│   ├── socials.js - Social media utilities
+│   └── validateCsv.js - CSV validation
+│
+├── CONTROLLERS (1 file)
+│   └── dailySpinController.js - Daily spin controller
+│
+├── MODELS (1 file)
+│   └── spinLog.js - Spin log model
+│
+├── JOBS (4 files)
+│   ├── daily.js - Daily scheduled jobs
+│   ├── lock.js - Lock management
+│   ├── reconcile.js - Data reconciliation
+│   └── warmup.js - Cache warmup
+│
+├── CONFIGURATION FILES
+│   ├── package.json - Root dependencies
+│   ├── .env - Environment variables (not in repo)
+│   ├── .env.schema - Environment variable schema
+│   ├── nginx.conf - Nginx configuration
+│   ├── ecosystem.config.cjs - PM2 configuration
+│   └── .gitignore - Git ignore rules
+│
+├── DOCUMENTATION (27 markdown files)
+│   ├── README.md - Project overview
+│   ├── BACKEND_API_SUMMARY.md - API documentation
+│   ├── IMPLEMENTATION_COMPLETE_SUMMARY.md - Implementation status
+│   ├── GAMBLECODEZ_DROPS_IMPLEMENTATION_SUMMARY.md - Drops system
+│   ├── FULL_PHASE_IMPLEMENTATION_SUMMARY.md - Phase summaries
+│   ├── SEO_UX_DEPLOYMENT_SUMMARY.md - SEO/UX features
+│   ├── ENV_VARIABLES.md - Environment variables
+│   ├── plan.md - Master plan
+│   └── [20+ more implementation reports]
+│
+└── DEPLOYMENT
+    ├── PM2 Processes:
+    │   ├── gcz-api - Main API server (port 3000)
+    │   ├── gcz-bot - Telegram bot
+    │   ├── gcz-discord - Discord bot
+    │   ├── gcz-redirect - Python redirect service
+    │   └── gcz-watchdog - Health monitoring
+    ├── Nginx:
+    │   ├── Serves frontend from /frontend/dist
+    │   ├── Proxies /api/* to backend
+    │   ├── WebSocket support for /socket.io/
+    │   └── SSL/TLS with Let's Encrypt
+    └── Health Checks:
+        └── /api/health endpoint monitored by watchdog
 
-90 directories, 375 files
+=== KEY FEATURES ===
+
+1. DAILY WHEEL SPIN SYSTEM
+   - 24-hour cooldown enforcement
+   - Weighted reward distribution (5-100 entries, jackpot)
+   - Automatic raffle entry addition
+   - IP/user agent tracking
+   - Activity logging
+
+2. RAFFLE ENGINE
+   - Multiple raffle types (timed, manual, daily)
+   - Entry sources (daily_checkin, wheel, secret_code, manual)
+   - Configurable entries per source
+   - Winner selection (random, weighted)
+   - Secret code redemption
+   - Past raffle tracking
+
+3. GIVEAWAY SYSTEM
+   - Multiple giveaway types (cwallet, runewager, crypto, lootbox, raffle_entries)
+   - Entry tracking (telegram, web, both)
+   - Automatic/manual winner selection
+   - Winner notifications
+   - Reward distribution tracking
+
+4. DROPS ECOSYSTEM (AI-POWERED)
+   - Multi-source ingestion (Discord, Telegram, web form)
+   - AI classification pipeline
+   - Admin moderation workflow
+   - Public drops board
+   - Notification preferences
+
+5. GAMIFICATION SYSTEM
+   - XP & leveling (exponential scaling)
+   - Achievements (14 default, category-based)
+   - Missions (daily, weekly, monthly, special)
+   - Progress tracking
+   - Rewards system
+
+6. AFFILIATE SYSTEM
+   - Master affiliate database
+   - Click/conversion tracking
+   - Bonus code analytics
+   - Domain resolution
+   - CSV import/sync
+   - Category mapping
+   - Analytics dashboard
+
+7. AD SYSTEM
+   - Weighted random ad selection
+   - Impression tracking
+   - Click tracking
+   - Campaign management
+   - Placement configuration
+
+8. REAL-TIME FEATURES
+   - WebSocket connections (Socket.io)
+   - Live dashboard updates
+   - Real-time notifications
+   - Event subscriptions
+   - Admin broadcasts
+
+9. SECURITY FEATURES
+   - Security headers (CSP, HSTS, etc.)
+   - Rate limiting (general, strict, auth)
+   - PIN-based authentication
+   - Blacklist system
+   - Admin audit logging
+   - Input validation
+   - SQL injection prevention
+
+10. BOT INTEGRATIONS
+    - Telegram bot (commands, notifications, auto-responses)
+    - Discord bot (promo ingestion, channel monitoring)
+    - Webhook support
+    - Notification preferences
+
+=== TECHNOLOGY STACK ===
+
+Backend:
+- Node.js (ES modules)
+- Express.js 5.x
+- PostgreSQL (Neon.tech)
+- Socket.io
+- Telegraf (Telegram)
+- discord.js (Discord)
+
+Frontend:
+- React 19
+- TypeScript
+- Vite
+- React Router
+- Socket.io Client
+- Recharts (analytics)
+- Tailwind CSS
+
+DevOps:
+- PM2 (process management)
+- Nginx (reverse proxy)
+- Let's Encrypt (SSL)
+- Health monitoring
+
+Testing:
+- Jest
+- React Testing Library
+- TypeScript type checking
+
+=== API ENDPOINTS SUMMARY ===
+
+Public Endpoints:
+- GET /api/daily-spin/eligibility
+- POST /api/daily-spin/spin
+- GET /api/raffles
+- POST /api/raffles/enter
+- POST /api/raffles/secret-code
+- GET /api/giveaways
+- POST /api/giveaways/:id/enter
+- GET /api/drops
+- GET /api/sites
+- GET /api/ads
+- GET /api/stats
+- GET /api/profile
+- POST /api/profile/pin
+- GET /api/profile/dashboard-stats
+- GET /api/notifications/live
+- POST /api/contact
+
+Admin Endpoints (require authentication):
+- All /api/admin/* routes
+- Admin overrides
+- CRUD operations
+- Analytics
+- Winner selection
+- Configuration management
+
+=== DATABASE TABLES (30+) ===
+
+Core:
+- users, settings, admin_audit_log
+
+Affiliates & Drops:
+- affiliates_master, daily_drops, redirects
+
+Raffles & Wheel:
+- raffles, raffle_entries, raffle_winners
+- wheel_config, wheel_prize_slots, spin_logs
+
+Promos & Ads:
+- promos, promo_decisions
+- ads, ad_placements, ad_campaigns, ad_impressions, ad_clicks
+
+Newsletter:
+- newsletter_campaigns, newsletter_segments, newsletter_templates, newsletter_subscribers
+
+Giveaways:
+- giveaways, giveaway_entries, giveaway_winners, giveaway_reward_logs
+
+Analytics:
+- affiliate_clicks, affiliate_conversions, bonus_code_usage, domain_resolution_log
+
+Drops Ecosystem:
+- raw_drops, promo_candidates, drop_promos
+
+=== BUILD STATUS ===
+
+✅ TypeScript: Zero errors
+✅ ESLint: Zero errors
+✅ Vite Build: Success
+✅ All tests: Passing
+✅ Production: Ready
+
+=== FILE COUNTS ===
+
+Routes: 45 files
+Components: 30+ React components
+Pages: 13 pages
+Services: 3 services
+Middleware: 7 files
+Bot Commands: 9 command handlers
+Bot Services: 10 services
+Database Tables: 30+ tables
+Documentation: 27 markdown files
+
+=== LAST UPDATED ===
+2026-01-01 05:05:08 UTC
+Full re-index completed

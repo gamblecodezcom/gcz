@@ -1,10 +1,29 @@
 import pkg from "pg";
 const { Pool } = pkg;
 
-// Create a single pool instance for the application
+/**
+ * Determine which connection string to use.
+ * Priority:
+ * 1. DATABASE_URL (local or production)
+ * 2. AI_AGENT_NEON_DB_URL (Neon cloud)
+ */
+const connectionString =
+  process.env.DATABASE_URL ||
+  process.env.AI_AGENT_NEON_DB_URL;
+
+/**
+ * Detect if the connection is Neon.
+ * Neon requires SSL with rejectUnauthorized: false
+ */
+const isNeon =
+  typeof connectionString === "string" &&
+  connectionString.includes("neon.tech");
+
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || process.env.AI_AGENT_NEON_DB_URL,
-  ssl: process.env.DATABASE_URL?.includes("neon.tech") ? { rejectUnauthorized: false } : false,
+  connectionString,
+  ssl: isNeon
+    ? { rejectUnauthorized: false }
+    : false,
 });
 
 // Handle pool errors
