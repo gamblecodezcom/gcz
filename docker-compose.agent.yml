@@ -1,0 +1,13 @@
+version: "3.8"
+
+services:
+  gcz-agent:
+    container_name: gcz-agent
+    image: ghcr.io/all-hands-ai/openhands:latest
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - /var/www/html/gcz/openhands-data:/root/.openhands

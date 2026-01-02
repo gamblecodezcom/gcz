@@ -1,0 +1,6 @@
+{
+  "task_storage": "local",
+  "telemetry_enabled": false,
+  "default_model": "gpt-4",
+  "ui": true
+}

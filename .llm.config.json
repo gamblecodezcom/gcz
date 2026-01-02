@@ -1,0 +1,9 @@
+{
+  "primary_model": "gpt-4.1",
+  "worker_model": "gpt-4.1-mini",
+  "research_model": "sonar-pro",
+  "max_tokens": 4096,
+  "temperature": 0.2,
+  "timeout_seconds": 60,
+  "failover": true
+}
