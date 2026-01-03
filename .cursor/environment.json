@@ -1,0 +1,56 @@
+{
+  "snapshot": "POPULATED_FROM_SETTINGS",
+  "install": "npm install && pip install -r requirements.txt || true",
+  "start": "pm2 start ecosystem.config.js || true",
+  "terminals": [
+    {
+      "name": "GCZ Site Dev",
+      "command": "npm run dev || true"
+    },
+    {
+      "name": "GCZ Bot",
+      "command": "node start-bot.js || true"
+    },
+    {
+      "name": "GCZ API",
+      "command": "node server.js || true"
+    }
+  ],
+  "secrets": {
+    "NODE_ENV": "production",
+    "PORT": "3000",
+    "DOMAIN": "https://gamblecodez.com",
+    "DB_URL": "postgresql://gambledbuser:pass@localhost:5432/gambledb",
+    "TELEGRAM_BOT_TOKEN": "paste-real-token-here",
+    "ADMIN_TOKEN": "use_your_admin_hash",
+    "SESSION_SECRET": "use_secure_random_string"
+  }
+}
+{
+  "snapshot": "POPULATED_FROM_SETTINGS",
+  "install": "npm install && pip install -r requirements.txt || true",
+  "start": "pm2 start ecosystem.config.js || true",
+  "terminals": [
+    {
+      "name": "GCZ Site Dev",
+      "command": "npm run dev || true"
+    },
+    {
+      "name": "GCZ Bot",
+      "command": "node start-bot.js || true"
+    },
+    {
+      "name": "GCZ API",
+      "command": "node server.js || true"
+    }
+  ],
+  "secrets": {
+    "NODE_ENV": "production",
+    "PORT": "3000",
+    "DOMAIN": "https://gamblecodez.com",
+    "DB_URL": "postgresql://gambledbuser:pass@localhost:5432/gambledb",
+    "TELEGRAM_BOT_TOKEN": "paste-real-token-here",
+    "ADMIN_TOKEN": "use_your_admin_hash",
+    "SESSION_SECRET": "use_secure_random_string"
+  }
+}

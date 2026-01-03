@@ -1,0 +1,5 @@
+{
+  "exclude": ["node_modules", "dist", "build", "vendor"],
+  "include": ["routes", "bot", "admin", "backend", "migrations"],
+  "defaultModel": "gpt-4"
+}

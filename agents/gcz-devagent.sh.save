@@ -1,0 +1,12 @@
+chmod +x gcz-devagent.sh
+
+nano task_engine.py   # Paste second script
+nano ai_writer.py     # Paste third script
+echo "{}" > memory_index.json
+
+# Add alias and reload shell
+echo "alias agent='bash /var/www/html/gcz/agents/gcz-devagent.sh'" >> ~/.bashrc
+source ~/.bashrc
+#!/usr/bin/env bash
+cd /var/www/html/gcz/agents
+python3 task_engine.py

@@ -1,0 +1,10 @@
+node_modules/
+dist/
+logs/
+.env
+uploads/
+test/
+sql/backups/
+.vscode/
+.idea/
+.cursor/
