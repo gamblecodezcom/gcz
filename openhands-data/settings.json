@@ -1,10 +1,3 @@
 {
-  "llm_provider": "openai",
-  "llm_api_key": "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",
-  "enable_experimental_ui": true,
-  "auto_archive_completed_conversations": true,
-  "summarizer": true,
-  "condenser": true,
-  "enable_solvability_analysis": true,
-  "enable_proactive_conversation_starters": false
+  "api_key": "REDACTED"
 }
