@@ -21,8 +21,9 @@ def get_logger(name: str):
     """
     logger = logging.getLogger(name)
 
+    # Prevent duplicate handlers
     if logger.handlers:
-        return logger  # Prevent duplicate handlers
+        return logger
 
     logger.setLevel(LOG_LEVEL)
 
@@ -31,7 +32,7 @@ def get_logger(name: str):
         "%Y-%m-%d %H:%M:%S"
     )
 
-    # File handler (rotating)
+    # Rotating file handler
     fh = logging.handlers.RotatingFileHandler(
         LOG_FILE,
         maxBytes=5_000_000,

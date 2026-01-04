@@ -6,7 +6,7 @@ import random
 
 from services.db import get_db
 from services.auth import require_admin
-from logger import get_logger
+from backend.logger import get_logger
 
 router = APIRouter(prefix="/api/giveaway", tags=["Giveaways"])
 logger = get_logger("gcz-giveaway")

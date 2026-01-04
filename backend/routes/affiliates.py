@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Query
 from services.db import get_db
-from logger import get_logger
+from backend.logger import get_logger
 import random
 
 router = APIRouter(prefix="/api/affiliates", tags=["Affiliates"])

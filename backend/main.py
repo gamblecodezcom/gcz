@@ -18,7 +18,7 @@ sys.path.append(BACKEND_ROOT)
 # CONFIG + LOGGER
 # ============================
 from config import get_settings, load_env
-from logger import get_logger
+from backend.logger import get_logger
 from middleware.rate_limit import rate_limiter
 
 settings = get_settings()

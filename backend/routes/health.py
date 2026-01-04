@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from services.db import get_db
-from logger import get_logger
+from backend.logger import get_logger
 
 router = APIRouter(prefix="/api/health", tags=["Health"])
 logger = get_logger("gcz-health")

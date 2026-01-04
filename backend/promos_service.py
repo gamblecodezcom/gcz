@@ -1,5 +1,5 @@
 from services.db import get_db
-from logger import get_logger
+from backend.logger import get_logger
 
 logger = get_logger("gcz-promos-service")
 

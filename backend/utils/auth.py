@@ -13,7 +13,7 @@ Supports:
 
 from fastapi import HTTPException
 from config import get_settings
-from logger import get_logger
+from backend.logger import get_logger
 from services.db import get_db
 
 settings = get_settings()

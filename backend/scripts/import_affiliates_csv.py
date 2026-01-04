@@ -1,6 +1,6 @@
 import csv
 from services.affiliates_service import resolve_domain, generate_icon_url, upsert_affiliate
-from logger import get_logger
+from backend.logger import get_logger
 
 CSV_PATH = "/var/www/html/gcz/master_affiliates.csv"
 logger = get_logger("gcz-affiliates-import")

@@ -1,6 +1,6 @@
 import time
 from fastapi import Request, HTTPException
-from logger import get_logger
+from backend.logger import get_logger
 
 logger = get_logger("gcz-rate-limit")
 

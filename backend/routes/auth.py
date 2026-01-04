@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import jwt
 
 from config import get_settings
-from logger import get_logger
+from backend.logger import get_logger
 
 # God‑Mode auth service functions
 from services.auth import (

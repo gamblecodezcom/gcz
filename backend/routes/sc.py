@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from logger import get_logger
+from backend.logger import get_logger
 
 # Updated admin check (async + role-aware)
 from services.auth import require_admin

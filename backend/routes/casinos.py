@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from services.db import get_db
-from logger import get_logger
+from backend.logger import get_logger
 
 router = APIRouter(prefix="/api/casinos", tags=["Casinos"])
 logger = get_logger("gcz-casinos")

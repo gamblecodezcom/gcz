@@ -5,7 +5,7 @@ import asyncio
 from typing import Dict, Any, List
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
-from logger import get_logger
+from backend.logger import get_logger
 
 CSV_PATH = "/var/www/html/gcz/master_affiliates.csv"
 REFRESH_SECONDS = 60

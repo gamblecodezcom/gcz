@@ -1,6 +1,6 @@
 import os
 import httpx
-from logger import get_logger
+from backend.logger import get_logger
 
 logger = get_logger("perplexity-ask")
 

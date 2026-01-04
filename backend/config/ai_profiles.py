@@ -1,4 +1,4 @@
-from config import get_settings
+from backend.config import get_settings
 
 settings = get_settings()
 
@@ -6,6 +6,7 @@ settings = get_settings()
 def get_ai_profile(provider: str):
     """
     Returns API key, model, and base URL for the selected provider.
+    Unified GCZ AI provider registry.
     """
 
     profiles = {

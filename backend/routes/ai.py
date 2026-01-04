@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-from logger import get_logger
+from backend.logger import get_logger
 
 # Async Perplexity client
 from services.ai import (

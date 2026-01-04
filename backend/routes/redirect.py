@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import RedirectResponse
 from services.db import get_db
-from logger import get_logger
+from backend.logger import get_logger
 from datetime import datetime
 
 router = APIRouter(tags=["Redirect"])

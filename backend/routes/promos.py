@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from services.db import get_db
 from services.promos_service import get_promo_codes, get_promo_links
-from logger import get_logger
+from backend.logger import get_logger
 
 router = APIRouter(prefix="/api/promos", tags=["Promos"])
 logger = get_logger("gcz-promos")

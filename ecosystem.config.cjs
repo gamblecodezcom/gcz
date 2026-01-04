@@ -142,14 +142,13 @@ module.exports = {
     },
 
     // =====================================================
-    // GCZ CLI MCP SERVER (TypeScript via ts-node)
+    // GCZ CLI MCP SERVER (TYPESCRIPT → RUNS dist/gcz.js)
     // =====================================================
     {
       name: "gcz-mcp",
-      script: "src/gcz.ts",
+      script: "dist/gcz.js",
       cwd: "/var/www/html/gcz/cli",
       interpreter: "node",
-      interpreter_args: "-r ts-node/register",
       exec_mode: "fork",
       instances: 1,
       env: {

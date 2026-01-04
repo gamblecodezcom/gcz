@@ -6,7 +6,7 @@ import re
 from typing import Dict, Any
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import RedirectResponse, JSONResponse
-from logger import get_logger
+from backend.logger import get_logger
 
 CSV_PATH = "/var/www/html/gcz/master_affiliates.csv"
 REFRESH_SECONDS = 60

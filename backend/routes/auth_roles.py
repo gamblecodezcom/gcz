@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from services.db import get_db
-from logger import get_logger
+from backend.logger import get_logger
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 logger = get_logger("gcz-auth-roles")
