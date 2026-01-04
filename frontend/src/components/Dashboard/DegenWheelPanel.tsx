@@ -144,7 +144,7 @@ export const DegenWheelPanel = ({ spinsRemaining, onSpinComplete }: DegenWheelPa
           <div className="text-neon-pink text-lg font-bold mb-2">Wheel Locked</div>
 
           {!eligibility.loggedIn && (
-            <a href="/login" className="text-neon-cyan underline text-sm">Login to unlock</a>
+            <a href="/degen-login" className="text-neon-cyan underline text-sm">Login to unlock</a>
           )}
 
           {eligibility.loggedIn && !eligibility.profileComplete && (
@@ -218,104 +218,74 @@ export const DegenWheelPanel = ({ spinsRemaining, onSpinComplete }: DegenWheelPa
                       )}
                     </div>
                   ) : (
-                    <div className="text-text-muted text-sm text-center">Spin to win!</div>
+                    <div className="text-center text-text-muted text-sm">Spin to win</div>
                   )}
                 </div>
               </div>
-
-              {/* Pointer */}
-              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-2 z-10">
-                <div className="w-0 h-0 border-l-8 border-r-8 border-t-12 border-transparent border-t-neon-pink drop-shadow-lg" />
-              </div>
             </div>
 
+            {/* Spin Button */}
             <button
               onClick={handleSpin}
-              disabled={spinning || !eligibility.eligible}
-              className="btn-neon relative px-8 py-4 bg-gradient-to-r from-neon-yellow to-neon-pink text-bg-dark font-bold text-lg rounded-xl hover:shadow-lg hover:shadow-neon-yellow/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden group"
+              disabled={!eligibility.eligible || spinning}
+              className={`px-8 py-4 rounded-full font-bold text-lg transition-all ${
+                eligibility.eligible && !spinning
+                  ? 'bg-neon-cyan text-bg-dark hover:shadow-neon-cyan animate-pulse'
+                  : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+              }`}
             >
-              <span className="relative z-10 flex items-center gap-2">
-                {spinning ? (
-                  <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-bg-dark"></div>
-                    Spinning...
-                  </>
-                ) : (
-                  <>
-                    <span>🎡</span>
-                    Spin Wheel
-                  </>
-                )}
-              </span>
-              <div className="absolute inset-0 bg-gradient-to-r from-neon-cyan to-neon-pink opacity-0 group-hover:opacity-20 transition-opacity" />
+              {spinning ? 'Spinning...' : eligibility.eligible ? 'SPIN NOW' : 'Locked'}
             </button>
           </div>
 
-          {/* Stats */}
+          {/* Stats + Entries */}
           <div className="space-y-4">
-            <div className="bg-bg-dark rounded-xl p-4 border-2 border-neon-cyan/20 card-hover">
-              <div className="text-sm text-text-muted mb-1">Spins Remaining Today</div>
+            <div className="bg-bg-dark p-4 rounded-lg border border-neon-cyan/20">
+              <div className="text-sm text-text-muted">Daily Spins Remaining</div>
               <div className="text-3xl font-bold text-neon-cyan">{spinsRemaining}</div>
             </div>
-
-            {nextResetTime && (
-              <div className="bg-bg-dark rounded-xl p-4 border-2 border-neon-pink/20 card-hover">
-                <div className="text-sm text-text-muted mb-1">Next Reset</div>
-                <div className="text-lg font-semibold text-neon-pink">
-                  {formatTimeUntilReset(nextResetTime)}
-                </div>
+            <div className="bg-bg-dark p-4 rounded-lg border border-neon-pink/20">
+              <div className="text-sm text-text-muted">Entries Earned from Wheel</div>
+              <div className="text-3xl font-bold text-neon-pink">{entriesFromWheel}</div>
+            </div>
+            <div className="bg-bg-dark p-4 rounded-lg border border-neon-yellow/20">
+              <div className="text-sm text-text-muted">Last Spin Result</div>
+              <div className="text-lg font-bold text-neon-yellow">
+                {lastResult ? getRewardDisplay(lastResult.reward) : '—'}
               </div>
-            )}
-
-            {lastResult && (
-              <div className={`bg-bg-dark rounded-xl p-4 border-2 ${lastResult.jackpot ? 'border-neon-gold/50 gold-pulse' : 'border-neon-green/20'} card-hover`}>
-                <div className="text-sm text-text-muted mb-1">Last Spin Result</div>
-                <div className={`text-xl font-bold ${lastResult.jackpot ? 'text-neon-gold neon-glow-gold' : 'text-neon-green'}`}>
-                  {getRewardDisplay(lastResult.reward)}
-                </div>
-                {lastResult.entriesAdded && (
-                  <div className="text-sm text-text-muted mt-1">
-                    +{lastResult.entriesAdded} raffle entries
-                  </div>
-                )}
+            </div>
+            <div className="bg-bg-dark p-4 rounded-lg border border-neon-green/20">
+              <div className="text-sm text-text-muted">Next Reset</div>
+              <div className="text-lg font-bold text-neon-green">
+                {nextResetTime ? formatTimeUntilReset(nextResetTime) : '—'}
               </div>
-            )}
-
-            {entriesFromWheel > 0 && (
-              <div className="bg-bg-dark rounded-xl p-4 border-2 border-neon-cyan/20 card-hover">
-                <div className="text-sm text-text-muted mb-1">Total Entries from Wheel</div>
-                <div className="text-2xl font-bold text-neon-cyan neon-glow-cyan">{entriesFromWheel}</div>
-              </div>
-            )}
+            </div>
           </div>
         </div>
       </div>
 
       {/* Probability Breakdown Modal */}
       {showBreakdown && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-bg-dark-2 border border-neon-cyan/40 rounded-xl p-6 w-full max-w-md shadow-xl">
-            <h3 className="text-neon-cyan text-xl font-bold mb-4">Wheel Probability Breakdown</h3>
-
-            <div className="space-y-2">
-              {probabilityData.map((item, idx) => (
-                <div key={idx} className="flex justify-between text-text-muted text-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+          <div className="bg-bg-dark-2 border-2 border-neon-pink/50 rounded-xl p-6 max-w-md w-full mx-4">
+            <h3 className="text-xl font-bold text-neon-pink mb-4">Wheel Odds</h3>
+            <ul className="space-y-2 text-sm text-text-muted">
+              {probabilityData.map((item) => (
+                <li key={item.label} className="flex justify-between">
                   <span>{item.label}</span>
-                  <span className="text-neon-yellow">{item.chance}</span>
-                </div>
+                  <span className="text-neon-cyan font-semibold">{item.chance}</span>
+                </li>
               ))}
-            </div>
-
+            </ul>
             <button
               onClick={() => setShowBreakdown(false)}
-              className="mt-6 w-full bg-neon-pink text-bg-dark font-bold py-2 rounded-lg hover:opacity-80"
+              className="mt-6 w-full px-4 py-2 bg-neon-cyan text-bg-dark rounded-lg font-semibold hover:shadow-neon-cyan transition-all"
             >
               Close
             </button>
           </div>
         </div>
       )}
-
     </div>
   );
 };

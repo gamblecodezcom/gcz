@@ -24,6 +24,9 @@ export const SOCIAL_LINKS = {
     channel: 'https://t.me/GambleCodezDrops',
     group: 'https://t.me/GambleCodezPrizeHub',
   },
+  discord:
+    (import.meta.env?.VITE_DISCORD_INVITE_URL as string) ||
+    `${API_BASE_URL}/discord`,
   twitter: 'https://x.com/GambleCodez',
   email: 'GambleCodez@gmail.com',
 } as const;
