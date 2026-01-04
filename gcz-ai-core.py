@@ -11,8 +11,9 @@ args = parser.parse_args()
 ROOT = args.root
 MEMORY = args.memory
 CONTROL = args.control
-LOGS = args.logs
 
+# FIX: guarantee LOGS is always a valid string path
+LOGS = args.logs or "/var/www/html/gcz/logs"
 os.makedirs(LOGS, exist_ok=True)
 
 def log(msg):
