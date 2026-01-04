@@ -1,78 +1,99 @@
-import fs from 'fs';
-import path from 'path';
-import { logger } from '../utils/logger.js';
-import { config } from '../config.js';
+import fetch from "node-fetch";
+import { log } from "../utils/logger.js";
 
-const STORAGE_PATH = path.resolve('bot/storage/autoresponses.json');
+// -------------------------------------
+// CONFIG
+// -------------------------------------
+const API_BASE = "https://gamblecodez.com/api/autoresponses";
 
-// Load or initialize storage
-function loadStorage() {
-  try {
-    if (!fs.existsSync(STORAGE_PATH)) return {};
-    return JSON.parse(fs.readFileSync(STORAGE_PATH, 'utf8'));
-  } catch (err) {
-    logger.error('Failed to load autoresponses:', err);
-    return {};
+// Cache autoresponses to reduce API load
+let cache = [];
+let lastFetch = 0;
+const CACHE_TTL = 15_000; // 15 seconds
+
+// -------------------------------------
+// API SERVICE
+// -------------------------------------
+export const AutoResponseService = {
+  async getAll(force = false) {
+    try {
+      const now = Date.now();
+
+      // Use cache if fresh
+      if (!force && now - lastFetch < CACHE_TTL && cache.length > 0) {
+        return cache;
+      }
+
+      const res = await fetch(`${API_BASE}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      const data = await res.json();
+      cache = Array.isArray(data) ? data : [];
+      lastFetch = now;
+
+      return cache;
+    } catch (err) {
+      log("autoresponses", "Failed to fetch autoresponses", err);
+      return cache; // fallback to stale cache
+    }
+  },
+
+  async add(trigger, response, buttons = []) {
+    try {
+      const res = await fetch(`${API_BASE}/add`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ trigger, response, buttons })
+      });
+
+      const data = await res.json();
+      await this.getAll(true); // refresh cache
+      return data;
+    } catch (err) {
+      log("autoresponses", "Failed to add autoresponse", err);
+      return { error: true };
+    }
+  },
+
+  async delete(trigger) {
+    try {
+      const res = await fetch(`${API_BASE}/delete`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ trigger })
+      });
+
+      const data = await res.json();
+      await this.getAll(true); // refresh cache
+      return data;
+    } catch (err) {
+      log("autoresponses", "Failed to delete autoresponse", err);
+      return { error: true };
+    }
   }
-}
+};
 
-function saveStorage(data) {
-  try {
-    fs.writeFileSync(STORAGE_PATH, JSON.stringify(data, null, 2));
-  } catch (err) {
-    logger.error('Failed to save autoresponses:', err);
-  }
-}
-
-let autoresponses = loadStorage();
-
-// Temporary admin setup sessions
-const setupSessions = new Map();
+// -------------------------------------
+// STATE MACHINE FOR SETUP FLOW
+// -------------------------------------
+const setupState = new Map();
 
 /**
- * Admin starts setup by replying to a message:
- * /reply keyword
+ * Start autoresponse setup
  */
 export function startReplySetup(ctx, keyword) {
-  if (!ctx.message.reply_to_message) {
-    return ctx.reply('❌ You must reply to a message to create an auto-response.');
-  }
+  setupState.set(ctx.from.id, {
+    step: "await_message",
+    keyword,
+    message: null,
+    buttons: []
+  });
 
-  const adminId = ctx.from.id.toString();
-  const replied = ctx.message.reply_to_message;
-
-  // Extract content
-  const content = {
-    text: replied.text || replied.caption || '',
-    html: replied.entities || replied.caption_entities ? true : false,
-    photo: replied.photo ? replied.photo[replied.photo.length - 1].file_id : null,
-    document: replied.document ? replied.document.file_id : null,
-    buttons: [],
-    visibility: 'everyone', // admin-only | everyone | random
-    randomChance: 100
-  };
-
-  setupSessions.set(adminId, { keyword, content });
-
-  // Preview
   ctx.reply(
-    `📝 *Auto-Response Setup Started*\nKeyword: *${keyword}*\n\n` +
-    `Use the buttons below to configure.`,
-    {
-      parse_mode: 'Markdown',
-      reply_markup: {
-        inline_keyboard: [
-          [
-            { text: '👥 Visibility', callback_data: 'ar_visibility' },
-            { text: '🔘 Add Button', callback_data: 'ar_add_button' }
-          ],
-          [
-            { text: '💾 Save', callback_data: 'ar_save' },
-            { text: '❌ Cancel', callback_data: 'ar_cancel' }
-          ]
-        ]
-      }
-    }
+    `🛠 *Auto‑Response Setup Started*\n\n` +
+    `Keyword: *${keyword}*\n\n` +
+    `Reply to ANY message with the content you want to save.`,
+    { parse_mode: "Markdown" }
   );
 }
 
@@ -80,113 +101,108 @@ export function startReplySetup(ctx, keyword) {
  * Handle inline button actions during setup
  */
 export async function handleSetupAction(bot, ctx) {
-  const adminId = ctx.from.id.toString();
-  const session = setupSessions.get(adminId);
-  if (!session) return ctx.answerCbQuery('No active setup.');
+  const userId = ctx.from.id;
+  const state = setupState.get(userId);
+  if (!state) return ctx.answerCbQuery("No active setup.");
 
-  const { keyword, content } = session;
   const action = ctx.callbackQuery.data;
 
-  if (action === 'ar_visibility') {
-    if (content.visibility === 'everyone') content.visibility = 'admin';
-    else if (content.visibility === 'admin') content.visibility = 'random';
-    else content.visibility = 'everyone';
+  switch (action) {
+    case "ar_add_button":
+      state.step = "await_button";
+      return ctx.reply(
+        "Send button in format:\n\n`Button Text | https://example.com`",
+        { parse_mode: "Markdown" }
+      );
 
-    return ctx.editMessageText(
-      `📝 *Auto-Response Setup*\nKeyword: *${keyword}*\nVisibility: *${content.visibility}*`,
-      {
-        parse_mode: 'Markdown',
-        reply_markup: ctx.callbackQuery.message.reply_markup
+    case "ar_save":
+      if (!state.message) {
+        return ctx.reply("❌ You must reply to a message first.");
       }
-    );
-  }
 
-  if (action === 'ar_add_button') {
-    ctx.answerCbQuery('Send: button text | url');
-    session.awaitingButton = true;
-    return;
-  }
+      await AutoResponseService.add(state.keyword, state.message, state.buttons);
+      setupState.delete(userId);
 
-  if (action === 'ar_save') {
-    autoresponses[keyword.toLowerCase()] = content;
-    saveStorage(autoresponses);
-    setupSessions.delete(adminId);
+      return ctx.reply("✅ Auto‑response saved successfully.");
 
-    return ctx.editMessageText(
-      `✅ Auto-response saved for keyword: *${keyword}*`,
-      { parse_mode: 'Markdown' }
-    );
-  }
+    case "ar_cancel":
+      setupState.delete(userId);
+      return ctx.reply("❌ Setup cancelled.");
 
-  if (action === 'ar_cancel') {
-    setupSessions.delete(adminId);
-    return ctx.editMessageText('❌ Setup cancelled.');
+    default:
+      return ctx.answerCbQuery("Unknown action.");
   }
 }
 
 /**
- * Handle admin sending "button text | url"
+ * Handle button input during setup
  */
-export function handleButtonInput(ctx) {
-  const adminId = ctx.from.id.toString();
-  const session = setupSessions.get(adminId);
-  if (!session || !session.awaitingButton) return;
+export async function handleButtonInput(ctx) {
+  const userId = ctx.from.id;
+  const state = setupState.get(userId);
+
+  if (!state || state.step !== "await_button") return;
 
   const text = ctx.message.text;
-  if (!text.includes('|')) {
-    return ctx.reply('Format: Button Text | https://example.com');
+  if (!text.includes("|")) {
+    return ctx.reply(
+      "❌ Invalid format.\nUse:\n`Button Text | https://url.com`",
+      { parse_mode: "Markdown" }
+    );
   }
 
-  const [label, url] = text.split('|').map(s => s.trim());
-  session.content.buttons.push({ label, url });
-  session.awaitingButton = false;
+  const [label, url] = text.split("|").map((s) => s.trim());
+  state.buttons.push({ label, url });
+  state.step = "await_message";
 
-  ctx.reply(`🔘 Button added: ${label} → ${url}`);
+  ctx.reply(
+    `Button added:\n*${label}* → ${url}\n\nAdd more or press Save.`,
+    {
+      parse_mode: "Markdown",
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: "➕ Add Button", callback_data: "ar_add_button" }],
+          [{ text: "💾 Save", callback_data: "ar_save" }],
+          [{ text: "❌ Cancel", callback_data: "ar_cancel" }]
+        ]
+      }
+    }
+  );
 }
 
 /**
- * Trigger auto-response when keyword is detected
+ * Handle autoresponse message triggers
  */
 export async function handleAutoResponse(bot, ctx) {
-  if (!ctx.message || !ctx.message.text) return;
+  const text = ctx.message?.text?.toLowerCase();
+  if (!text) return;
 
-  const text = ctx.message.text.toLowerCase();
-  const entry = autoresponses[text];
-  if (!entry) return;
+  const all = await AutoResponseService.getAll();
+  if (!all.length) return;
 
-  // Visibility rules
-  if (entry.visibility === 'admin' && ctx.from.id.toString() !== config.TELEGRAM_ADMIN_ID) {
-    return;
-  }
+  // Fast match: find first trigger contained in message
+  const match = all.find((r) =>
+    text.includes(r.trigger.toLowerCase())
+  );
 
-  if (entry.visibility === 'random') {
-    if (Math.random() * 100 > entry.randomChance) return;
-  }
+  if (!match) return;
 
-  const opts = {
-    parse_mode: entry.html ? 'HTML' : undefined,
-    reply_markup: entry.buttons.length
-      ? {
-          inline_keyboard: [
-            entry.buttons.map(b => ({ text: b.label, url: b.url }))
-          ]
+  const buttons = match.buttons?.length
+    ? {
+        reply_markup: {
+          inline_keyboard: match.buttons.map((b) => [
+            { text: b.label, url: b.url }
+          ])
         }
-      : undefined
-  };
+      }
+    : {};
 
-  if (entry.photo) {
-    return bot.telegram.sendPhoto(ctx.chat.id, entry.photo, {
-      caption: entry.text,
-      ...opts
+  try {
+    await ctx.reply(match.response, {
+      parse_mode: "Markdown",
+      ...buttons
     });
+  } catch (err) {
+    log("autoresponses", "Failed to send autoresponse", err);
   }
-
-  if (entry.document) {
-    return bot.telegram.sendDocument(ctx.chat.id, entry.document, {
-      caption: entry.text,
-      ...opts
-    });
-  }
-
-  return ctx.reply(entry.text, opts);
 }

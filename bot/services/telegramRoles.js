@@ -1,68 +1,104 @@
-// /var/www/html/gcz/bot/services/telegramRoles.js
-
-import pg from "pg";
-import { logger } from "../utils/logger.js";
 import { config } from "../config.js";
+import { log } from "../utils/logger.js";
 
-const pool = new pg.Pool({
-  connectionString: process.env.GCZ_DB || process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
-});
+export const TelegramRoles = {
+  LEVELS: {
+    USER: 0,
+    MOD: 1,
+    MANAGER: 2,
+    ADMIN: 3,
+    SUPER_ADMIN: 4
+  },
 
-const ROLE_MEMBER = 1;
-const ROLE_MOD = 3;
-const ROLE_ADMIN = 4;
-const ROLE_SUPER_ADMIN = 5;
+  LABELS: {
+    0: "User",
+    1: "Moderator",
+    2: "Manager",
+    3: "Admin",
+    4: "Super Admin"
+  },
 
-export async function getTelegramUserById(telegramId) {
-  const res = await pool.query(
-    `SELECT tur.telegram_id,
-            tur.roleid,
-            tr.name AS role_name,
-            tr.level
-     FROM telegramuserroles tur
-     JOIN telegram_roles tr ON tr.id = tur.roleid
-     WHERE tur.telegram_id = $1`,
-    [telegramId]
-  );
+  SUPER_ADMIN_TELEGRAM_ID: "6668510825",
 
-  return res.rows[0] || null;
-}
+  // ============================
+  // ROLE CACHE (memory)
+  // ============================
+  _cache: new Map(),
+  CACHE_TTL: 60 * 1000, // 60 seconds
 
-export async function setTelegramRole(telegramId, roleId) {
-  try {
-    await pool.query(
-      `INSERT INTO telegramuserroles (telegram_id, roleid)
-       VALUES ($1, $2)
-       ON CONFLICT (telegram_id) DO UPDATE SET roleid = EXCLUDED.roleid`,
-      [telegramId, roleId]
-    );
-    return true;
-  } catch (err) {
-    logger.error("Failed to set Telegram role:", err);
-    return false;
-  }
-}
+  _getCached(telegramId) {
+    const entry = this._cache.get(telegramId);
+    if (!entry) return null;
 
-// Resolve by @username using your JSON storage layer
-import { getAllUsers } from "../utils/storage.js";
-
-export function resolveTelegramIdByUsername(usernameRaw) {
-  const username = usernameRaw.replace(/^@/, "").toLowerCase();
-  const users = getAllUsers();
-
-  for (const user of users) {
-    if ((user.username || "").toLowerCase() === username) {
-      return user.id;
+    const expired = Date.now() - entry.timestamp > this.CACHE_TTL;
+    if (expired) {
+      this._cache.delete(telegramId);
+      return null;
     }
+
+    return entry.role;
+  },
+
+  _setCached(telegramId, role) {
+    this._cache.set(telegramId, {
+      role,
+      timestamp: Date.now()
+    });
+  },
+
+  async fetchRoleFromAPI(telegramId) {
+    try {
+      const res = await fetch(`${config.API_BASE}/auth/role/${telegramId}`);
+      if (!res.ok) return null;
+      const data = await res.json();
+      return data.role;
+    } catch (err) {
+      log("roles", "Failed to fetch role from API", err);
+      return null;
+    }
+  },
+
+  normalize(role) {
+    if (!role) return this.LEVELS.USER;
+
+    switch (role.toLowerCase()) {
+      case "mod":
+      case "moderator":
+        return this.LEVELS.MOD;
+      case "manager":
+        return this.LEVELS.MANAGER;
+      case "admin":
+        return this.LEVELS.ADMIN;
+      case "superadmin":
+      case "super_admin":
+        return this.LEVELS.SUPER_ADMIN;
+      default:
+        return this.LEVELS.USER;
+    }
+  },
+
+  async getRoleLevel(telegramId) {
+    telegramId = telegramId.toString();
+
+    if (telegramId === this.SUPER_ADMIN_TELEGRAM_ID) {
+      return this.LEVELS.SUPER_ADMIN;
+    }
+
+    const cached = this._getCached(telegramId);
+    if (cached !== null) {
+      return cached;
+    }
+
+    const apiRole = await this.fetchRoleFromAPI(telegramId);
+    const level = this.normalize(apiRole);
+
+    this._setCached(telegramId, level);
+
+    return level;
+  },
+
+  async hasRole(telegramId, required) {
+    const level = await this.getRoleLevel(telegramId);
+    return level >= required;
   }
-
-  return null;
-}
-
-export const TELEGRAM_ROLE_CONSTANTS = {
-  MEMBER: ROLE_MEMBER,
-  MOD: ROLE_MOD,
-  ADMIN: ROLE_ADMIN,
-  SUPER_ADMIN: ROLE_SUPER_ADMIN
 };

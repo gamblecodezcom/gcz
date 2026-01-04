@@ -1,56 +1,57 @@
-import { setupRaffleCommands } from './commands.raffle.js';
-import { setupAutoResponseCommands } from './commands.autoresponse.js';
-import { setupUserCommands } from './commands.user.js';
-import { setupWheelCommands } from './commands.wheel.js';
-import { setupGiveawayCommands } from './commands.giveaway.js';
-import { setupStatsCommands } from './commands.stats.js';
-import { setupDropsCommands } from './commands.drops.js';
-import { setupAdminCommands } from './commands.admin.js';
-import { setupHelpCommands } from './commands.help.js';
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+import { log } from "../utils/logger.js";
 
-export function setupCommands(bot) {
-  // Raffles
-  if (typeof setupRaffleCommands === 'function') {
-    setupRaffleCommands(bot);
+/**
+ * Auto-loads ALL bot command modules.
+ * Supports:
+ * - commands.autoresponse.js
+ * - commands.wheel.js
+ * - commands.stats.js
+ * - commands.user.js
+ * - commands.admin.js
+ * - commands.missions.js
+ * - commands.badges.js
+ * - commands.leaderboard.js
+ * - commands.raffles.js
+ * - commands.giveaways.js
+ * - commands.drops.js
+ * - commands.promos.js
+ * - ANY future *.js command file
+ */
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+export default async function loadRoutes(bot) {
+  log("routes", "Loading all GambleCodez bot modules...");
+
+  const files = fs
+    .readdirSync(__dirname)
+    .filter((file) => file.endsWith(".js") && file !== "index.js");
+
+  if (files.length === 0) {
+    log("routes", "⚠️ No command modules found.");
+    return;
   }
 
-  // Auto-response engine
-  if (typeof setupAutoResponseCommands === 'function') {
-    setupAutoResponseCommands(bot);
+  for (const file of files) {
+    const modulePath = path.join(__dirname, file);
+
+    try {
+      const routeModule = await import(modulePath);
+
+      if (typeof routeModule.default === "function") {
+        routeModule.default(bot);
+        log("routes", `✓ Loaded: ${file}`);
+      } else {
+        log("routes", `⚠️ Skipped (no default export): ${file}`);
+      }
+    } catch (err) {
+      log("routes", `❌ Failed to load ${file}`, err);
+    }
   }
 
-  // User commands
-  if (typeof setupUserCommands === 'function') {
-    setupUserCommands(bot);
-  }
-
-  // Wheel
-  if (typeof setupWheelCommands === 'function') {
-    setupWheelCommands(bot);
-  }
-
-  // Giveaways
-  if (typeof setupGiveawayCommands === 'function') {
-    setupGiveawayCommands(bot);
-  }
-
-  // Stats
-  if (typeof setupStatsCommands === 'function') {
-    setupStatsCommands(bot);
-  }
-
-  // Drops engine
-  if (typeof setupDropsCommands === 'function') {
-    setupDropsCommands(bot);
-  }
-
-  // Admin commands
-  if (typeof setupAdminCommands === 'function') {
-    setupAdminCommands(bot);
-  }
-
-  // Help menu
-  if (typeof setupHelpCommands === 'function') {
-    setupHelpCommands(bot);
-  }
+  log("routes", "All bot modules loaded successfully.");
 }
