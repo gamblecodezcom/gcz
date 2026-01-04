@@ -11,53 +11,72 @@ interface UseRealtimeOptions {
   userId?: string;
   onEvent?: (event: RealtimeEvent) => void;
   eventTypes?: string[];
+  emitRateLimitMs?: number;
 }
 
-export function useRealtime({ userId, onEvent, eventTypes }: UseRealtimeOptions = {}) {
+const DEFAULT_RATE_LIMIT_MS = 2000;
+
+export function useRealtime({
+  userId,
+  onEvent,
+  eventTypes,
+  emitRateLimitMs = DEFAULT_RATE_LIMIT_MS,
+}: UseRealtimeOptions = {}) {
   const socketRef = useRef<Socket | null>(null);
+  const lastEmitRef = useRef<Record<string, number>>({});
 
   useEffect(() => {
     if (!userId) return;
 
-    // Initialize socket connection
     const socket = io(window.location.origin, {
       transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionDelay: 1000,
+      reconnectionDelayMax: 10000,
       reconnectionAttempts: 5,
+      randomizationFactor: 0.5,
+      timeout: 20000,
+      auth: {
+        userId,
+      },
     });
+
+    const emitWithRateLimit = (event: string, payload: unknown) => {
+      const now = Date.now();
+      const lastEmit = lastEmitRef.current[event] || 0;
+      if (now - lastEmit < emitRateLimitMs) return;
+      lastEmitRef.current[event] = now;
+      socket.emit(event, payload);
+    };
 
     socketRef.current = socket;
 
-    // Authenticate user
     socket.on('connect', () => {
-      socket.emit('user:authenticate', userId);
-      console.log('Real-time connection established');
+      emitWithRateLimit('user:authenticate', userId);
+      if (eventTypes && eventTypes.length > 0) {
+        emitWithRateLimit('realtime:subscribe', eventTypes);
+      }
     });
 
-    // Subscribe to event types
-    if (eventTypes && eventTypes.length > 0) {
-      socket.emit('realtime:subscribe', eventTypes);
-    }
-
-    // Listen for real-time events
     socket.on('realtime:event', (event: RealtimeEvent) => {
       if (onEvent) {
         onEvent(event);
       }
     });
 
-    // Handle disconnection
     socket.on('disconnect', () => {
-      console.log('Real-time connection disconnected');
+      // Intentionally silent - handled by UI subscriptions
     });
 
-    // Cleanup
+    socket.on('connect_error', (error) => {
+      console.warn('Real-time connection error:', error);
+    });
+
     return () => {
       socket.disconnect();
       socketRef.current = null;
     };
-  }, [userId, onEvent, eventTypes]);
+  }, [userId, onEvent, eventTypes, emitRateLimitMs]);
 
   return socketRef.current;
 }

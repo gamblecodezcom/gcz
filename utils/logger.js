@@ -1,47 +1,93 @@
-// utils/logger.js
-// GambleCodez Production Logger (ESM Safe)
-
-const COLORS = {
-  reset: "\x1b[0m",
-  gray: "\x1b[90m",
-  red: "\x1b[31m",
-  yellow: "\x1b[33m",
-  green: "\x1b[32m",
-  cyan: "\x1b[36m"
+const LEVELS = {
+  debug: 10,
+  info: 20,
+  warn: 30,
+  error: 40,
 };
 
-function timestamp() {
-  return new Date().toISOString();
+const DEFAULT_LEVEL = (process.env.LOG_LEVEL || "info").toLowerCase();
+const ACTIVE_LEVEL = LEVELS[DEFAULT_LEVEL] ?? LEVELS.info;
+
+function normalizeError(err) {
+  if (!(err instanceof Error)) return null;
+  return {
+    name: err.name,
+    message: err.message,
+    stack: err.stack,
+  };
 }
 
-function base(level, color, ...args) {
-  const prefix = `${COLORS.gray}[${timestamp()}]${COLORS.reset}`;
-  const tag = `${color}${level.toUpperCase()}${COLORS.reset}`;
-  console.log(prefix, tag, ...args);
+function buildEntry(level, args) {
+  const timestamp = new Date().toISOString();
+  const entry = {
+    timestamp,
+    level,
+    service: process.env.SERVICE_NAME || "gcz",
+  };
+
+  const messageParts = [];
+  let meta = {};
+  let errorPayload;
+
+  for (const arg of args) {
+    if (arg instanceof Error) {
+      errorPayload = normalizeError(arg);
+      continue;
+    }
+
+    if (arg && typeof arg === "object") {
+      meta = { ...meta, ...arg };
+      continue;
+    }
+
+    messageParts.push(String(arg));
+  }
+
+  if (messageParts.length > 0) {
+    entry.message = messageParts.join(" ");
+  }
+
+  if (Object.keys(meta).length > 0) {
+    Object.assign(entry, meta);
+  }
+
+  if (errorPayload) {
+    entry.error = errorPayload;
+  }
+
+  return entry;
+}
+
+function log(level, ...args) {
+  if (LEVELS[level] < ACTIVE_LEVEL) return;
+  const entry = buildEntry(level, args);
+  const payload = JSON.stringify(entry);
+  if (level === "error") {
+    console.error(payload);
+    return;
+  }
+  console.log(payload);
 }
 
 export function info(...args) {
-  base("info", COLORS.green, ...args);
+  log("info", ...args);
 }
 
 export function warn(...args) {
-  base("warn", COLORS.yellow, ...args);
+  log("warn", ...args);
 }
 
 export function error(...args) {
-  base("error", COLORS.red, ...args);
+  log("error", ...args);
 }
 
 export function debug(...args) {
-  if (process.env.DEBUG === "true") {
-    base("debug", COLORS.cyan, ...args);
-  }
+  log("debug", ...args);
 }
 
-// Default export for convenience
 export default {
   info,
   warn,
   error,
-  debug
+  debug,
 };

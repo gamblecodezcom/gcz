@@ -5,18 +5,31 @@ import csv
 import time
 import threading
 from typing import Dict, Any
-from fastapi import FastAPI, HTTPException
+
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import RedirectResponse, JSONResponse
+
+from backend.logging_config import (
+    RequestContextMiddleware,
+    configure_logging,
+    get_request_id,
+)
 
 CSV_PATH = "/var/www/html/gcz/master_affiliates.csv"
 REFRESH_SECONDS = 60
 
+logger = configure_logging("gcz-redirect")
+
 app = FastAPI(title="GambleCodez Redirect Engine")
+app.state.started_at = time.time()
+app.add_middleware(RequestContextMiddleware, logger=logger)
 
 REDIRECT_MAP: Dict[str, Dict[str, Any]] = {}
 
+
 def normalize(name: str) -> str:
     return re.sub(r"[^a-z0-9]", "", name.lower())
+
 
 def load_redirects():
     """Load CSV into in-memory redirect map."""
@@ -40,10 +53,23 @@ def load_redirects():
                 }
 
         REDIRECT_MAP = new_map
-        print(f"[redirect] Map refreshed: {len(REDIRECT_MAP)} entries")
+        logger.info("redirects.loaded", extra={"entries": len(REDIRECT_MAP)})
 
-    except Exception as e:
-        print(f"[redirect] ERROR loading CSV: {e}")
+    except Exception:
+        logger.exception("redirects.load_failed")
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    logger.exception(
+        "unhandled.exception",
+        extra={"method": request.method, "path": request.url.path},
+    )
+    return JSONResponse(
+        status_code=500,
+        content={"error": "Internal Server Error", "request_id": get_request_id()},
+    )
+
 
 # ------------------------------------------------------------
 # HEALTH ENDPOINT (Master Ops uses this)
@@ -51,7 +77,23 @@ def load_redirects():
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "entries": len(REDIRECT_MAP)}
+    return {
+        "status": "ok",
+        "service": "gcz-redirect",
+        "entries": len(REDIRECT_MAP),
+        "uptime_s": int(time.time() - app.state.started_at),
+    }
+
+
+@app.get("/api/health")
+def health_api():
+    return {
+        "status": "ok",
+        "service": "gcz-redirect",
+        "entries": len(REDIRECT_MAP),
+        "uptime_s": int(time.time() - app.state.started_at),
+    }
+
 
 # ------------------------------------------------------------
 # REDIRECT ENDPOINTS
@@ -65,6 +107,7 @@ def do_redirect(sitename: str):
         return RedirectResponse(REDIRECT_MAP[key]["url"])
     raise HTTPException(status_code=404, detail="Affiliate not found")
 
+
 # ------------------------------------------------------------
 # META ENDPOINTS
 # ------------------------------------------------------------
@@ -77,14 +120,17 @@ def get_meta(sitename: str):
         return JSONResponse(content=REDIRECT_MAP[key])
     raise HTTPException(status_code=404, detail="Not found")
 
+
 # ------------------------------------------------------------
 # BACKGROUND REFRESHER
 # ------------------------------------------------------------
+
 
 def refresher():
     while True:
         load_redirects()
         time.sleep(REFRESH_SECONDS)
+
 
 # Load once before serving
 load_redirects()
@@ -98,4 +144,5 @@ threading.Thread(target=refresher, daemon=True).start()
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run("backend.redirect:app", host="0.0.0.0", port=8000)

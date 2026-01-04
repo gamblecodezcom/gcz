@@ -4,7 +4,12 @@
   "type": "module",
   "scripts": {
     "start": "node server.js",
-    "build": "echo 'No backend build step required'"
+    "build": "echo 'No backend build step required'",
+    "lint": "npm --prefix frontend run lint",
+    "type-check": "npm --prefix frontend run type-check",
+    "test": "npm --prefix frontend run test",
+    "smoke": "./scripts/smoke-test.sh",
+    "checks": "./scripts/run-checks.sh"
   },
   "dependencies": {
     "cors": "^2.8.5",
