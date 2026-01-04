@@ -1,0 +1,6 @@
+body { background:#0b0b14; color:white; font-family:monospace; }
+h1 { color:#6cffcc; }
+.grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
+.card { background:#101022; padding:6px; border-radius:8px; }
+section { background:#080816; padding:10px; border-radius:10px; }
+button { padding:6px 14px; }

@@ -1,80 +1,107 @@
 /**
- * Discord Content Sanitizer
- * Strips ALL Discord metadata to enforce privacy requirements
+ * STRICT DISCORD PRIVACY SANITIZER
+ * - Removes ALL Discord metadata + IDs
+ * - Content-only, zero user traceability
+ * - Safe for storage & AI ingestion
  */
 
+function normalize(str = '') {
+  return str
+    .normalize('NFKC')  // normalize unicode forms
+    .replace(/\u200B/g, '') // remove zero-width chars
+    .trim();
+}
+
 /**
- * Sanitize message content - removes Discord-specific metadata
- * @param {string} content - Raw message content
- * @returns {string} - Sanitized content
+ * Sanitize single message
  */
 export function sanitizeContent(content) {
   if (!content) return '';
-  
-  let sanitized = content.trim();
-  
-  // Remove Discord user mentions (@user)
+
+  let sanitized = normalize(content);
+
+  // strip mentions (@user)
   sanitized = sanitized.replace(/<@!?\d+>/g, '');
-  
-  // Remove Discord role mentions (@role)
+
+  // strip role mentions
   sanitized = sanitized.replace(/<@&\d+>/g, '');
-  
-  // Remove Discord channel mentions (#channel)
+
+  // strip channel mentions
   sanitized = sanitized.replace(/<#\d+>/g, '');
-  
-  // Remove Discord custom emoji (<:name:id>)
-  sanitized = sanitized.replace(/<:\w+:\d+>/g, '');
-  
-  // Remove Discord animated emoji (<a:name:id>)
-  sanitized = sanitized.replace(/<a:\w+:\d+>/g, '');
-  
-  // Remove Discord message links (discord.com/channels/...)
-  sanitized = sanitized.replace(/https?:\/\/(?:discord\.com|discordapp\.com)\/channels\/\d+\/\d+\/\d+/gi, '');
-  
-  // Clean up extra whitespace
+
+  // strip custom emoji
+  sanitized = sanitized.replace(/<a?:\w+:\d+>/gi, '');
+
+  // strip message/guild links
+  sanitized = sanitized.replace(
+    /https?:\/\/(?:canary\.|ptb\.)?(?:discord(?:app)?\.com)\/channels\/\d+\/\d+\/\d+/gi,
+    ''
+  );
+
+  // strip raw discord snowflake IDs anywhere
+  sanitized = sanitized.replace(/\b\d{17,22}\b/g, '');
+
+  // strip code-block formatting
+  sanitized = sanitized.replace(/```[\s\S]*?```/g, m =>
+    m.replace(/```/g, '')
+  );
+
+  // strip inline code formatting
+  sanitized = sanitized.replace(/`([^`]+)`/g, '$1');
+
+  // collapse whitespace
   sanitized = sanitized.replace(/\s+/g, ' ').trim();
-  
-  return sanitized;
+
+  return sanitized || '';
 }
 
 /**
- * Sanitize an array of messages (for context)
- * @param {Array} messages - Array of message objects
- * @returns {Array} - Array of sanitized message content strings
+ * Sanitize batch
  */
-export function sanitizeMessageContext(messages) {
+export function sanitizeMessageContext(messages = []) {
   return messages
-    .map(msg => sanitizeContent(msg.content || ''))
-    .filter(content => content.length > 0);
+    .map(m => sanitizeContent(m?.content || ''))
+    .filter(Boolean);
 }
 
 /**
- * Check if content contains a promo code pattern
- * @param {string} content - Message content
- * @returns {boolean} - True if content looks like a promo
+ * Detect promo-like content
  */
 export function looksLikePromo(content) {
   if (!content) return false;
-  
+
   const sanitized = sanitizeContent(content);
-  
-  // Check for URL patterns
-  const urlPattern = /https?:\/\/.+/i;
-  if (urlPattern.test(sanitized)) return true;
-  
-  // Check for code patterns
+
+  if (!sanitized) return false;
+
+  // URL = instant promo flag
+  if (/https?:\/\/\S+/i.test(sanitized)) return true;
+
+  // Strong promo patterns
   const codePatterns = [
-    /\b[A-Z]{3,15}\d{2,10}\b/,
-    /\b[A-Z]{4,20}\b/,
-    /(?:code|promo|bonus|coupon)[\s:]+([A-Z0-9]{4,20})/i,
+    /\b[A-Z0-9]{4,20}\b/,                 // CODE123 / BONUS / DF42
+    /(?:promo|bonus|code|coupon)\s*[:\- ]+\s*[A-Z0-9]{3,20}/i,
+    /\b(use|enter|apply)\b.*\bcode\b/i,   // “use code…”
   ];
-  
-  if (codePatterns.some(pattern => pattern.test(sanitized))) return true;
-  
-  // Check for promo-related keywords
-  const promoKeywords = ['bonus', 'code', 'promo', 'coupon', 'deal', 'offer', 'discount'];
-  const lowerContent = sanitized.toLowerCase();
-  if (promoKeywords.some(keyword => lowerContent.includes(keyword))) return true;
-  
+
+  if (codePatterns.some(r => r.test(sanitized))) return true;
+
+  // Keyword heuristics
+  const keywords = [
+    'bonus',
+    'promo',
+    'code',
+    'coupon',
+    'deal',
+    'offer',
+    'discount',
+    'redeem',
+    'claim'
+  ];
+
+  const lower = sanitized.toLowerCase();
+
+  if (keywords.some(k => lower.includes(k))) return true;
+
   return false;
 }

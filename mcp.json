@@ -1,0 +1,6 @@
+{
+  "name": "gcz-vps",
+  "version": "1.0.0",
+  "command": "node",
+  "args": ["dist/index.js"]
+}

@@ -1,0 +1,35 @@
+{
+  "owner": "GambleCodez",
+  "db": "neon_postgres",
+  "ai": {
+    "memory": {
+      "tables": [
+        "ai_memory",
+        "service_health",
+        "anomalies"
+      ],
+      "files": [
+        "ai/db.py",
+        "ai/memory_store.py",
+        "ai/memory_monitor.py",
+        "ai/memory_client.py"
+      ]
+    },
+    "health_engine": {
+      "port": 8010,
+      "file": "ai/health_engine.py",
+      "index": "ai/health_index.json",
+      "description": "Runs SELECT 1 checks, logs service health, and triggers anomaly detection"
+    }
+  },
+  "services": {
+    "gcz-api": { "type": "fastapi", "port": 3000, "file": "backend/main.py" },
+    "gcz-redirect": { "type": "fastapi", "port": 8000, "file": "backend/redirect.py" },
+    "gcz-drops": { "type": "fastapi", "port": 8002, "file": "backend/drops.py" },
+    "gcz-bot": { "type": "telegram", "file": "bot/start-bot.js" },
+    "gcz-discord": { "type": "discord", "file": "discord/start-discord.js" },
+    "gcz-watchdog": { "type": "node", "file": "watchdog.js" },
+    "gcz-ai": { "type": "python", "port": 8010, "file": "ai/health_engine.py" }
+  },
+  "last_scan": "2026-01-03T16:44:02Z"
+}

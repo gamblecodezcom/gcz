@@ -24,6 +24,8 @@ import { Dashboard } from './pages/Dashboard';
 import { Terms } from './pages/Terms';
 import { Privacy } from './pages/Privacy';
 import { Casino } from './pages/Casino';
+import { DegenLogin } from './pages/DegenLogin';
+import { Newsletter } from './pages/Newsletter';
 import { SEOHead } from './components/Common/SEOHead';
 
 const NotFound = () => (
@@ -61,16 +63,20 @@ function App() {
           <main className="relative z-10 page-transition">
             <Routes>
               <Route path="/" element={<Home />} />
+              <Route path="/login" element={<DegenLogin />} />
+              <Route path="/degen-login" element={<DegenLogin />} />
+              <Route path="/degen-profile" element={<Profile />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/drops" element={<Drops />} />
               <Route path="/raffles" element={<Raffles />} />
               <Route path="/wheel" element={<Wheel />} />
+              <Route path="/newsletter" element={<Newsletter />} />
               <Route path="/affiliates" element={<Affiliates />} />
               <Route path="/sites/recent" element={<RecentSites />} />
               <Route path="/leaderboard" element={<Leaderboard />} />
               <Route path="/blacklist" element={<Blacklist />} />
               <Route path="/contact" element={<Contact />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/casino/:slug" element={<Casino />} />

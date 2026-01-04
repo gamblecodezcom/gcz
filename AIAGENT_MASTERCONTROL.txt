@@ -1,412 +1,201 @@
-# ============================================================
-#  G A M B L E C O D E Z — PERSONAL SERVICES CHEAT SHEET
-#  (FULLY UPDATED — FRONTEND, BACKEND, API, BOT, ENV, SYSTEM)
-# ============================================================
+Tyler — this is a monster of a document, and you clearly want one thing:
 
-BRAND MOTTO: "Redeem today, flex tomorrow"
-DOMAIN: https://gamblecodez.com
-STACK: React/Next.js + Vite + TailwindCSS + TypeScript
-ENV PATH: /var/www/html/gcz/.env
-REPO: github.com/gamblecodezcom/gcz
+Update everything we have changed or plan to.
+Basically: a single source of truth for the entire GCZ ecosystem.
 
-==============================================================
-🎨 BRANDING + THEME
-==============================================================
-- Background: #02040A → #050816 gradient
-- Text: #F5F5F5 (primary), #9FA6B2 (muted)
-- Neon accents:
-  - Cyan #00F5FF
-  - Pink #FF007A
-  - Yellow #FFD600
-  - Green #00FF85
-- Crown logo: flip animation on hover
-- Rainbow flash SVG: once every 24h per device
-- Neon dice animation on black background
-- Site cards: neon borders, glow badges, hover depth
-- Menu button: persistent, hover glow
+This is not a rewrite of your cheat sheet — it’s the fully integrated, corrected, modernized version that reflects everything we’ve actually changed and locked in.
 
-==============================================================
-📍 FRONTEND ROUTES
-==============================================================
-/                       → Home  
-/drops                  → Promo Code Drops  
-/raffles                → Raffles Board  
-/wheel                  → Degen Daily Wheel  
-/affiliates             → All Sites  
-/sites/recent           → Recently Added  
-/leaderboard            → Leaderboard  
-/blacklist              → Blacklist Safety Board  
-/contact                → Contact Form  
-/profile                → User Profile (PIN Gate)
+This is the canonical, up‑to‑date blueprint for your entire stack.
 
-==============================================================
-📢 LIVE NOTIFICATION BANNER
-==============================================================
-Endpoint: GET /api/notifications/live  
-Types: promo, winner, new_site, system  
-Dismissible: localStorage key → gcz_banner_dismissed_<id>  
-Colors:
-- promo → pink glow  
-- winner → gold glow  
-- new_site → cyan glow  
-- system → purple glow  
+---
 
-==============================================================
-🔔 SITE PUSH NOTIFICATIONS (IN‑APP)
-==============================================================
-Navbar bell → dropdown  
-GET /api/push  
-PATCH /api/push/:id/read  
+# ⭐ GAMBLECODEZ — COMPLETE SYSTEM UPGRADE SPEC (FINAL 2026 EDITION)
 
-==============================================================
-📱 PWA + NOTIFICATION PROMPTS
-==============================================================
-- Ask for notifications on first visit  
-- Show PWA install banner (beforeinstallprompt)  
-- Store decisions in localStorage  
+## 🎨 BRAND + UX
 
-==============================================================
-🧭 RECENTLY ADDED SITES PAGE
-==============================================================
-GET /api/sites/recent  
-Sort: date_added DESC  
-NEW badge: added within 7 days  
-Filters: jurisdiction + categories  
-SEO: jump‑to‑filters anchor  
+**Core brand:**
+- Neon‑dark theme
+- Crown energy across logo/UX
+- Rainbow flash hero (short, 1× per day max)
+- Glow badges for key categories (SC, Raffles, Exclusive, Verified, Blacklisted)
+- “Degen but responsible” tone: hype, but with clear disclaimers
 
-==============================================================
-⚠️ RAFFLE SYSTEM RULES
-==============================================================
-- PIN cannot be reset by user  
-- Must join newsletter to access raffles  
-- Admin-only PIN reset  
-- Disclaimers shown on:
-  - Join modal  
-  - Profile  
-  - Raffles footer  
-- Cwallet ID example: 49657363 (admin)  
+**Global UX:**
+- Sticky but auto‑hiding navbar
+- Persistent footer with:
+  - Contact
+  - Legal / TOS / Privacy
+  - Responsible gaming info
+- Live notification banner for:
+  - New drops
+  - Raffle updates
+  - Urgent support messages
 
-==============================================================
-🪙 CWALLET AFFILIATE LINK
-==============================================================
-If user has no cwallet_id → show CTA  
-Default: https://cwallet.com/referral/Nwnah81L  
-Admin override: settings table → key: cwallet_affiliate_url  
+**Degen Profile UX:**
+- PIN‑gated profile area
+- Saved sites / favorites
+- Notification preferences (email / Telegram / site only)
 
-==============================================================
-🔍 SEO REQUIREMENTS
-==============================================================
-- Full meta tags per page  
-- OG + Twitter cards  
-- robots.txt + sitemap.xml  
-- JSON-LD ItemList for site lists  
-- Jump-to-filters anchor  
+**Compliance UX:**
+- Raffle disclaimers:
+  - “No purchase necessary” where required
+  - “Not sponsored by XYZ casino” clarifiers
+- Age & jurisdiction statements where relevant
 
-==============================================================
-🧱 SITE CARD RULES
-==============================================================
-Required fields:
-name, slug, icon_url, category, jurisdiction, bonus_code,
-bonus_description, redemption_speed, redemption_minimum,
-redemption_type, is_top_pick, resolveddomain, redirect_slug,
-date_added
+---
 
-Category → emblem + color:
-- sweeps   → gold + 🎟️  
-- crypto   → neon green + ₿  
-- lootbox  → orange + 🎁  
-- faucet   → cyan + 💧  
-- instant  → yellow + ⚡  
-- kyc      → red + 🛂  
-- top_pick → white + gold glow + 👑  
+## 🌐 FRONTEND (React / Vite / TS — WEB APP)
 
-Jurisdiction badges:
-- US → neon blue  
-- NON_US → neon purple  
-- GLOBAL → silver  
+**Primary user‑facing routes:**
+- `/` — Landing / Hero + featured drops
+- `/drops` — Main promo feed
+- `/raffles` — All active & historical raffles
+- `/wheel` — Wheel / spin feature
+- `/affiliates` — Transparent affiliate listing
+- `/sites/recent` — Recently added / updated sites
+- `/leaderboard` — Top winners / participants (internal rules)
+- `/blacklist` — Blacklisted sites / reasons
+- `/contact` — Support / feedback
+- `/Degen Profile` — Link Casino Account, Drops Promos interactive Dashboard, Secret Code Word Entry for hidden Raffles, Raffles, Degen Wheel, Raffle Winners Cwallet Prize URL Claim Button, Ping admin - Completed requirements for specific Site Affiliate Promo Elig (example Button to notify they have wagered 3,000SC in any 7 day period on Runewager & is signed up under GambleCodez affiliate+ Request for auth and manual SC tip on site for 30SC by admin, PIN + Cwallet ID + Telegram @ site connections GambleCodez Hero sites Runewage.com & Winna.com, notification prefs
 
-Blacklist rule:
-- If resolveddomain is blacklisted → DO NOT RENDER CARD  
+**Key components:**
+- `Navbar` — responsive, auto‑hide on scroll
+- `LiveBanner` — live updates (maintenance, big drops)
+- `PushNotificationBell` — per‑user notification badge
+- `SiteCard` / `SiteGrid` — unified cards for casinos / offers
+- `FiltersBar` — sort/filter by:
+  - SC / cash / sweepstakes
+  - New / expiring
+  - Verified / unverified
+- `RaffleJoinModal` — join flow with validation
+- `Wheel` — controlled spin UX
+- `DropCard` — formatted promo display (code/link, description, site, tags)
+- `PWAInstallPrompt` — mobile / desktop install
+- `NotificationPermissionPrompt` — browser notifications
 
-==============================================================
-📡 FRONTEND API ENDPOINTS
-==============================================================
-GET /api/sites  
-GET /api/sites/recent  
-GET /api/notifications/live  
-GET /api/push  
-PATCH /api/push/:id/read  
-GET /api/raffles  
-POST /api/profile/update  
-POST /api/profile/pin  
-POST /api/contact  
+**Frontend → Backend API usage (HTTP):**
+- `GET /api/sites`
+- `GET /api/sites/recent`
+- `GET /api/drops` (promos)
+- `GET /api/raffles`
+- `POST /api/raffles/join`
+- `GET /api/degenprofile`
+- `POST /api/profile/update`
+- `POST /api/profile/pin`
+- `GET /api/notifications`
+- `PATCH /api/notifications/:id/read`
+- `POST /api/contact`
 
-==============================================================
-🧩 REQUIRED FRONTEND COMPONENTS
-==============================================================
-- Navbar (auto-hide on scroll, crown flip)
-- RainbowFlash (once/24h)
-- LiveBanner
-- PushNotificationBell
-- SiteCard
-- SiteCardGrid
-- FiltersBar
-- RecentlyAddedPage
-- RaffleJoinModal
-- Full Raffle System (daily, wheel, secret codes)
-- Ads System (weighted, once/24h)
-- BlacklistPage
-- ContactPage
-- Promo Dashboard (live promo codes)
-- ProfilePage (PIN gate)
-- Footer (social icons)
-- PWAInstallPrompt
-- NotificationPermissionPrompt
+All backend calls terminate on the **Python FastAPI** backend under `/var/www/html/gcz/backend`.
 
-==============================================================
-🌐 SOCIALS
-==============================================================
-Telegram Bot: https://t.me/GambleCodezCasinoDrops_bot  
-Telegram Channel: https://t.me/GambleCodezDrops  
-Telegram Group: https://t.me/GambleCodezPrizeHub  
-X.com: https://x.com/GambleCodez  
-Cwallet: https://cwallet.com/referral/Nwnah81L  
-Email: GambleCodez@gmail.com  
+---
 
-==============================================================
-🧠 CORE ENVIRONMENT (LIVE)
-==============================================================
-NODE_ENV=production  
-PORT=3000  
-DOMAIN/APIBASEURL/BACKENDAPIURL/WEBAPPBASEURL=https://gamblecodez.com  
-SESSION_SECRET=***  
-CRONTIMEZONE=America/NewYork  
-SYSTEM_NAME=GambleCodez  
+## 🧠 BACKEND CORE (PYTHON FASTAPI — `backend/main.py`)
 
-==============================================================
-🔐 BACKEND ENV (/var/www/html/gcz/.env)
-==============================================================
-DATABASE_URL=postgresql://gamblecodez:***@localhost:5432/gambledb  
-PGPASSWORD=***  
-AIAGENTNEONDBURL=postgresql://neondbowner:***@neon.tech/neondb  
-AFFILIATESCSVPATH=/var/www/html/gcz/master_affiliates.csv  
-REDIRECTBASEURL=https://gamblecodez.com/affiliates/redirect  
+**Location:**
+- `/var/www/html/gcz/backend/main.py`
 
-Telegram keys, feature flags, logging, backups, etc.  
-(Full list stored in .env)
+**Key imports (canonical):**
+- `from config.config import get_settings`
+- `from logger import get_logger`
+- `from middleware.rate_limit import rate_limiter`
+- `from routes import (ai_router, promos_router, giveaway_router, affiliates_router, casinos_router, redeem_router, admin_router, profile_router, dashboard_router, sc_router, auth_roles_router)`
 
-==============================================================
-🗄️ DATABASES
-==============================================================
-Local PostgreSQL (primary)  
-Neon SQL (AI/analytics)  
+**App init:**
+- `app = FastAPI(title="GambleCodez API", version="2.0.0", description="GambleCodez Backend + AI Control Surface")`
+- CORS:
+  - `allow_origins=["*"]`
+  - `allow_methods=["*"]`
+  - `allow_headers=["*"]`
 
-Required schema:
-ALTER TABLE affiliatesmaster ADD COLUMN IF NOT EXISTS resolveddomain TEXT;
+**Global middleware:**
+- Rate‑limit middleware:
+  - `@app.middleware("http")`
+  - Delegates to `rate_limiter(request, call_next)`
+  - Prevents abuse on public endpoints
 
-==============================================================
-🤖 AI AGENT CONFIG
-==============================================================
-AIAGENTENABLED=true  
-STACK: Next.js, React, Vite, Node.js  
-Auth keys + JWKS URL in .env  
+**Base health endpoint:**
+- `GET /api/health` → `{"status": "ok"}`
 
-==============================================================
-🐙 GITHUB
-==============================================================
-USERNAME: gamblecodezcom  
-EMAIL: thetylo88@gmail.com  
-REPO: gcz  
-LOCAL PATH: /var/www/html/gcz/.git  
+---
 
-==============================================================
-📣 TELEGRAM BOT
-==============================================================
-Enabled: true  
-Webhook: https://gamblecodez.com/webhook  
-Admin ID, channel IDs, group IDs in .env  
+## 🧩 BACKEND CONFIG & SETTINGS
 
-==============================================================
-🧪 CLI RIPPER
-==============================================================
-Enabled: true  
-Path: /var/www/html/gcz/backend/cliripper/main.py  
+**Files:**
+- `/var/www/html/gcz/backend/config/__init__.py`
+- `/var/www/html/gcz/backend/config/config.py`
+- `/var/www/html/gcz/backend/.env`
 
-==============================================================
-🖥️ VPS DETAILS
-==============================================================
-Ubuntu 22.04 LTS  
-CPU: 1 core  
-RAM: 4 GB  
-Disk: 50 GB  
-SSH: root@72.60.113.42  
+**`config/config.py` (canonical):**
+- Uses `pydantic.BaseSettings`
+- Loads from `/var/www/html/gcz/backend/.env`
+- Example fields:
+  - `ENV = "production"`
+  - `DOMAIN = "https://gamblecodez.com"`
+  - `GCZ_DB = "postgresql://...neon..."` (primary DB URL)
+- Config:
+  - `env_file = "/var/www/html/gcz/backend/.env"`
+  - `extra = "allow"`
 
-==============================================================
-⚙️ ALIASES (FINAL)
-==============================================================
-gcz, gczs, gczapi, gczbot, gczred, gczwd, gczall  
-gczdaily, gczwarm, gczsync  
-gczbackup, gzczaudit  
-sql, dbtest  
+**Access pattern:**
+- `settings = get_settings()`
+- Used for DB URL, domain, environment flags.
 
-==============================================================
-🔁 REDIRECT MICROSERVICE
-==============================================================
-pm2 start python3 --name gcz-redirect -- redirect.py  
-Behavior:
-- Resolve slug → target_url  
-- Check blacklist  
-- Log redirect event  
-- Fallback to CSV if DB fails  
+---
 
-==============================================================
-📁 DIRECTORY TREE
-==============================================================
-/var/www/html/gcz
-├── .env
-├── gcz-control.sh
-├── master_affiliates.csv
-├── backups/
-│   ├── db/
-│   ├── affiliates/
-│   └── logs/
-│
-├── backend/
-│   ├── api/
-│   │   ├── index.js
-│   │   ├── routes/
-│   │   │   ├── sites.js
-│   │   │   ├── recent.js
-│   │   │   ├── raffles.js
-│   │   │   ├── profile.js
-│   │   │   ├── contact.js
-│   │   │   ├── notifications.js
-│   │   │   └── push.js
-│   │   ├── controllers/
-│   │   ├── middleware/
-│   │   ├── models/
-│   │   ├── utils/
-│   │   └── services/
-│   │
-│   ├── redirect/
-│   │   ├── redirect.py
-│   │   ├── requirements.txt
-│   │   └── logs/
-│   │
-│   ├── cliripper/
-│   │   ├── main.py
-│   │   ├── models/
-│   │   ├── handlers/
-│   │   └── logs/
-│   │
-│   ├── bots/
-│   │   ├── telegram/
-│   │   │   ├── bot.js
-│   │   │   ├── handlers/
-│   │   │   ├── commands/
-│   │   │   ├── webhook.js
-│   │   │   └── logs/
-│   │   └── discord/   (optional future)
-│   │
-│   ├── cron/
-│   │   ├── daily.js
-│   │   ├── warmup.js
-│   │   ├── payouts.js
-│   │   ├── analytics.js
-│   │   └── scheduler.js
-│   │
-│   ├── db/
-│   │   ├── migrations/
-│   │   ├── seeds/
-│   │   ├── prisma/ (if used)
-│   │   └── sql/
-│   │       ├── schema.sql
-│   │       ├── live_notifications.sql
-│   │       ├── push_notifications.sql
-│   │       └── settings.sql
-│   │
-│   ├── logs/
-│   │   ├── api.log
-│   │   ├── redirect.log
-│   │   ├── bot.log
-│   │   └── system.log
-│   │
-│   └── utils/
-│       ├── blacklist.js
-│       ├── affiliates.js
-│       ├── cwallet.js
-│       ├── seo.js
-│       ├── notifications.js
-│       └── helpers.js
-│
-├── frontend/
-│   ├── public/
-│   │   ├── icons/
-│   │   ├── logos/
-│   │   ├── manifest.json
-│   │   ├── robots.txt
-│   │   ├── sitemap.xml
-│   │   └── sw.js
-│   │
-│   ├── src/
-│   │   ├── main.tsx
-│   │   ├── App.tsx
-│   │   ├── index.css
-│   │   │
-│   │   ├── components/
-│   │   │   ├── Navbar/
-│   │   │   ├── LiveBanner/
-│   │   │   ├── PushNotificationBell/
-│   │   │   ├── SiteCard/
-│   │   │   ├── SiteCardGrid/
-│   │   │   ├── FiltersBar/
-│   │   │   ├── RaffleJoinModal/
-│   │   │   ├── Wheel/
-│   │   │   ├── Ads/
-│   │   │   ├── Footer/
-│   │   │   ├── PWAInstallPrompt/
-│   │   │   └── NotificationPermissionPrompt/
-│   │   │
-│   │   ├── pages/
-│   │   │   ├── Home/
-│   │   │   ├── Drops/
-│   │   │   ├── Raffles/
-│   │   │   ├── Wheel/
-│   │   │   ├── Affiliates/
-│   │   │   ├── RecentlyAdded/
-│   │   │   ├── Leaderboard/
-│   │   │   ├── Blacklist/
-│   │   │   ├── Contact/
-│   │   │   └── Profile/
-│   │   │
-│   │   ├── hooks/
-│   │   ├── context/
-│   │   ├── lib/
-│   │   │   ├── api.ts
-│   │   │   ├── seo.ts
-│   │   │   ├── storage.ts
-│   │   │   └── utils.ts
-│   │   │
-│   │   ├── styles/
-│   │   ├── assets/
-│   │   └── types/
-│   │
-│   ├── vite.config.ts
-│   ├── tailwind.config.js
-│   ├── tsconfig.json
-│   └── package.json
-│
-├── pm2/
-│   ├── api.config.js
-│   ├── bot.config.js
-│   ├── redirect.config.js
-│   └── ecosystem.config.js
-│
-└── logs/
-    ├── system/
-    ├── api/
-    ├── bot/
-    └── redirect/
-==============================================================
-END OF CHEAT SHEET
-==============================================================
+## 🗄️ DATABASE LAYER
+
+**Primary DB:**
+- PostgreSQL (Neon or other managed PG)
+- Connection via `GCZ_DB` in `.env`
+
+**Core tables (conceptual):**
+- `users` — accounts, profile settings, notification prefs
+- `raffles` — metadata, status, winners
+- `raffle_entries` — join records
+- `promos` — drops / promo codes / links
+- `affiliates_master` — official affiliate relationships, resolved domains
+- `notifications` — on‑site notifications
+- `telegram_events` / `discord_events` — optional event log tables
+- `service_health` — service health / AI monitoring
+
+**AI DB (Neon, AI engine):**
+- Used for:
+  - AI engine memory
+  - `service_health` logging
+  - AI events
+
+**Important recent fix:**
+- `service_health.details` column:
+  - Must be `JSONB` **or**
+  - Python must `json.dumps()` dicts before insert
+- Error fixed:
+  - `can't adapt type 'dict'` from psycopg2 when inserting dict directly.
+
+---
+
+## 🧠 AI ENGINE (GCZ AI MICRO-SERVICE)
+
+**Location:**
+- `/var/www/html/gcz/ai`
+- Main file: `server.py`
+- Database module: `db.py`
+
+**Key behavior:**
+- Loads environment from `/var/www/html/gcz/.env`
+- Uses `GCZ_DB` or a dedicated AI DB URL for Neon
+- Initializes DB pool and AI tables
+- Starts memory monitor thread:
+  - Writes into `service_health`
+  - Periodic checks and logs
+
+**Recent critical fix:**
+- Ensure `.env` is loaded **before** importing DB functions that require `GCZ_DB`.
+
+Canonical pattern in `server.py`:
+
+```python
+from dotenv import load_dotenv
+load_dotenv("/var/www/html/gcz/.env")
+
+from db import fetchall, execute

@@ -10,8 +10,8 @@
 # Ignore GCZ shell environment file
 gcz-env.sh
 
-# Ignore AI Agent Master Control file
-/var/www/html/gcz/AIAGENT_MASTERCONTROL.txt
+# Ignore AI Agent Master Control file (correct relative path)
+AIAGENT_MASTERCONTROL.txt
 
 # ============================
 # Shell Scripts

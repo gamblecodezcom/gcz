@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 
 import csv
-import random
+import asyncio
 import time
-import threading
 from typing import Dict, Any, List
 
 from fastapi import FastAPI, HTTPException, Request
@@ -28,48 +27,74 @@ DROPS: List[Dict[str, Any]] = []
 DROPS_BY_CATEGORY: Dict[str, List[Dict[str, Any]]] = {}
 
 
-def normalize(s: str) -> str:
+def normalize(s: str | None) -> str:
+    if not s:
+        return "unknown"
     return s.lower().strip().replace(" ", "")
 
 
-def load_drops():
-    """Load drops from the master affiliates CSV."""
-    global DROPS, DROPS_BY_CATEGORY
-
+def load_drops_sync():
+    """Load drops from the master affiliates CSV (sync, safe)."""
     new_list = []
     new_categories = {}
 
     try:
         with open(CSV_PATH, newline="", encoding="utf-8") as f:
             reader = csv.DictReader(f)
+
             for row in reader:
+                # Validate required fields
+                if not row.get("name") or not row.get("affiliate_url"):
+                    logger.warning("drops.invalid_row", extra={"row": row})
+                    continue
+
                 entry = {
-                    "name": row["name"],
-                    "url": row["affiliate_url"],
-                    "category": row["category"],
-                    "level": row["level"],
-                    "icon": row["icon_url"],
-                    "bonus_code": row["bonus_code"],
-                    "bonus_description": row["bonus_description"],
+                    "name": row.get("name"),
+                    "url": row.get("affiliate_url"),
+                    "category": row.get("category"),
+                    "level": row.get("level"),
+                    "icon": row.get("icon_url"),
+                    "bonus_code": row.get("bonus_code"),
+                    "bonus_description": row.get("bonus_description"),
                 }
 
                 new_list.append(entry)
 
-                cat = normalize(row["category"])
-                if cat not in new_categories:
-                    new_categories[cat] = []
-                new_categories[cat].append(entry)
-
-        DROPS = new_list
-        DROPS_BY_CATEGORY = new_categories
+                cat = normalize(row.get("category"))
+                new_categories.setdefault(cat, []).append(entry)
 
         logger.info(
             "drops.loaded",
-            extra={"drops": len(DROPS), "categories": len(DROPS_BY_CATEGORY)},
+            extra={"drops": len(new_list), "categories": len(new_categories)},
         )
+        return new_list, new_categories
 
     except Exception:
         logger.exception("drops.load_failed")
+        return [], {}
+
+
+async def refresh_loop():
+    """Async background refresher."""
+    global DROPS, DROPS_BY_CATEGORY
+
+    while True:
+        drops, categories = await asyncio.to_thread(load_drops_sync)
+        DROPS = drops
+        DROPS_BY_CATEGORY = categories
+        await asyncio.sleep(REFRESH_SECONDS)
+
+
+@app.on_event("startup")
+async def startup_event():
+    """Load once and start async refresher."""
+    global DROPS, DROPS_BY_CATEGORY
+
+    drops, categories = await asyncio.to_thread(load_drops_sync)
+    DROPS = drops
+    DROPS_BY_CATEGORY = categories
+
+    asyncio.create_task(refresh_loop())
 
 
 @app.exception_handler(Exception)
@@ -85,7 +110,7 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
 
 
 # ------------------------------------------------------------
-# HEALTH ENDPOINT (Master Ops uses this)
+# HEALTH ENDPOINT
 # ------------------------------------------------------------
 
 @app.get("/api/drops/health")
@@ -125,6 +150,7 @@ def drops_list():
 def drops_random():
     if not DROPS:
         raise HTTPException(status_code=404, detail="No drops available")
+    import random
     return JSONResponse(content=random.choice(DROPS))
 
 
@@ -146,26 +172,9 @@ def drops_by_category(category: str):
 
 @app.get("/api/drops/top")
 def drops_top():
-    top = [d for d in DROPS if d["level"] and d["level"].lower() == "top"]
+    top = [d for d in DROPS if d.get("level", "").lower() == "top"]
     return JSONResponse(content=top)
 
-
-# ------------------------------------------------------------
-# BACKGROUND REFRESHER
-# ------------------------------------------------------------
-
-
-def refresher():
-    while True:
-        load_drops()
-        time.sleep(REFRESH_SECONDS)
-
-
-# Load once before serving
-load_drops()
-
-# Start background refresh thread
-threading.Thread(target=refresher, daemon=True).start()
 
 # ------------------------------------------------------------
 # RUN SERVER

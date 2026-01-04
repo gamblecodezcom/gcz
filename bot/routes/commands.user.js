@@ -1,57 +1,45 @@
-import { getTelegramUserById } from "../services/telegramRoles.js";
+import fetch from "node-fetch";
 
-export function setupCommandList(bot) {
-  bot.command("commands", async (ctx) => {
-    const telegramId = ctx.from.id;
+export function setupUserCommands(bot) {
+  bot.command("me", async (ctx) => {
+    const userId = ctx.from.id.toString();
 
-    const role = await getTelegramUserById(telegramId);
-    const level = role?.level || 1; // default: member
+    try {
+      const res = await fetch(`https://gamblecodez.com/api/profile/${userId}`);
+      const data = await res.json();
 
-    const userCommands = [
-      "• /start – Welcome menu",
-      "• /profile – View your profile",
-      "• /setcwallet <id> – Save Cwallet ID",
-      "• /setrunewager <username> – Save Runewager username",
-      "• /donate – Send promo link/code",
-      "• /commands – Show available commands"
-    ];
+      ctx.reply(
+        `👤 *Your Profile*\n\n` +
+        `Telegram: ${ctx.from.username || ctx.from.first_name}\n` +
+        `CWallet: ${data.cwallet || "Not linked"}\n` +
+        `RuneWager: ${data.runewager || "Not linked"}\n` +
+        `Winna: ${data.winna || "Not linked"}\n`
+      );
+    } catch (err) {
+      ctx.reply("❌ Failed to load profile.");
+    }
+  });
 
-    const modCommands = [
-      "• /whois – Inspect a user",
-      "• /postpromo – Post promo manually"
-    ];
-
-    const adminCommands = [
-      "• /approve <id> – Approve promo",
-      "• /editpromo <id> <text> – Edit promo",
-      "• /broadcast – Broadcast message",
-      "• /giveaway start|cancel|status – Manage giveaways",
-      "• /join – Join giveaway (if allowed)"
-    ];
-
-    const superAdminCommands = [
-      "• /admin @user – Promote to admin",
-      "• /mod @user – Promote to moderator",
-      "• /demote @user – Demote to member"
-    ];
-
-    let message = `📜 *Your Available Commands*\n\n`;
-
-    // Everyone gets user commands
-    message += `👤 *User Commands:*\n${userCommands.join("\n")}\n\n`;
-
-    if (level >= 3) {
-      message += `🛡️ *Moderator Commands:*\n${modCommands.join("\n")}\n\n`;
+  bot.command("link_profile", async (ctx) => {
+    const args = ctx.message.text.split(" ").slice(1);
+    if (args.length < 3) {
+      return ctx.reply("Usage: /link_profile <cwallet> <runewager> <winna>");
     }
 
-    if (level >= 4) {
-      message += `🔧 *Admin Commands:*\n${adminCommands.join("\n")}\n\n`;
-    }
+    const [cwallet, runewager, winna] = args;
+    const userId = ctx.from.id.toString();
 
-    if (level === 5) {
-      message += `👑 *Super Admin Commands:*\n${superAdminCommands.join("\n")}\n\n`;
-    }
+    try {
+      const res = await fetch("https://gamblecodez.com/api/profile/link", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-user-id": userId },
+        body: JSON.stringify({ cwallet, runewager, winna })
+      });
 
-    await ctx.reply(message, { parse_mode: "Markdown" });
+      const data = await res.json();
+      ctx.reply(data.message || "✅ Profile linked successfully.");
+    } catch (err) {
+      ctx.reply("❌ Failed to link profile.");
+    }
   });
 }

@@ -1,0 +1,9 @@
+{
+  "version": "1.0.0",
+  "tables": {
+    "memory": "ai_memory",
+    "health": "service_health",
+    "anomalies": "anomalies"
+  },
+  "description": "Registry of all DB-backed memory tables used by the GCZ AI engine."
+}

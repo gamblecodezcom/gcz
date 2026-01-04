@@ -58,7 +58,7 @@ function buildEntry(level, args) {
   return entry;
 }
 
-function log(level, ...args) {
+function logLevel(level, ...args) {
   if (LEVELS[level] < ACTIVE_LEVEL) return;
   const entry = buildEntry(level, args);
   const payload = JSON.stringify(entry);
@@ -70,8 +70,31 @@ function log(level, ...args) {
 }
 
 export const logger = {
-  info: (...args) => log("info", ...args),
-  warn: (...args) => log("warn", ...args),
-  error: (...args) => log("error", ...args),
-  debug: (...args) => log("debug", ...args),
+  info: (...args) => logLevel("info", ...args),
+  warn: (...args) => logLevel("warn", ...args),
+  error: (...args) => logLevel("error", ...args),
+  debug: (...args) => logLevel("debug", ...args),
 };
+
+export function log(scope, message, error = null, meta = null) {
+  const level = error ? "error" : "info";
+  const payload = {
+    timestamp: new Date().toISOString(),
+    level,
+    service: process.env.SERVICE_NAME || "gcz-bot",
+    scope,
+    message,
+  };
+
+  if (meta && typeof meta === "object") {
+    Object.assign(payload, meta);
+  }
+
+  if (error) {
+    payload.error = normalizeError(error) || { message: String(error) };
+    console.error(JSON.stringify(payload));
+    return;
+  }
+
+  console.log(JSON.stringify(payload));
+}

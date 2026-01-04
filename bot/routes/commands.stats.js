@@ -1,46 +1,42 @@
-import { logger } from '../utils/logger.js';
-import { getUserStats, getUserActivity } from '../services/stats.js';
-import { getUserProfile } from '../utils/storage.js';
+import fetch from "node-fetch";
 
-/**
- * Setup stats-related commands
- */
 export function setupStatsCommands(bot) {
-  // /stats command - show user statistics
-  bot.command('stats', async (ctx) => {
+  bot.command("stats", async (ctx) => {
+    const userId = ctx.from.id.toString();
+
     try {
-      const userId = ctx.from.id.toString();
-      const profile = getUserProfile(userId);
-      const stats = await getUserStats(userId);
-      const recentActivity = await getUserActivity(userId, 5);
+      const res = await fetch(`https://gamblecodez.com/api/stats/${userId}`);
+      const data = await res.json();
 
-      let message = `📊 *Your Stats*\n\n`;
-      message += `🎰 *Raffle Entries:* ${stats.raffleEntries}\n`;
-      message += `🎡 *Wheel Spins:* ${stats.wheelSpins}\n`;
-      message += `🎁 *Giveaways Entered:* ${stats.giveawaysEntered}\n`;
-      message += `🔗 *Linked Casinos:* ${stats.linkedCasinos}\n\n`;
+      ctx.reply(
+        `📊 *Your Stats*\n\n` +
+        `Entries: ${data.entries}\n` +
+        `Wins: ${data.wins}\n` +
+        `Raffles Joined: ${data.raffles}\n` +
+        `Last Win: ${data.lastWin || "None"}`
+      );
+    } catch (err) {
+      ctx.reply("❌ Failed to fetch stats.");
+    }
+  });
 
-      if (profile.cwalletId) {
-        message += `💸 Cwallet ID: \`${profile.cwalletId}\`\n`;
-      }
-      if (profile.runewager) {
-        message += `🎰 Runewager: \`${profile.runewager}\`\n`;
-      }
+  bot.command("raffle_stats", async (ctx) => {
+    const id = ctx.message.text.split(" ")[1];
+    if (!id) return ctx.reply("Usage: /raffle_stats <raffleId>");
 
-      if (recentActivity.length > 0) {
-        message += `\n📝 *Recent Activity:*\n`;
-        recentActivity.forEach((activity, index) => {
-          const date = new Date(activity.timestamp).toLocaleDateString();
-          message += `${index + 1}. ${activity.title} - ${date}\n`;
-        });
-      }
+    try {
+      const res = await fetch(`https://gamblecodez.com/api/raffles/${id}/stats`);
+      const data = await res.json();
 
-      message += `\n🎰 Redeem today, flex tomorrow!`;
-
-      await ctx.reply(message, { parse_mode: 'Markdown' });
-    } catch (error) {
-      logger.error('Stats command error:', error);
-      ctx.reply('❌ Error fetching stats.');
+      ctx.reply(
+        `📈 *Raffle Stats*\n\n` +
+        `ID: ${id}\n` +
+        `Entries: ${data.entries}\n` +
+        `Unique Users: ${data.uniqueUsers}\n` +
+        `Status: ${data.status}`
+      );
+    } catch (err) {
+      ctx.reply("❌ Failed to fetch raffle stats.");
     }
   });
 }

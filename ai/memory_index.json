@@ -1,0 +1,9 @@
+{
+  "version": "1.0.0",
+  "description": "GCZ AI memory registry (DB-backed)",
+  "tables": {
+    "memory": "ai_memory",
+    "health": "service_health",
+    "anomalies": "anomalies"
+  }
+}

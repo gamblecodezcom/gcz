@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
-import re
 import csv
+import asyncio
+import re
 import time
-import threading
 from typing import Dict, Any
 
 from fastapi import FastAPI, HTTPException, Request
@@ -27,36 +27,63 @@ app.add_middleware(RequestContextMiddleware, logger=logger)
 REDIRECT_MAP: Dict[str, Dict[str, Any]] = {}
 
 
-def normalize(name: str) -> str:
+def normalize(name: str | None) -> str:
+    if not name:
+        return ""
     return re.sub(r"[^a-z0-9]", "", name.lower())
 
 
-def load_redirects():
-    """Load CSV into in-memory redirect map."""
-    global REDIRECT_MAP
+def load_redirects_sync():
+    """Load CSV into in-memory redirect map (sync, safe)."""
     new_map = {}
 
     try:
         with open(CSV_PATH, newline="", encoding="utf-8") as f:
             reader = csv.DictReader(f)
+
             for row in reader:
+                if not row.get("name") or not row.get("affiliate_url"):
+                    logger.warning("redirects.invalid_row", extra={"row": row})
+                    continue
+
                 key = normalize(row["name"])
-                icon = row["icon_url"] or (
-                    f"https://www.google.com/s2/favicons?sz=256&domain={row['resolved_domain']}"
+
+                icon = row.get("icon_url") or (
+                    f"https://www.google.com/s2/favicons?sz=256&domain={row.get('resolved_domain')}"
                     if row.get("resolved_domain")
                     else None
                 )
+
                 new_map[key] = {
-                    "url": row["affiliate_url"],
+                    "url": row.get("affiliate_url"),
                     "icon": icon,
-                    "level": row["level"],
+                    "level": row.get("level"),
                 }
 
-        REDIRECT_MAP = new_map
-        logger.info("redirects.loaded", extra={"entries": len(REDIRECT_MAP)})
+        logger.info("redirects.loaded", extra={"entries": len(new_map)})
+        return new_map
 
     except Exception:
         logger.exception("redirects.load_failed")
+        return {}
+
+
+async def refresh_loop():
+    """Async background refresher."""
+    global REDIRECT_MAP
+
+    while True:
+        REDIRECT_MAP = await asyncio.to_thread(load_redirects_sync)
+        await asyncio.sleep(REFRESH_SECONDS)
+
+
+@app.on_event("startup")
+async def startup_event():
+    """Load once and start async refresher."""
+    global REDIRECT_MAP
+
+    REDIRECT_MAP = await asyncio.to_thread(load_redirects_sync)
+    asyncio.create_task(refresh_loop())
 
 
 @app.exception_handler(Exception)
@@ -72,7 +99,7 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
 
 
 # ------------------------------------------------------------
-# HEALTH ENDPOINT (Master Ops uses this)
+# HEALTH ENDPOINT
 # ------------------------------------------------------------
 
 @app.get("/health")
@@ -120,23 +147,6 @@ def get_meta(sitename: str):
         return JSONResponse(content=REDIRECT_MAP[key])
     raise HTTPException(status_code=404, detail="Not found")
 
-
-# ------------------------------------------------------------
-# BACKGROUND REFRESHER
-# ------------------------------------------------------------
-
-
-def refresher():
-    while True:
-        load_redirects()
-        time.sleep(REFRESH_SECONDS)
-
-
-# Load once before serving
-load_redirects()
-
-# Start background refresh thread
-threading.Thread(target=refresher, daemon=True).start()
 
 # ------------------------------------------------------------
 # RUN SERVER
