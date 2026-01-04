@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 import json
 import asyncio
@@ -9,33 +10,25 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse, PlainTextResponse, StreamingResponse
 
-from config import get_settings
+# Ensure backend root is on PYTHONPATH
+BACKEND_ROOT = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(BACKEND_ROOT)
+
+# ============================
+# CONFIG + LOGGER
+# ============================
+from config import get_settings, load_env
 from logger import get_logger
-from middleware.rate_limit import rate_limiter   # ⭐ FIXED IMPORT
+from middleware.rate_limit import rate_limiter
 
-# ============================
-# ROUTERS
-# ============================
-from routes import (
-    ai_router,
-    promos_router,
-    giveaway_router,
-    affiliates_router,
-    casinos_router,
-    redeem_router,
-    admin_router,
-    profile_router,
-    dashboard_router,
-    sc_router,
-    auth_roles_router,   # ⭐ NEW ROLE ROUTER
-)
-
-# ============================
-# SETTINGS + LOGGER
-# ============================
 settings = get_settings()
+load_env(settings.ENV_FILE)
+
 logger = get_logger("gcz-main")
 
+# ============================
+# FASTAPI APP
+# ============================
 app = FastAPI(
     title="GambleCodez API",
     version="2.0.0",
@@ -58,6 +51,23 @@ app.add_middleware(
 @app.middleware("http")
 async def rate_limit_middleware(request: Request, call_next):
     return await rate_limiter(request, call_next)
+
+# ============================
+# ROUTERS
+# ============================
+from routes import (
+    ai_router,
+    promos_router,
+    giveaway_router,
+    affiliates_router,
+    casinos_router,
+    redeem_router,
+    admin_router,
+    profile_router,
+    dashboard_router,
+    sc_router,
+    auth_roles_router,
+)
 
 # ============================
 # BASE HEALTH
@@ -86,13 +96,22 @@ async def ai_health():
         return JSONResponse(data)
     except FileNotFoundError:
         logger.warning("AI health file not found")
-        return JSONResponse({"status": "unknown", "error": "health_index.json not found"})
+        return JSONResponse(
+            {"status": "unknown", "error": "health_index.json not found"},
+            status_code=404,
+        )
     except json.JSONDecodeError as e:
         logger.error(f"AI health JSON decode error: {e}")
-        return JSONResponse({"status": "unknown", "error": "invalid JSON in health_index.json"})
+        return JSONResponse(
+            {"status": "unknown", "error": "invalid JSON in health_index.json"},
+            status_code=500,
+        )
     except Exception as e:
         logger.error(f"AI health error: {e}")
-        return JSONResponse({"status": "unknown", "error": str(e)})
+        return JSONResponse(
+            {"status": "unknown", "error": str(e)},
+            status_code=500,
+        )
 
 # ============================
 # /ai/memory
@@ -236,14 +255,14 @@ if os.path.isdir(AI_DASHBOARD):
 # ============================
 # ROUTER REGISTRATION
 # ============================
-app.include_router(ai_router,         prefix="")
-app.include_router(promos_router,     prefix="")
-app.include_router(giveaway_router,   prefix="")
-app.include_router(affiliates_router, prefix="")
-app.include_router(casinos_router,    prefix="")
-app.include_router(redeem_router,     prefix="")
-app.include_router(admin_router,      prefix="")
-app.include_router(profile_router,    prefix="")
-app.include_router(dashboard_router,  prefix="")
-app.include_router(sc_router,         prefix="")
-app.include_router(auth_roles_router, prefix="")
+app.include_router(ai_router)
+app.include_router(promos_router)
+app.include_router(giveaway_router)
+app.include_router(affiliates_router)
+app.include_router(casinos_router)
+app.include_router(redeem_router)
+app.include_router(admin_router)
+app.include_router(profile_router)
+app.include_router(dashboard_router)
+app.include_router(sc_router)
+app.include_router(auth_roles_router)

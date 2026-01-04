@@ -1,7 +1,11 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from logger import get_logger
+
+# Updated admin check (async + role-aware)
 from services.auth import require_admin
+
+# SC engine services
 from services.sc_service import (
     check_runewager_tip_eligibility,
     log_runewager_tip_granted,
@@ -43,7 +47,7 @@ async def runewager_log_tip(payload: RunewagerTipLogRequest):
     Called AFTER admin manually tips user on Runewager/sweeps site.
     Just logs in DB so they can't double-dip.
     """
-    require_admin(payload.admin_id)
+    await require_admin(payload.admin_id)
 
     await log_runewager_tip_granted(
         telegram_id=payload.telegram_id,
@@ -52,8 +56,10 @@ async def runewager_log_tip(payload: RunewagerTipLogRequest):
     )
 
     logger.info(
-        f"[SC] Runewager tip logged: {payload.telegram_id} +{payload.sc_amount} SC by admin {payload.admin_id}"
+        f"[SC] Runewager tip logged: tg={payload.telegram_id} "
+        f"+{payload.sc_amount} SC by admin {payload.admin_id}"
     )
+
     return {"success": True}
 
 
@@ -75,7 +81,7 @@ async def sc_drop(payload: DropRequest):
     Creates a drop log using site multipliers.
     Admin still sends sweeps/SC/crypto manually on partner site.
     """
-    require_admin(payload.admin_id)
+    await require_admin(payload.admin_id)
 
     drop = await create_drop_log(
         telegram_id=payload.telegram_id,
@@ -89,6 +95,7 @@ async def sc_drop(payload: DropRequest):
         f"[SC] Drop logged: tg={payload.telegram_id} site={payload.site} "
         f"{payload.base_sc} -> {drop['final_sc']} ({payload.reason})"
     )
+
     return {"success": True, "drop": drop}
 
 
@@ -108,6 +115,8 @@ async def sc_raffle_enter(payload: RaffleEntryRequest):
       - logs raffle entry
     """
     result = await enter_raffle(payload.telegram_id)
+
     if not result["success"]:
         raise HTTPException(status_code=400, detail=result["reason"])
+
     return result

@@ -10,7 +10,6 @@ from utils.sc import (
     raffle_entry_cost,
 )
 
-
 # ============================================================
 #  RUNEWAGER TIP LOGIC (DECIDE + LOG, MANUAL TIP OFFSITE)
 # ============================================================
@@ -258,6 +257,7 @@ async def enter_raffle(telegram_id: int) -> Dict:
     new_balance = balance - cost
 
     db = await get_db()
+
     # raffle entry log
     await db.execute(
         """
@@ -266,6 +266,7 @@ async def enter_raffle(telegram_id: int) -> Dict:
         """,
         telegram_id,
     )
+
     # balance log
     await db.execute(
         """
@@ -275,6 +276,7 @@ async def enter_raffle(telegram_id: int) -> Dict:
         telegram_id,
         cost,
     )
+
     # update balance
     await db.execute(
         """
@@ -285,6 +287,7 @@ async def enter_raffle(telegram_id: int) -> Dict:
         telegram_id,
         new_balance,
     )
+
     await db.close()
 
     return {

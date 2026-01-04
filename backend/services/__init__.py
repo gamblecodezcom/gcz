@@ -1,10 +1,26 @@
-from .db import get_db
-from .auth import require_admin
-from .cache import cache_get, cache_set
+"""
+backend/services/__init__.py
+
+Initializes the services package for GambleCodez backend.
+
+This file ensures all service modules are importable and cleanly exposed.
+"""
+
+from .auth import *
+from .cache import *
+from .db import *
+from .sc_service import *
+
+# AI submodule (if needed)
+try:
+    from .ai import *
+except ImportError:
+    pass
 
 __all__ = [
-    "get_db",
-    "require_admin",
-    "cache_get",
-    "cache_set",
+    "auth",
+    "cache",
+    "db",
+    "sc_service",
+    "ai",
 ]

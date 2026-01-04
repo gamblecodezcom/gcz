@@ -1,296 +1,201 @@
 Tyler — this is a monster of a document, and you clearly want one thing:
 
-“Update everything we have changed or plan to.”
-
-So here’s what I’m going to do:
-
-I’ll give you a clean, unified, authoritative upgrade plan that merges:
-
-- your new bot architecture  
-- your backend/API structure  
-- your frontend requirements  
-- your PM2 processes  
-- your directory tree  
-- your environment layout  
-- your branding + UX rules  
-- your notification systems  
-- your AI agent stack  
-- your cron + redirect + CLI ripper  
-- your database schema  
-- your VPS layout  
-
+Update everything we have changed or plan to.
 Basically: a single source of truth for the entire GCZ ecosystem.
 
-This is not a rewrite of your cheat sheet — it’s the fully integrated, corrected, modernized version that reflects everything we’ve actually changed in the last 48 hours.
+This is not a rewrite of your cheat sheet — it’s the fully integrated, corrected, modernized version that reflects everything we’ve actually changed and locked in.
 
-Let’s lock it in.
-
----
-
-⭐ GAMBLECODEZ — COMPLETE SYSTEM UPGRADE SPEC (FINAL 2026 EDITION)
 This is the canonical, up‑to‑date blueprint for your entire stack.
 
 ---
 
-🎨 BRAND + UX
-- Neon‑dark theme  
-- Crown flip animation  
-- Rainbow flash (1×/24h)  
-- Glow badges for categories  
-- Live notification banner  
-- PWA install + notification prompts  
-- PIN‑gated profile  
-- Raffle disclaimers everywhere needed  
-- Cwallet affiliate fallback + admin override  
+# ⭐ GAMBLECODEZ — COMPLETE SYSTEM UPGRADE SPEC (FINAL 2026 EDITION)
+
+## 🎨 BRAND + UX
+
+**Core brand:**
+- Neon‑dark theme
+- Crown energy across logo/UX
+- Rainbow flash hero (short, 1× per day max)
+- Glow badges for key categories (SC, Raffles, Exclusive, Verified, Blacklisted)
+- “Degen but responsible” tone: hype, but with clear disclaimers
+
+**Global UX:**
+- Sticky but auto‑hiding navbar
+- Persistent footer with:
+  - Contact
+  - Legal / TOS / Privacy
+  - Responsible gaming info
+- Live notification banner for:
+  - New drops
+  - Raffle updates
+  - Urgent support messages
+
+**Degen Profile UX:**
+- PIN‑gated profile area
+- Saved sites / favorites
+- Notification preferences (email / Telegram / site only)
+
+**Compliance UX:**
+- Raffle disclaimers:
+  - “No purchase necessary” where required
+  - “Not sponsored by XYZ casino” clarifiers
+- Age & jurisdiction statements where relevant
 
 ---
 
-🌐 FRONTEND (Vite + React + TS)
+## 🌐 FRONTEND (React / Vite / TS — WEB APP)
 
-Routes
-`
-/
- /drops
- /raffles
- /wheel
- /affiliates
- /sites/recent
- /leaderboard
- /blacklist
- /contact
- /profile
-`
+**Primary user‑facing routes:**
+- `/` — Landing / Hero + featured drops
+- `/drops` — Main promo feed
+- `/raffles` — All active & historical raffles
+- `/wheel` — Wheel / spin feature
+- `/affiliates` — Transparent affiliate listing
+- `/sites/recent` — Recently added / updated sites
+- `/leaderboard` — Top winners / participants (internal rules)
+- `/blacklist` — Blacklisted sites / reasons
+- `/contact` — Support / feedback
+- `/Degen Profile` — Link Casino Account, Drops Promos interactive Dashboard, Secret Code Word Entry for hidden Raffles, Raffles, Degen Wheel, Raffle Winners Cwallet Prize URL Claim Button, Ping admin - Completed requirements for specific Site Affiliate Promo Elig (example Button to notify they have wagered 3,000SC in any 7 day period on Runewager & is signed up under GambleCodez affiliate+ Request for auth and manual SC tip on site for 30SC by admin, PIN + Cwallet ID + Telegram @ site connections GambleCodez Hero sites Runewage.com & Winna.com, notification prefs
 
-Components
-- Navbar (auto‑hide)  
-- LiveBanner  
-- PushNotificationBell  
-- SiteCard + Grid  
-- FiltersBar  
-- RaffleJoinModal  
-- Wheel  
-- Ads (weighted)  
-- Footer  
-- PWAInstallPrompt  
-- NotificationPermissionPrompt  
+**Key components:**
+- `Navbar` — responsive, auto‑hide on scroll
+- `LiveBanner` — live updates (maintenance, big drops)
+- `PushNotificationBell` — per‑user notification badge
+- `SiteCard` / `SiteGrid` — unified cards for casinos / offers
+- `FiltersBar` — sort/filter by:
+  - SC / cash / sweepstakes
+  - New / expiring
+  - Verified / unverified
+- `RaffleJoinModal` — join flow with validation
+- `Wheel` — controlled spin UX
+- `DropCard` — formatted promo display (code/link, description, site, tags)
+- `PWAInstallPrompt` — mobile / desktop install
+- `NotificationPermissionPrompt` — browser notifications
 
-API Calls
-`
-GET /api/sites
-GET /api/sites/recent
-GET /api/notifications/live
-GET /api/push
-PATCH /api/push/:id/read
-GET /api/raffles
-POST /api/profile/update
-POST /api/profile/pin
-POST /api/contact
-`
+**Frontend → Backend API usage (HTTP):**
+- `GET /api/sites`
+- `GET /api/sites/recent`
+- `GET /api/drops` (promos)
+- `GET /api/raffles`
+- `POST /api/raffles/join`
+- `GET /api/degenprofile`
+- `POST /api/profile/update`
+- `POST /api/profile/pin`
+- `GET /api/notifications`
+- `PATCH /api/notifications/:id/read`
+- `POST /api/contact`
 
----
-
-🧠 BACKEND (Node + Python microservices)
-
-Node API
-`
-/backend/api
-  /routes
-    sites.js
-    recent.js
-    raffles.js
-    profile.js
-    contact.js
-    notifications.js
-    push.js
-`
-
-Python microservices
-- redirect service (slug → URL resolver)  
-- drops service  
-- CLI ripper  
-
-Cron jobs
-- daily  
-- warmup  
-- payouts  
-- analytics  
-- scheduler  
+All backend calls terminate on the **Python FastAPI** backend under `/var/www/html/gcz/backend`.
 
 ---
 
-🗄️ DATABASES
+## 🧠 BACKEND CORE (PYTHON FASTAPI — `backend/main.py`)
 
-PostgreSQL (primary)
-- users  
-- raffles  
-- wheel  
-- promos  
-- notifications  
-- settings  
-- affiliatesmaster (with resolveddomain column)
+**Location:**
+- `/var/www/html/gcz/backend/main.py`
 
-Neon (analytics + AI agent)
-- event logs  
-- embeddings  
-- agent memory  
+**Key imports (canonical):**
+- `from config.config import get_settings`
+- `from logger import get_logger`
+- `from middleware.rate_limit import rate_limiter`
+- `from routes import (ai_router, promos_router, giveaway_router, affiliates_router, casinos_router, redeem_router, admin_router, profile_router, dashboard_router, sc_router, auth_roles_router)`
 
----
+**App init:**
+- `app = FastAPI(title="GambleCodez API", version="2.0.0", description="GambleCodez Backend + AI Control Surface")`
+- CORS:
+  - `allow_origins=["*"]`
+  - `allow_methods=["*"]`
+  - `allow_headers=["*"]`
 
-🤖 TELEGRAM BOT (Upgraded 2026 Architecture)
+**Global middleware:**
+- Rate‑limit middleware:
+  - `@app.middleware("http")`
+  - Delegates to `rate_limiter(request, call_next)`
+  - Prevents abuse on public endpoints
 
-Bot entry
-`
-/var/www/html/gcz/bot/bot.js
-`
-
-Commands
-- stats  
-- user  
-- wheel  
-- autoresponse  
-- giveaways  
-
-Services (API‑driven)
-`
-autoresponses.js
-giveaways.js
-wheel.js
-stats.js
-promos.js
-notifications.js
-scheduler.js
-channel.js
-messages.js
-raffles.js
-telegramRoles.js
-`
-
-Utils
-`
-logger.js
-permissions.js
-storage.js
-formatters.js
-`
-
-Role system
-`
-user → 0
-mod → 1
-manager → 2
-admin → 3
-super_admin → 4
-`
-
-Super admin Telegram ID: 6668510825
-
-Autoresponse system
-- keyword triggers  
-- admin setup flow  
-- inline buttons  
-- callback queries  
-- API‑stored responses  
-
-Notification system
-- wheel spin  
-- giveaway win  
-- new raffle  
-- secret code hint  
-- all API‑driven  
+**Base health endpoint:**
+- `GET /api/health` → `{"status": "ok"}`
 
 ---
 
-⚙️ PM2 CONFIG (UPDATED)
-Your bot now uses bot.js, not start‑bot.js.
+## 🧩 BACKEND CONFIG & SETTINGS
 
-`
-gcz-api
-gcz-redirect
-gcz-drops
-gcz-bot (bot.js)
-gcz-discord
-gcz-watchdog
-`
+**Files:**
+- `/var/www/html/gcz/backend/config/__init__.py`
+- `/var/www/html/gcz/backend/config/config.py`
+- `/var/www/html/gcz/backend/.env`
 
----
+**`config/config.py` (canonical):**
+- Uses `pydantic.BaseSettings`
+- Loads from `/var/www/html/gcz/backend/.env`
+- Example fields:
+  - `ENV = "production"`
+  - `DOMAIN = "https://gamblecodez.com"`
+  - `GCZ_DB = "postgresql://...neon..."` (primary DB URL)
+- Config:
+  - `env_file = "/var/www/html/gcz/backend/.env"`
+  - `extra = "allow"`
 
-📁 DIRECTORY TREE (FINAL)
-You now have:
-
-`
-/var/www/html/gcz
-  backend/
-  frontend/
-  bot/
-    bot.js
-    config.js
-    routes/
-    services/
-    utils/
-  pm2/
-  logs/
-  backups/
-  .env
-`
+**Access pattern:**
+- `settings = get_settings()`
+- Used for DB URL, domain, environment flags.
 
 ---
 
-🔐 ENVIRONMENT
+## 🗄️ DATABASE LAYER
 
-Core
-`
-NODE_ENV=production
-PORT=3000
-DOMAIN=https://gamblecodez.com
-APIBASEURL=https://gamblecodez.com/api
-BACKENDAPIURL=https://gamblecodez.com/api
-WEBAPPBASEURL=https://gamblecodez.com
-SESSION_SECRET=*
-CRONTIMEZONE=America/NewYork
-SYSTEM_NAME=GambleCodez
-`
+**Primary DB:**
+- PostgreSQL (Neon or other managed PG)
+- Connection via `GCZ_DB` in `.env`
 
-Backend
-`
-DATABASE_URL=postgresql://...
-PGPASSWORD=...
-AIAGENTNEONDBURL=postgresql://...
-AFFILIATESCSVPATH=/var/www/html/gcz/master_affiliates.csv
-REDIRECTBASEURL=https://gamblecodez.com/affiliates/redirect
-`
+**Core tables (conceptual):**
+- `users` — accounts, profile settings, notification prefs
+- `raffles` — metadata, status, winners
+- `raffle_entries` — join records
+- `promos` — drops / promo codes / links
+- `affiliates_master` — official affiliate relationships, resolved domains
+- `notifications` — on‑site notifications
+- `telegram_events` / `discord_events` — optional event log tables
+- `service_health` — service health / AI monitoring
 
-Telegram
-- bot token  
-- admin ID  
-- channel IDs  
-- group IDs  
+**AI DB (Neon, AI engine):**
+- Used for:
+  - AI engine memory
+  - `service_health` logging
+  - AI events
 
----
-
-🧪 CLI RIPPER
-`
-/backend/cliripper/main.py
-`
+**Important recent fix:**
+- `service_health.details` column:
+  - Must be `JSONB` **or**
+  - Python must `json.dumps()` dicts before insert
+- Error fixed:
+  - `can't adapt type 'dict'` from psycopg2 when inserting dict directly.
 
 ---
 
-🖥️ VPS
-Ubuntu 22.04  
-4GB RAM  
-50GB disk  
-root@72.60.113.42  
+## 🧠 AI ENGINE (GCZ AI MICRO-SERVICE)
 
----
+**Location:**
+- `/var/www/html/gcz/ai`
+- Main file: `server.py`
+- Database module: `db.py`
 
-🎯 ALIASES
-`
-gcz, gczs, gczapi, gczbot, gczred, gczwd, gczall
-gczdaily, gczwarm, gczsync
-gczbackup, gzczaudit
-sql, dbtest
-`
+**Key behavior:**
+- Loads environment from `/var/www/html/gcz/.env`
+- Uses `GCZ_DB` or a dedicated AI DB URL for Neon
+- Initializes DB pool and AI tables
+- Starts memory monitor thread:
+  - Writes into `service_health`
+  - Periodic checks and logs
 
----
+**Recent critical fix:**
+- Ensure `.env` is loaded **before** importing DB functions that require `GCZ_DB`.
 
-⭐ THIS IS NOW YOUR OFFICIAL, UPDATED, COMPLETE SYSTEM SPEC
-Everything we changed — bot, backend, frontend, PM2, roles, notifications, architecture — is now unified and correct.
+Canonical pattern in `server.py`:
+
+```python
+from dotenv import load_dotenv
+load_dotenv("/var/www/html/gcz/.env")
+
+from db import fetchall, execute

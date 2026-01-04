@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from datetime import datetime, timedelta
-from typing import Optional
 import uuid
+import random
 
 from services.db import get_db
 from services.auth import require_admin
@@ -11,6 +11,10 @@ from logger import get_logger
 router = APIRouter(prefix="/api/giveaway", tags=["Giveaways"])
 logger = get_logger("gcz-giveaway")
 
+
+# ============================================================
+#  MODELS
+# ============================================================
 
 class StartGiveaway(BaseModel):
     site: str
@@ -34,6 +38,10 @@ class LogGiveaway(BaseModel):
     status: str  # "entered", "won", "delivered"
 
 
+# ============================================================
+#  VALIDATION
+# ============================================================
+
 ALLOWED_SITES = ["runewager", "winna", "cwallet"]
 
 
@@ -42,32 +50,49 @@ def validate_site(site: str):
         raise HTTPException(status_code=400, detail="Unsupported site for giveaways")
 
 
+# ============================================================
+#  START GIVEAWAY
+# ============================================================
+
 @router.post("/start")
 async def start_giveaway(payload: StartGiveaway):
-    require_admin(payload.started_by_telegram_id)
+    await require_admin(payload.started_by_telegram_id)
     validate_site(payload.site)
 
     db = await get_db()
+
     giveaway_id = str(uuid.uuid4())
     end_time = datetime.utcnow() + timedelta(minutes=payload.duration_minutes)
 
-    await db.execute(
-        """
-        INSERT INTO giveaways (id, site, winners, prize_value, end_time, status)
-        VALUES ($1, $2, $3, $4, $5, 'active')
-        """,
-        giveaway_id,
-        payload.site,
-        payload.winners,
-        payload.prize_value,
-        end_time,
-    )
+    try:
+        await db.execute(
+            """
+            INSERT INTO giveaways (id, site, winners, prize_value, end_time, status)
+            VALUES ($1, $2, $3, $4, $5, 'active')
+            """,
+            giveaway_id,
+            payload.site.lower(),
+            payload.winners,
+            payload.prize_value,
+            end_time,
+        )
 
-    await db.close()
-    logger.info(f"Started giveaway {giveaway_id} on {payload.site}")
+        logger.info(f"[GIVEAWAY] Started {giveaway_id} on {payload.site}")
 
-    return {"success": True, "giveaway_id": giveaway_id, "message": "Giveaway started"}
+        return {
+            "success": True,
+            "giveaway_id": giveaway_id,
+            "message": "Giveaway started"
+        }
 
+    except Exception as e:
+        logger.error(f"[GIVEAWAY] Failed to start giveaway: {e}")
+        raise HTTPException(status_code=500, detail="Failed to start giveaway")
+
+
+# ============================================================
+#  JOIN GIVEAWAY
+# ============================================================
 
 @router.post("/join")
 async def join_giveaway(payload: JoinGiveaway):
@@ -76,68 +101,83 @@ async def join_giveaway(payload: JoinGiveaway):
 
     active = await db.fetchrow(
         """
-        SELECT id FROM giveaways
+        SELECT id
+        FROM giveaways
         WHERE status='active' AND site=$1
-        ORDER BY end_time DESC LIMIT 1
+        ORDER BY end_time DESC
+        LIMIT 1
         """,
-        payload.site,
+        payload.site.lower(),
     )
 
     if not active:
-        await db.close()
         raise HTTPException(status_code=400, detail="No active giveaway")
 
-    await db.execute(
-        """
-        INSERT INTO giveaway_entries (giveaway_id, telegram_id, username, site)
-        VALUES ($1, $2, $3, $4)
-        ON CONFLICT DO NOTHING
-        """,
-        active["id"],
-        payload.telegram_id,
-        payload.username,
-        payload.site,
-    )
+    try:
+        await db.execute(
+            """
+            INSERT INTO giveaway_entries (giveaway_id, telegram_id, username, site)
+            VALUES ($1, $2, $3, $4)
+            ON CONFLICT DO NOTHING
+            """,
+            active["id"],
+            payload.telegram_id,
+            payload.username,
+            payload.site.lower(),
+        )
 
-    await db.close()
-    logger.info(f"User {payload.telegram_id} joined giveaway {active['id']} on {payload.site}")
+        logger.info(
+            f"[GIVEAWAY] User {payload.telegram_id} joined {active['id']} ({payload.site})"
+        )
 
-    return {"success": True, "message": "Entry recorded"}
+        return {"success": True, "message": "Entry recorded"}
 
+    except Exception as e:
+        logger.error(f"[GIVEAWAY] Join error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to join giveaway")
+
+
+# ============================================================
+#  PICK WINNERS
+# ============================================================
 
 @router.post("/pick-winners")
 async def pick_winners(admin_id: int):
-    require_admin(admin_id)
+    await require_admin(admin_id)
     db = await get_db()
 
     giveaway = await db.fetchrow(
         """
-        SELECT * FROM giveaways
+        SELECT *
+        FROM giveaways
         WHERE status='active'
-        ORDER BY end_time ASC LIMIT 1
+        ORDER BY end_time ASC
+        LIMIT 1
         """
     )
 
     if not giveaway:
-        await db.close()
         raise HTTPException(status_code=400, detail="No active giveaway")
 
     entries = await db.fetch(
         """
-        SELECT * FROM giveaway_entries
+        SELECT *
+        FROM giveaway_entries
         WHERE giveaway_id=$1
         """,
         giveaway["id"],
     )
 
+    # No entries → end giveaway
     if not entries:
-        await db.execute("UPDATE giveaways SET status='ended' WHERE id=$1", giveaway["id"])
-        await db.close()
-        logger.info(f"Ended giveaway {giveaway['id']} with no entries")
+        await db.execute(
+            "UPDATE giveaways SET status='ended' WHERE id=$1",
+            giveaway["id"],
+        )
+        logger.info(f"[GIVEAWAY] Ended {giveaway['id']} (no entries)")
         return {"success": True, "winners": [], "message": "No entries"}
 
-    import random
-
+    # Pick winners
     winners = random.sample(entries, min(giveaway["winners"], len(entries)))
 
     for w in winners:
@@ -152,64 +192,86 @@ async def pick_winners(admin_id: int):
             w["site"],
         )
 
-    await db.execute("UPDATE giveaways SET status='ended' WHERE id=$1", giveaway["id"])
-    await db.close()
+    await db.execute(
+        "UPDATE giveaways SET status='ended' WHERE id=$1",
+        giveaway["id"],
+    )
 
-    logger.info(f"Picked {len(winners)} winners for giveaway {giveaway['id']}")
+    logger.info(f"[GIVEAWAY] Picked {len(winners)} winners for {giveaway['id']}")
 
     return {
         "success": True,
         "winners": [
-            {"telegram_id": w["telegram_id"], "username": w["username"], "site": w["site"]}
+            {
+                "telegram_id": w["telegram_id"],
+                "username": w["username"],
+                "site": w["site"],
+            }
             for w in winners
         ],
     }
 
 
+# ============================================================
+#  LOG DELIVERY
+# ============================================================
+
 @router.post("/log")
 async def log_delivery(payload: LogGiveaway):
     db = await get_db()
 
-    await db.execute(
-        """
-        INSERT INTO giveaway_logs (giveaway_id, telegram_id, username, site, status)
-        VALUES ($1, $2, $3, $4, $5)
-        """,
-        payload.giveaway_id,
-        payload.telegram_id,
-        payload.username,
-        payload.site,
-        payload.status,
-    )
+    try:
+        await db.execute(
+            """
+            INSERT INTO giveaway_logs (giveaway_id, telegram_id, username, site, status)
+            VALUES ($1, $2, $3, $4, $5)
+            """,
+            payload.giveaway_id,
+            payload.telegram_id,
+            payload.username,
+            payload.site.lower(),
+            payload.status,
+        )
 
-    await db.close()
-    logger.info(
-        f"Logged giveaway delivery: {payload.giveaway_id} -> {payload.telegram_id} ({payload.status})"
-    )
-    return {"success": True}
+        logger.info(
+            f"[GIVEAWAY] Delivery logged: {payload.giveaway_id} -> {payload.telegram_id} ({payload.status})"
+        )
 
+        return {"success": True}
+
+    except Exception as e:
+        logger.error(f"[GIVEAWAY] Delivery log error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to log delivery")
+
+
+# ============================================================
+#  RAFFLE STATUS (ADMIN PANEL)
+# ============================================================
 
 @router.get("/raffle-status")
 async def raffle_status():
     db = await get_db()
 
-    raffleEntriesResult = await db.fetchrow("SELECT COUNT(*) FROM raffle_entries")
-    raffleEntriesTodayResult = await db.fetchrow(
-        """
-        SELECT COUNT(*) FROM raffle_entries
-        WHERE DATE(created_at) = CURRENT_DATE
-        """
-    )
-    wheelSpinsRemaining = 1
-    giveawaysReceived = await db.fetchval("SELECT COUNT(*) FROM giveaway_winners")
-    linkedCasinos = await db.fetchval("SELECT COUNT(*) FROM casinos WHERE enabled=true")
+    try:
+        raffleEntries = await db.fetchval("SELECT COUNT(*) FROM raffle_entries")
+        raffleEntriesToday = await db.fetchval(
+            """
+            SELECT COUNT(*)
+            FROM raffle_entries
+            WHERE DATE(created_at) = CURRENT_DATE
+            """
+        )
+        giveawaysReceived = await db.fetchval("SELECT COUNT(*) FROM giveaway_winners")
+        linkedCasinos = await db.fetchval("SELECT COUNT(*) FROM casinos WHERE enabled=true")
 
-    await db.close()
+        return {
+            "raffleEntries": int(raffleEntries),
+            "raffleEntriesToday": int(raffleEntriesToday),
+            "wheelSpinsRemaining": 1,
+            "giveawaysReceived": giveawaysReceived,
+            "linkedCasinos": linkedCasinos,
+        }
 
-    return {
-        "raffleEntries": int(raffleEntriesResult["count"]),
-        "raffleEntriesToday": int(raffleEntriesTodayResult["count"]),
-        "wheelSpinsRemaining": wheelSpinsRemaining,
-        "giveawaysReceived": giveawaysReceived,
-        "linkedCasinos": linkedCasinos,
-    }
+    except Exception as e:
+        logger.error(f"[GIVEAWAY] raffle-status error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to load raffle status")

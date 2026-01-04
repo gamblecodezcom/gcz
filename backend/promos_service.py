@@ -1,33 +1,99 @@
-from database import get_db
-from models import PromoCode, PromoLink
+from services.db import get_db
+from logger import get_logger
+
+logger = get_logger("gcz-promos-service")
+
+
+# ============================================================
+#  GET PROMO CODES (type = 'code')
+# ============================================================
 
 async def get_promo_codes():
+    db = await get_db()
+
     try:
-        db = await get_db()
-        rows = await db.fetch("SELECT * FROM promo_codes ORDER BY created_at DESC")
-        await db.close()
-        return [dict(row) for row in rows]
-    except Exception:
+        rows = await db.fetch(
+            """
+            SELECT
+                id,
+                site,
+                description,
+                created_at,
+                verified,
+                code
+            FROM promos
+            WHERE type = 'code' AND active = TRUE
+            ORDER BY created_at DESC
+            """
+        )
+
+        return [
+            {
+                "id": r["id"],
+                "site": r["site"].lower() if r["site"] else None,
+                "code": r["code"],
+                "description": r["description"],
+                "createdAt": r["created_at"],
+                "verified": bool(r["verified"]),
+            }
+            for r in rows
+        ]
+
+    except Exception as e:
+        logger.error(f"[PROMOS] Failed to load promo codes: {e}")
+
         # fallback mock
         return [{
             "id": "mock1",
-            "site": "Stake.us",
+            "site": "stake.us",
             "code": "GCZ50",
             "description": "50 Free Sweeps Coins",
             "createdAt": "2026-01-01T00:00:00Z",
             "verified": True
         }]
 
+
+# ============================================================
+#  GET PROMO LINKS (type = 'link')
+# ============================================================
+
 async def get_promo_links():
+    db = await get_db()
+
     try:
-        db = await get_db()
-        rows = await db.fetch("SELECT * FROM promo_links ORDER BY created_at DESC")
-        await db.close()
-        return [dict(row) for row in rows]
-    except Exception:
+        rows = await db.fetch(
+            """
+            SELECT
+                id,
+                site,
+                description,
+                created_at,
+                verified,
+                url
+            FROM promos
+            WHERE type = 'link' AND active = TRUE
+            ORDER BY created_at DESC
+            """
+        )
+
+        return [
+            {
+                "id": r["id"],
+                "site": r["site"].lower() if r["site"] else None,
+                "url": r["url"],
+                "description": r["description"],
+                "createdAt": r["created_at"],
+                "verified": bool(r["verified"]),
+            }
+            for r in rows
+        ]
+
+    except Exception as e:
+        logger.error(f"[PROMOS] Failed to load promo links: {e}")
+
         return [{
             "id": "mock1",
-            "site": "Rollbit",
+            "site": "rollbit",
             "url": "https://rollbit.com/ref/gcz",
             "description": "10% Lootbox Boost",
             "createdAt": "2026-01-01T00:00:00Z",

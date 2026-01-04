@@ -1,16 +1,29 @@
-# health.py
 from fastapi import APIRouter
-import asyncpg
+from services.db import get_db
+from logger import get_logger
 
 router = APIRouter(prefix="/api/health", tags=["Health"])
+logger = get_logger("gcz-health")
+
 
 @router.get("/")
 async def health():
+    """
+    Full GCZ health check:
+      - Confirms DB pool is alive
+      - Confirms a simple SELECT works
+    """
     try:
-        conn = await asyncpg.connect(
-            "postgresql://neondb_owner:npg_C7kPSNtVgmD4@ep-calm-base-a4zc750u-pooler.us-east-1.aws.neon.tech/neondb?sslmode=require"
-        )
-        await conn.close()
+        db = await get_db()
+
+        # Simple DB check
+        row = await db.fetchval("SELECT 1")
+        if row != 1:
+            logger.error("[HEALTH] DB returned unexpected value")
+            return {"status": "db_error"}
+
         return {"status": "ok"}
-    except:
+
+    except Exception as e:
+        logger.error(f"[HEALTH] DB error: {e}")
         return {"status": "db_error"}

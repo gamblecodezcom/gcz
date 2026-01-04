@@ -1,57 +1,89 @@
 #!/usr/bin/env python3
 
-import re
 import csv
-import time
-import threading
+import asyncio
+import re
 from typing import Dict, Any
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import RedirectResponse, JSONResponse
+from logger import get_logger
 
 CSV_PATH = "/var/www/html/gcz/master_affiliates.csv"
 REFRESH_SECONDS = 60
 
 app = FastAPI(title="GambleCodez Redirect Engine")
+logger = get_logger("gcz-redirect")
 
 REDIRECT_MAP: Dict[str, Dict[str, Any]] = {}
 
-def normalize(name: str) -> str:
+
+def normalize(name: str | None) -> str:
+    if not name:
+        return ""
     return re.sub(r"[^a-z0-9]", "", name.lower())
 
-def load_redirects():
-    """Load CSV into in-memory redirect map."""
-    global REDIRECT_MAP
+
+def load_redirects_sync():
+    """Load CSV into in-memory redirect map (sync, safe)."""
     new_map = {}
 
     try:
         with open(CSV_PATH, newline="", encoding="utf-8") as f:
             reader = csv.DictReader(f)
+
             for row in reader:
+                if not row.get("name") or not row.get("affiliate_url"):
+                    logger.warning(f"[redirect] Skipping invalid row: {row}")
+                    continue
+
                 key = normalize(row["name"])
-                icon = row["icon_url"] or (
-                    f"https://www.google.com/s2/favicons?sz=256&domain={row['resolved_domain']}"
+
+                icon = row.get("icon_url") or (
+                    f"https://www.google.com/s2/favicons?sz=256&domain={row.get('resolved_domain')}"
                     if row.get("resolved_domain")
                     else None
                 )
+
                 new_map[key] = {
-                    "url": row["affiliate_url"],
+                    "url": row.get("affiliate_url"),
                     "icon": icon,
-                    "level": row["level"],
+                    "level": row.get("level"),
                 }
 
-        REDIRECT_MAP = new_map
-        print(f"[redirect] Map refreshed: {len(REDIRECT_MAP)} entries")
+        logger.info(f"[redirect] Map refreshed: {len(new_map)} entries")
+        return new_map
 
     except Exception as e:
-        print(f"[redirect] ERROR loading CSV: {e}")
+        logger.error(f"[redirect] ERROR loading CSV: {e}")
+        return {}
+
+
+async def refresh_loop():
+    """Async background refresher."""
+    global REDIRECT_MAP
+
+    while True:
+        REDIRECT_MAP = await asyncio.to_thread(load_redirects_sync)
+        await asyncio.sleep(REFRESH_SECONDS)
+
+
+@app.on_event("startup")
+async def startup_event():
+    """Load once and start async refresher."""
+    global REDIRECT_MAP
+
+    REDIRECT_MAP = await asyncio.to_thread(load_redirects_sync)
+    asyncio.create_task(refresh_loop())
+
 
 # ------------------------------------------------------------
-# HEALTH ENDPOINT (Master Ops uses this)
+# HEALTH ENDPOINT
 # ------------------------------------------------------------
 
 @app.get("/health")
 def health():
     return {"status": "ok", "entries": len(REDIRECT_MAP)}
+
 
 # ------------------------------------------------------------
 # REDIRECT ENDPOINTS
@@ -65,6 +97,7 @@ def do_redirect(sitename: str):
         return RedirectResponse(REDIRECT_MAP[key]["url"])
     raise HTTPException(status_code=404, detail="Affiliate not found")
 
+
 # ------------------------------------------------------------
 # META ENDPOINTS
 # ------------------------------------------------------------
@@ -76,26 +109,3 @@ def get_meta(sitename: str):
     if key in REDIRECT_MAP:
         return JSONResponse(content=REDIRECT_MAP[key])
     raise HTTPException(status_code=404, detail="Not found")
-
-# ------------------------------------------------------------
-# BACKGROUND REFRESHER
-# ------------------------------------------------------------
-
-def refresher():
-    while True:
-        load_redirects()
-        time.sleep(REFRESH_SECONDS)
-
-# Load once before serving
-load_redirects()
-
-# Start background refresh thread
-threading.Thread(target=refresher, daemon=True).start()
-
-# ------------------------------------------------------------
-# RUN SERVER
-# ------------------------------------------------------------
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("backend.redirect:app", host="0.0.0.0", port=8000)
