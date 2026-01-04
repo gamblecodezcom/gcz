@@ -1,115 +1,160 @@
 #!/usr/bin/env python3
-import os, json, time, subprocess, argparse, datetime, requests
+"""
+GCZ AI CORE — Modernized Version
+Replaces the old JSON-based AI core with a DB-backed,
+AI-integrated, production-grade GCZ engine controller.
+
+This script is invoked by gcz_ai_cli.py.
+"""
+
+import os
+import subprocess
+import argparse
+import time
+from pathlib import Path
+
+from gcz_ai import (
+    execute,
+    health_scan,
+    start_background_monitor,
+)
+from ai_logger import get_logger
+
+logger = get_logger("gcz-ai.core")
+
+
+# ============================================================
+# ARGUMENTS
+# ============================================================
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--root")
+parser.add_argument("--root", required=True)
+parser.add_argument("--db", required=True)
 parser.add_argument("--memory")
 parser.add_argument("--control")
 parser.add_argument("--logs")
 args = parser.parse_args()
 
-ROOT = args.root
-MEMORY = args.memory
-CONTROL = args.control
+ROOT = Path(args.root)
+CONTROL = Path(args.control) if args.control else None
+LOGS = Path(args.logs) if args.logs else ROOT / "logs"
+LOGS.mkdir(parents=True, exist_ok=True)
 
-# FIX: guarantee LOGS is always a valid string path
-LOGS = args.logs or "/var/www/html/gcz/logs"
-os.makedirs(LOGS, exist_ok=True)
 
-def log(msg):
-    ts = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    line = f"[{ts}] {msg}"
-    print(line)
-    with open(f"{LOGS}/ai-devops.log","a") as f:
-        f.write(line + "\n")
+# ============================================================
+# LOAD CONTROL FILE
+# ============================================================
 
-def load_json(path, default):
-    if not path or not os.path.exists(path):
-        return default
-    try:
-        return json.load(open(path))
-    except:
-        return default
+def load_control():
+    if CONTROL and CONTROL.exists():
+        try:
+            return CONTROL.read_text().strip()
+        except Exception as e:
+            logger.error(f"Failed to read control file: {e}")
+    return ""
 
-state = load_json(MEMORY,{
-    "runs":0,
-    "last_status":"boot",
-    "service_health":{},
-    "sonar_history":[],
-    "snyk_history":[],
-    "health_fail_count":0
-})
 
-# GUARANTEE KEY EXISTS
-if "health_fail_count" not in state:
-    state["health_fail_count"] = 0
+# ============================================================
+# PM2 HELPERS
+# ============================================================
 
-state["runs"] += 1
-
-log("🔍 Loading system control context…")
-
-if CONTROL and os.path.exists(CONTROL):
-    control = open(CONTROL).read()
-else:
-    control = ""
-
-log("🔍 Verifying node deps (non-blocking)…")
-subprocess.Popen(["npm","install","--omit=dev"],cwd=ROOT)
-
-def service_exists(name):
-    return subprocess.run(
-        ["pm2","describe",name],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL
-    ).returncode == 0
-
-expected = [
+PM2_SERVICES = [
     "gcz-api",
     "gcz-redirect",
     "gcz-drops",
     "gcz-bot",
     "gcz-discord",
-    "gcz-watchdog"
+    "gcz-watchdog",
 ]
 
-for svc in expected:
-    if not service_exists(svc):
-        log(f"⚠️ Missing service — restarting {svc}")
-        subprocess.run(["pm2","restart",svc])
+def pm2_exists(name: str) -> bool:
+    return subprocess.run(
+        ["pm2", "describe", name],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL
+    ).returncode == 0
 
-log("🔍 PM2 status sync…")
-subprocess.run(["pm2","save"])
 
-# ---- HEALTH CHECK ----
-log("🔍 Running health probe…")
+def pm2_restart(name: str):
+    logger.warning(f"Restarting PM2 service: {name}")
+    subprocess.run(["pm2", "restart", name])
 
-urls = [
-    "https://gamblecodez.com/health"
-]
 
-healthy = True
+def pm2_save():
+    subprocess.run(["pm2", "save"])
 
-for url in urls:
-    try:
-        r = requests.get(url,timeout=5)
-        if r.status_code != 200:
-            healthy = False
-    except:
-        healthy = False
 
-if not healthy:
-    state["health_fail_count"] += 1
-    log("❌ Health degraded")
+# ============================================================
+# NODE DEPENDENCY CHECK (NON-BLOCKING)
+# ============================================================
 
-    if state["health_fail_count"] >= 3:
-        log("🛠 Restarting stack (3 consecutive failures)")
-        subprocess.run(["pm2","restart","all"])
-        state["health_fail_count"] = 0
-else:
-    log("✅ Health OK")
-    state["health_fail_count"] = 0
+def verify_node_deps():
+    logger.info("🔧 Verifying Node dependencies (non-blocking)…")
+    subprocess.Popen(["npm", "install", "--omit=dev"], cwd=ROOT)
 
-log("💾 Persisting AI memory…")
-json.dump(state,open(MEMORY,"w"),indent=2)
 
-log("✨ AI God Mode Cycle Complete")
+# ============================================================
+# HEALTH LOGGING (DB-BACKED)
+# ============================================================
+
+def record_health(status: str, details: dict):
+    execute(
+        """
+        INSERT INTO service_health (service, status, details)
+        VALUES ('ai-core', %s, %s)
+        """,
+        [status, details],
+    )
+
+
+# ============================================================
+# MAIN CYCLE
+# ============================================================
+
+def run_cycle():
+    logger.info("🔍 Starting AI Core cycle")
+
+    # Load control file
+    control = load_control()
+    if control:
+        logger.info(f"📜 Control file loaded: {control[:80]}…")
+
+    # Verify PM2 services
+    for svc in PM2_SERVICES:
+        if not pm2_exists(svc):
+            logger.error(f"⚠️ Missing PM2 service: {svc}")
+            pm2_restart(svc)
+
+    pm2_save()
+
+    # Run AI health scan
+    health = health_scan()
+    db_ok = health.get("neon_db", {}).get("ok", False)
+
+    if db_ok:
+        logger.info("✅ AI Core health OK")
+        record_health("ok", health)
+    else:
+        logger.error("❌ AI Core health degraded")
+        record_health("error", health)
+
+    logger.info("✨ AI Core cycle complete")
+
+
+# ============================================================
+# ENTRYPOINT
+# ============================================================
+
+if __name__ == "__main__":
+    logger.info("🚀 GCZ AI Core starting…")
+
+    # Start background AI monitor
+    start_background_monitor()
+
+    # Verify Node deps (non-blocking)
+    verify_node_deps()
+
+    # Run cycle once (this script is invoked manually or via CLI)
+    run_cycle()
+
+    logger.info("🏁 GCZ AI Core finished")

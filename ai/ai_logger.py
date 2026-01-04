@@ -1,210 +1,106 @@
-from typing import Optional, Any, Dict
-from .db import execute
+import logging
+import logging.handlers
+import os
+import sys
+import threading
+from pathlib import Path
+
+_LOGGER = None
+_LOCK = threading.Lock()
 
 
-# ============================================================
-# HELPERS
-# ============================================================
+def get_logger(name: str = "gcz-ai") -> logging.Logger:
+    global _LOGGER
 
-def _json(meta: Optional[Dict[str, Any]]):
-    """
-    Ensures meta is stored as JSON or NULL cleanly.
-    """
-    return meta if isinstance(meta, dict) else None
+    # Thread-safe singleton
+    with _LOCK:
+        if _LOGGER:
+            return _LOGGER
 
+        # ------------------------------------------------------------
+        # LOG DIRECTORY (with fallback)
+        # ------------------------------------------------------------
+        primary_dir = Path("/var/www/html/gcz/logs")
+        fallback_dir = Path("/tmp/gcz-logs")
 
-# ============================================================
-# AI MEMORY
-# ============================================================
+        try:
+            primary_dir.mkdir(parents=True, exist_ok=True)
+            log_dir = primary_dir
+        except Exception:
+            fallback_dir.mkdir(parents=True, exist_ok=True)
+            log_dir = fallback_dir
 
-def add_memory(category: str, message: str,
-               source: str = "system",
-               meta: Optional[Dict[str, Any]] = None):
-    execute(
-        """
-        INSERT INTO ai_memory (category, message, source, meta)
-        VALUES (%s, %s, %s, %s)
-        """,
-        (category, message, source, _json(meta)),
-    )
+        log_file = log_dir / "gcz-ai-core.log"
 
+        # ------------------------------------------------------------
+        # LOGGER SETUP
+        # ------------------------------------------------------------
+        logger = logging.getLogger(name)
 
-# ============================================================
-# SERVICE HEALTH
-# ============================================================
+        # Environment-aware log level
+        env = os.getenv("GCZ_ENV", "prod").lower()
+        logger.setLevel(logging.DEBUG if env == "dev" else logging.INFO)
 
-def log_health(service: str, status: str,
-               details: Optional[Dict[str, Any]] = None):
-    execute(
-        """
-        INSERT INTO service_health (service, status, details)
-        VALUES (%s, %s, %s)
-        """,
-        (service, status, _json(details)),
-    )
+        # Prevent duplicate handlers
+        if logger.handlers:
+            _LOGGER = logger
+            return logger
 
+        # ------------------------------------------------------------
+        # FORMATTERS
+        # ------------------------------------------------------------
+        base_format = (
+            "%(asctime)s.%(msecs)03d "
+            "[%(levelname)s] "
+            "%(process)d:%(threadName)s "
+            "%(name)s: %(message)s"
+        )
 
-# ============================================================
-# ANOMALIES
-# ============================================================
+        date_format = "%Y-%m-%d %H:%M:%S"
 
-def log_anomaly(anomaly_type: str, message: str,
-                meta: Optional[Dict[str, Any]] = None):
-    execute(
-        """
-        INSERT INTO anomalies (type, message, meta)
-        VALUES (%s, %s, %s)
-        """,
-        (anomaly_type, message, _json(meta)),
-    )
+        formatter = logging.Formatter(base_format, date_format)
 
+        # Colored console output
+        class ColorFormatter(logging.Formatter):
+            COLORS = {
+                "DEBUG": "\033[36m",
+                "INFO": "\033[32m",
+                "WARNING": "\033[33m",
+                "ERROR": "\033[31m",
+                "CRITICAL": "\033[41m",
+            }
+            RESET = "\033[0m"
 
-# ============================================================
-# PERPLEXITY LOGGING
-# ============================================================
+            def format(self, record):
+                color = self.COLORS.get(record.levelname, "")
+                message = super().format(record)
+                return f"{color}{message}{self.RESET}"
 
-def log_perplexity_log(prompt: str, response: str,
-                       model: str,
-                       tokens_used: Optional[int] = None,
-                       meta: Optional[Dict[str, Any]] = None):
-    execute(
-        """
-        INSERT INTO ai_perplexity_logs
-        (prompt, response, model, tokens_used, meta)
-        VALUES (%s, %s, %s, %s, %s)
-        """,
-        (prompt, response, model, tokens_used, _json(meta)),
-    )
+        color_formatter = ColorFormatter(base_format, date_format)
 
+        # ------------------------------------------------------------
+        # FILE HANDLER (rotating)
+        # ------------------------------------------------------------
+        fh = logging.handlers.RotatingFileHandler(
+            log_file,
+            maxBytes=10_000_000,
+            backupCount=10,
+            encoding="utf-8"
+        )
+        fh.setFormatter(formatter)
 
-def log_perplexity_search(query: str, results: Any,
-                          model: str,
-                          meta: Optional[Dict[str, Any]] = None):
-    execute(
-        """
-        INSERT INTO ai_perplexity_search
-        (query, results, model, meta)
-        VALUES (%s, %s, %s, %s)
-        """,
-        (query, results, model, _json(meta)),
-    )
+        # ------------------------------------------------------------
+        # CONSOLE HANDLER
+        # ------------------------------------------------------------
+        ch = logging.StreamHandler(sys.stdout)
+        ch.setFormatter(color_formatter)
 
+        # ------------------------------------------------------------
+        # ATTACH HANDLERS
+        # ------------------------------------------------------------
+        logger.addHandler(fh)
+        logger.addHandler(ch)
+        logger.propagate = False
 
-def log_perplexity_embedding(input_text: str,
-                             embedding,
-                             model: str,
-                             meta: Optional[Dict[str, Any]] = None):
-    execute(
-        """
-        INSERT INTO ai_perplexity_embeddings
-        (input, embedding, model, meta)
-        VALUES (%s, %s, %s, %s)
-        """,
-        (input_text, embedding, model, _json(meta)),
-    )
-
-
-# ============================================================
-# DISCORD INGESTION (PRIVACY-SAFE)
-# ============================================================
-# NOTE — You should only call these with sanitized inputs.
-
-def log_discord_raw(discord_id: str,
-                    username: str,
-                    channel: str,
-                    message: str,
-                    meta: Optional[Dict[str, Any]] = None):
-    execute(
-        """
-        INSERT INTO discord_messages_raw
-        (discord_id, username, channel, message, meta)
-        VALUES (%s, %s, %s, %s, %s)
-        """,
-        (discord_id, username, channel, message, _json(meta)),
-    )
-
-
-def log_discord_clean(raw_id: int,
-                      clean_message: str,
-                      meta: Optional[Dict[str, Any]] = None):
-    execute(
-        """
-        INSERT INTO discord_messages_clean
-        (raw_id, clean_message, meta)
-        VALUES (%s, %s, %s)
-        """,
-        (raw_id, clean_message, _json(meta)),
-    )
-
-
-def log_discord_promo(clean_id: int,
-                      promo_code: Optional[str],
-                      promo_url: Optional[str],
-                      affiliate_id: Optional[int],
-                      classification: str,
-                      confidence: float,
-                      meta: Optional[Dict[str, Any]] = None):
-    execute(
-        """
-        INSERT INTO discord_promos
-        (clean_id, promo_code, promo_url, affiliate_id,
-         classification, confidence, meta)
-        VALUES (%s, %s, %s, %s, %s, %s, %s)
-        """,
-        (
-            clean_id,
-            promo_code,
-            promo_url,
-            affiliate_id,
-            classification,
-            confidence,
-            _json(meta),
-        ),
-    )
-
-
-# ============================================================
-# DROP ENGINE
-# ============================================================
-
-def log_drop_raw(source: str,
-                 message: str,
-                 meta: Optional[Dict[str, Any]] = None):
-    execute(
-        """
-        INSERT INTO drops_raw (source, message, meta)
-        VALUES (%s, %s, %s)
-        """,
-        (source, message, _json(meta)),
-    )
-
-
-def log_drop_ai(raw_id: int,
-                drop_type: str,
-                site: str,
-                bonus: Optional[str],
-                confidence: float,
-                meta: Optional[Dict[str, Any]] = None):
-    execute(
-        """
-        INSERT INTO drops_ai
-        (raw_id, drop_type, site, bonus, confidence, meta)
-        VALUES (%s, %s, %s, %s, %s, %s)
-        """,
-        (raw_id, drop_type, site, bonus, confidence, _json(meta)),
-    )
-
-
-def log_drop_gratification(raw_id: int,
-                           reward: str,
-                           amount: float,
-                           confidence: float,
-                           meta: Optional[Dict[str, Any]] = None):
-    execute(
-        """
-        INSERT INTO drops_gratification
-        (raw_id, reward, amount, confidence, meta)
-        VALUES (%s, %s, %s, %s, %s)
-        """,
-        (raw_id, reward, amount, confidence, _json(meta)),
-    )
+        _LOGGER = logger
+        return logger

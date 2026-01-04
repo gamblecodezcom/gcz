@@ -1,7 +1,7 @@
 module.exports = {
   apps: [
     // =====================================================
-    // TELEGRAM BOT
+    // TELEGRAM BOT (PRODUCTION)
     // =====================================================
     {
       name: "gcz-bot",
@@ -12,7 +12,9 @@ module.exports = {
       instances: 1,
       max_memory_restart: "300M",
       env: {
-        NODE_ENV: "production"
+        NODE_ENV: "production",
+        DATABASE_URL: process.env.DATABASE_URL,
+        AI_AGENT_NEON_DB_URL: process.env.AI_AGENT_NEON_DB_URL
       },
       out_file: "/var/www/html/gcz/logs/gcz-bot-out.log",
       error_file: "/var/www/html/gcz/logs/gcz-bot-error.log"
@@ -30,7 +32,9 @@ module.exports = {
       exec_mode: "fork",
       instances: 1,
       env: {
-        PYTHONPATH: "/var/www/html/gcz"
+        PYTHONPATH: "/var/www/html/gcz",
+        DATABASE_URL: process.env.DATABASE_URL,
+        AI_AGENT_NEON_DB_URL: process.env.AI_AGENT_NEON_DB_URL
       },
       out_file: "/var/www/html/gcz/logs/gcz-api-out.log",
       error_file: "/var/www/html/gcz/logs/gcz-api-error.log"
@@ -48,7 +52,9 @@ module.exports = {
       exec_mode: "fork",
       instances: 1,
       env: {
-        PYTHONPATH: "/var/www/html/gcz"
+        PYTHONPATH: "/var/www/html/gcz",
+        DATABASE_URL: process.env.DATABASE_URL,
+        AI_AGENT_NEON_DB_URL: process.env.AI_AGENT_NEON_DB_URL
       },
       out_file: "/var/www/html/gcz/logs/gcz-redirect-out.log",
       error_file: "/var/www/html/gcz/logs/gcz-redirect-error.log"
@@ -66,7 +72,9 @@ module.exports = {
       exec_mode: "fork",
       instances: 1,
       env: {
-        PYTHONPATH: "/var/www/html/gcz"
+        PYTHONPATH: "/var/www/html/gcz",
+        DATABASE_URL: process.env.DATABASE_URL,
+        AI_AGENT_NEON_DB_URL: process.env.AI_AGENT_NEON_DB_URL
       },
       out_file: "/var/www/html/gcz/logs/gcz-drops-out.log",
       error_file: "/var/www/html/gcz/logs/gcz-drops-error.log"
@@ -83,39 +91,75 @@ module.exports = {
       exec_mode: "fork",
       instances: 1,
       node_args: "--experimental-modules",
+      env: {
+        NODE_ENV: "production",
+        DATABASE_URL: process.env.DATABASE_URL,
+        AI_AGENT_NEON_DB_URL: process.env.AI_AGENT_NEON_DB_URL
+      },
       out_file: "/var/www/html/gcz/logs/gcz-discord-out.log",
       error_file: "/var/www/html/gcz/logs/gcz-discord-error.log"
     },
 
     // =====================================================
-    // WATCHDOG
+    // PYTHON WATCHDOG
     // =====================================================
     {
       name: "gcz-watchdog",
-      script: "watchdog.js",
-      cwd: "/var/www/html/gcz/bot",
-      interpreter: "node",
+      script: "gcz_watchdog.py",
+      cwd: "/var/www/html/gcz",
+      interpreter: "python3",
       exec_mode: "fork",
       instances: 1,
-      max_memory_restart: "150M",
+      max_memory_restart: "200M",
+      env: {
+        PYTHONPATH: "/var/www/html/gcz",
+        DATABASE_URL: process.env.DATABASE_URL,
+        AI_AGENT_NEON_DB_URL: process.env.AI_AGENT_NEON_DB_URL
+      },
       out_file: "/var/www/html/gcz/logs/gcz-watchdog-out.log",
       error_file: "/var/www/html/gcz/logs/gcz-watchdog-error.log"
     },
 
     // =====================================================
-    // AI CORE (PYTHON)
+    // AI ENGINE (FastAPI server.py via uvicorn)
     // =====================================================
     {
-      name: "gcz-ai-core",
-      script: "/var/www/html/gcz/gcz-ai-core.py",
+      name: "gcz-ai",
+      script: "uvicorn",
+      args: "server:app --host 0.0.0.0 --port 8010",
+      cwd: "/var/www/html/gcz/ai",
       interpreter: "python3",
       exec_mode: "fork",
       instances: 1,
       env: {
-        PYTHONPATH: "/var/www/html/gcz"
+        GCZ_ENV: "prod",
+        PYTHONPATH: "/var/www/html/gcz/ai",
+        DATABASE_URL: process.env.DATABASE_URL,
+        AI_AGENT_NEON_DB_URL: process.env.AI_AGENT_NEON_DB_URL
       },
-      out_file: "/var/www/html/gcz/logs/gcz-ai-core-out.log",
-      error_file: "/var/www/html/gcz/logs/gcz-ai-core-error.log"
+      out_file: "/var/www/html/gcz/logs/gcz-ai-out.log",
+      error_file: "/var/www/html/gcz/logs/gcz-ai-error.log"
+    },
+
+    // =====================================================
+    // GCZ CLI MCP SERVER (TypeScript via ts-node)
+    // =====================================================
+    {
+      name: "gcz-mcp",
+      script: "src/gcz.ts",
+      cwd: "/var/www/html/gcz/cli",
+      interpreter: "node",
+      interpreter_args: "-r ts-node/register",
+      exec_mode: "fork",
+      instances: 1,
+      env: {
+        NODE_ENV: "production",
+        DATABASE_URL: process.env.DATABASE_URL,
+        AI_AGENT_NEON_DB_URL: process.env.AI_AGENT_NEON_DB_URL,
+        GCZ_AI_URL: "http://127.0.0.1:8010"
+      },
+      out_file: "/var/www/html/gcz/logs/gcz-mcp-out.log",
+      error_file: "/var/www/html/gcz/logs/gcz-mcp-error.log"
     }
   ]
 };

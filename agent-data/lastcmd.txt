@@ -1,1 +1,0 @@
-Perform a full project audit. Learn the structure. Validate APIs. Detect missing imports. Identify bugs. Summarize and recommend fixes.
