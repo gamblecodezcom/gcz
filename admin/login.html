@@ -2,12 +2,16 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>GambleCodez Admin Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GambleCodez Admin Control</title>
   <style>
+    :root {
+      color-scheme: dark;
+    }
     body {
-      background: #0a0a0a;
+      background: radial-gradient(circle at top, #1a0a0f 0%, #050505 60%);
       color: #fff;
-      font-family: Arial, sans-serif;
+      font-family: 'Orbitron', 'Segoe UI', sans-serif;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -16,9 +20,11 @@
       margin: 0;
     }
     h1 {
-      font-size: 2.4rem;
-      margin-bottom: 10px;
-      background: linear-gradient(90deg, #ff00ea, #00eaff, #ffea00);
+      font-size: 2.6rem;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      background: linear-gradient(90deg, #ff3b3b, #ff00ea, #ffe500);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
@@ -27,40 +33,79 @@
       margin-bottom: 30px;
     }
     .box {
-      background: #111;
-      padding: 30px;
-      border-radius: 12px;
-      border: 1px solid #333;
-      width: 320px;
+      background: #0d0d0d;
+      padding: 32px;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 0, 234, 0.4);
+      width: 340px;
+      box-shadow: 0 0 30px rgba(255, 0, 234, 0.2);
+    }
+    .tagline {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      color: #ffae00;
+      margin-bottom: 18px;
+      letter-spacing: 1px;
+    }
+    label {
+      display: block;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      color: rgba(255, 255, 255, 0.7);
     }
     input {
       width: 100%;
       padding: 12px;
-      margin-bottom: 12px;
-      border-radius: 6px;
-      border: none;
-      background: #222;
+      margin-bottom: 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 0, 234, 0.3);
+      background: #1a1a1a;
       color: #fff;
     }
     button {
       width: 100%;
       padding: 12px;
-      background: #ff00ea;
+      background: linear-gradient(90deg, #ff3b3b, #ff00ea);
       border: none;
-      border-radius: 6px;
-      color: #000;
+      border-radius: 8px;
+      color: #0b0b0b;
       font-weight: bold;
       cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .note {
+      margin-top: 16px;
+      font-size: 0.75rem;
+      opacity: 0.7;
+      text-align: center;
     }
   </style>
 </head>
 <body>
-  <h1>GambleCodez Admin</h1>
+  <h1>GambleCodez Admin Control</h1>
   <p>Redeem today, flex tomorrow</p>
   <div class="box">
-    <input type="text" placeholder="Username" />
-    <input type="password" placeholder="Password" />
-    <button>Login</button>
+    <div class="tagline">Restricted Access</div>
+    <form id="admin-login">
+      <label for="username">Username</label>
+      <input id="username" type="text" placeholder="Admin username" required />
+      <label for="password">Password</label>
+      <input id="password" type="password" placeholder="Admin password" required />
+      <button type="submit">Enter Control Panel</button>
+    </form>
+    <div class="note">Unauthorized access is monitored and logged.</div>
   </div>
+  <script>
+    const form = document.getElementById('admin-login');
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value.trim();
+      if (!username || !password) return;
+      window.location.href = '/admin/affiliates.html';
+    });
+  </script>
 </body>
 </html>

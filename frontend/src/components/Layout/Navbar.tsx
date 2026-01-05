@@ -63,16 +63,18 @@ export const Navbar = () => {
 
   const navLinks = [
     { path: '/', label: 'Home' },
+    { path: '/degen-login', label: 'Degen Login' },
+    { path: '/degen-profile', label: 'Degen Profile' },
+    { path: '/dashboard', label: 'Dashboard' },
     { path: '/drops', label: 'Drops' },
     { path: '/raffles', label: 'Raffles' },
     { path: '/wheel', label: 'Wheel' },
+    { path: '/newsletter', label: 'Newsletter' },
     { path: '/affiliates', label: 'Affiliates' },
     { path: '/sites/recent', label: 'Recent' },
     { path: '/leaderboard', label: 'Leaderboard' },
     { path: '/blacklist', label: 'Blacklist' },
     { path: '/contact', label: 'Contact' },
-    { path: '/profile', label: 'Profile' },
-    { path: '/dashboard', label: 'Dashboard' },
   ];
 
   return (
