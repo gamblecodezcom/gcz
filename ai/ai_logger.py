@@ -1,106 +1,97 @@
+from __future__ import annotations
+
+import json
 import logging
-import logging.handlers
 import os
 import sys
-import threading
+from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any, Dict
+import contextvars
+import threading
 
-_LOGGER = None
-_LOCK = threading.Lock()
+from ai.config.loader import build_settings
+
+_LOGGER_LOCK = threading.Lock()
+_CONFIGURED = False
+_TRACE_ID = contextvars.ContextVar("trace_id", default="-")
+
+
+def set_trace_id(trace_id: str) -> None:
+    _TRACE_ID.set(trace_id)
+
+
+def get_trace_id() -> str:
+    return _TRACE_ID.get()
+
+
+class JsonFormatter(logging.Formatter):
+    def format(self, record: logging.LogRecord) -> str:
+        payload: Dict[str, Any] = {
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "level": record.levelname,
+            "logger": record.name,
+            "message": record.getMessage(),
+            "trace_id": getattr(record, "trace_id", get_trace_id()),
+        }
+
+        if record.exc_info:
+            payload["exception"] = self.formatException(record.exc_info)
+
+        for key, value in record.__dict__.items():
+            if key.startswith("_") or key in payload:
+                continue
+            if key in {"msg", "args", "levelname", "levelno", "pathname", "filename", "module",
+                       "exc_info", "exc_text", "stack_info", "lineno", "funcName", "created",
+                       "msecs", "relativeCreated", "thread", "threadName", "processName", "process",
+                       "name"}:
+                continue
+            payload[key] = value
+
+        return json.dumps(payload, ensure_ascii=False)
+
+
+class TraceIdFilter(logging.Filter):
+    def filter(self, record: logging.LogRecord) -> bool:
+        record.trace_id = get_trace_id()
+        return True
+
+
+def _configure_logging() -> None:
+    global _CONFIGURED
+    if _CONFIGURED:
+        return
+
+    repo_root = Path(__file__).resolve().parents[1]
+    settings = build_settings(repo_root)
+
+    log_dir = settings.log_dir
+    log_dir.mkdir(parents=True, exist_ok=True)
+    log_file = log_dir / "gcz-ai-core.log"
+
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.DEBUG if settings.environment == "dev" else logging.INFO)
+    root_logger.handlers.clear()
+
+    formatter = JsonFormatter()
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setFormatter(formatter)
+    handler.addFilter(TraceIdFilter())
+    root_logger.addHandler(handler)
+
+    if os.getenv("GCZ_LOG_TO_FILE", "1") == "1":
+        file_handler = logging.FileHandler(log_file, encoding="utf-8")
+        file_handler.setFormatter(formatter)
+        file_handler.addFilter(TraceIdFilter())
+        root_logger.addHandler(file_handler)
+
+    _CONFIGURED = True
 
 
 def get_logger(name: str = "gcz-ai") -> logging.Logger:
-    global _LOGGER
+    with _LOGGER_LOCK:
+        _configure_logging()
+        return logging.getLogger(name)
 
-    # Thread-safe singleton
-    with _LOCK:
-        if _LOGGER:
-            return _LOGGER
 
-        # ------------------------------------------------------------
-        # LOG DIRECTORY (with fallback)
-        # ------------------------------------------------------------
-        primary_dir = Path("/var/www/html/gcz/logs")
-        fallback_dir = Path("/tmp/gcz-logs")
-
-        try:
-            primary_dir.mkdir(parents=True, exist_ok=True)
-            log_dir = primary_dir
-        except Exception:
-            fallback_dir.mkdir(parents=True, exist_ok=True)
-            log_dir = fallback_dir
-
-        log_file = log_dir / "gcz-ai-core.log"
-
-        # ------------------------------------------------------------
-        # LOGGER SETUP
-        # ------------------------------------------------------------
-        logger = logging.getLogger(name)
-
-        # Environment-aware log level
-        env = os.getenv("GCZ_ENV", "prod").lower()
-        logger.setLevel(logging.DEBUG if env == "dev" else logging.INFO)
-
-        # Prevent duplicate handlers
-        if logger.handlers:
-            _LOGGER = logger
-            return logger
-
-        # ------------------------------------------------------------
-        # FORMATTERS
-        # ------------------------------------------------------------
-        base_format = (
-            "%(asctime)s.%(msecs)03d "
-            "[%(levelname)s] "
-            "%(process)d:%(threadName)s "
-            "%(name)s: %(message)s"
-        )
-
-        date_format = "%Y-%m-%d %H:%M:%S"
-
-        formatter = logging.Formatter(base_format, date_format)
-
-        # Colored console output
-        class ColorFormatter(logging.Formatter):
-            COLORS = {
-                "DEBUG": "\033[36m",
-                "INFO": "\033[32m",
-                "WARNING": "\033[33m",
-                "ERROR": "\033[31m",
-                "CRITICAL": "\033[41m",
-            }
-            RESET = "\033[0m"
-
-            def format(self, record):
-                color = self.COLORS.get(record.levelname, "")
-                message = super().format(record)
-                return f"{color}{message}{self.RESET}"
-
-        color_formatter = ColorFormatter(base_format, date_format)
-
-        # ------------------------------------------------------------
-        # FILE HANDLER (rotating)
-        # ------------------------------------------------------------
-        fh = logging.handlers.RotatingFileHandler(
-            log_file,
-            maxBytes=10_000_000,
-            backupCount=10,
-            encoding="utf-8"
-        )
-        fh.setFormatter(formatter)
-
-        # ------------------------------------------------------------
-        # CONSOLE HANDLER
-        # ------------------------------------------------------------
-        ch = logging.StreamHandler(sys.stdout)
-        ch.setFormatter(color_formatter)
-
-        # ------------------------------------------------------------
-        # ATTACH HANDLERS
-        # ------------------------------------------------------------
-        logger.addHandler(fh)
-        logger.addHandler(ch)
-        logger.propagate = False
-
-        _LOGGER = logger
-        return logger
+__all__ = ["get_logger", "set_trace_id", "get_trace_id"]
