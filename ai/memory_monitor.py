@@ -1,104 +1,59 @@
-import os
-import time
+from __future__ import annotations
+
+import asyncio
 import random
-import threading
-from health_engine import run_health_scan
-from ai_logger import get_logger
+
+from ai.ai_logger import get_logger
+from ai.health_engine import run_health_scan
 
 logger = get_logger("gcz-ai.monitor")
 
-# ============================================================
-# CONFIG
-# ============================================================
 
-DEFAULT_INTERVAL = int(os.getenv("AI_MONITOR_INTERVAL", "60"))
-MAX_BACKOFF = 300  # 5 minutes
-HEARTBEAT_EVERY = 10  # cycles
+class HealthMonitor:
+    def __init__(self, interval: int = 60) -> None:
+        self._interval = interval
+        self._task: asyncio.Task | None = None
+        self._stop = asyncio.Event()
 
+    async def start(self) -> None:
+        if self._task and not self._task.done():
+            logger.info("Health monitor already running")
+            return
+        self._stop.clear()
+        self._task = asyncio.create_task(self._run(), name="gcz-ai-monitor")
+        logger.info("Health monitor started")
 
-# ============================================================
-# INTERNAL LOOP
-# ============================================================
+    async def stop(self) -> None:
+        if not self._task:
+            return
+        self._stop.set()
+        await asyncio.sleep(0)
+        await self._task
+        logger.info("Health monitor stopped")
 
-def _monitor_loop(interval: int):
-    """
-    Runs continuous health scans with jitter, backoff, and heartbeat logging.
-    Never blocks FastAPI. Runs forever in a daemon thread.
-    """
+    async def _run(self) -> None:
+        jitter = random.uniform(0, 3)
+        await asyncio.sleep(jitter)
 
-    # Initial jitter to avoid synchronized load spikes
-    jitter = random.uniform(0, 3)
-    logger.info(f"Monitor starting with jitter={jitter:.2f}s")
-    time.sleep(jitter)
+        backoff = self._interval
+        cycle = 0
 
-    cycle = 0
-    backoff = interval
+        while not self._stop.is_set():
+            cycle += 1
+            try:
+                await run_health_scan()
+                backoff = self._interval
+            except Exception as exc:
+                logger.error("Monitor scan error", extra={"error": str(exc)})
+                backoff = min(backoff * 2, 300)
 
-    while True:
-        cycle += 1
+            if cycle % 10 == 0:
+                logger.info("Monitor heartbeat", extra={"cycle": cycle, "interval": backoff})
 
-        try:
-            run_health_scan()
-            backoff = interval  # reset backoff on success
-
-        except Exception as e:
-            logger.error(f"Monitor scan error: {e}")
-
-            # Exponential backoff
-            backoff = min(backoff * 2, MAX_BACKOFF)
-            logger.warning(f"Backoff increased to {backoff}s due to failure")
-
-        # Heartbeat every N cycles
-        if cycle % HEARTBEAT_EVERY == 0:
-            logger.info(f"Monitor heartbeat — cycle={cycle}, interval={backoff}s")
-
-        time.sleep(backoff)
-
-
-# ============================================================
-# THREAD STARTER
-# ============================================================
-
-_monitor_thread = None
-_thread_lock = threading.Lock()
+            try:
+                await asyncio.wait_for(self._stop.wait(), timeout=backoff)
+            except asyncio.TimeoutError:
+                continue
 
 
-def start_monitor(interval: int = DEFAULT_INTERVAL):
-    """
-    Starts the monitor in a daemon thread.
-    Safe to call from FastAPI startup or standalone.
-    Ensures only one monitor thread runs.
-    """
-
-    global _monitor_thread
-
-    with _thread_lock:
-        if _monitor_thread and _monitor_thread.is_alive():
-            logger.info("Monitor already running")
-            return _monitor_thread
-
-        logger.info(f"Starting memory monitor (interval={interval}s)")
-
-        thread = threading.Thread(
-            target=_monitor_loop,
-            args=(interval,),
-            daemon=True,
-            name="gcz-ai-monitor"
-        )
-        thread.start()
-
-        _monitor_thread = thread
-        return thread
-
-
-# ============================================================
-# STANDALONE MODE
-# ============================================================
-
-if __name__ == "__main__":
-    logger.info("Starting memory monitor in standalone mode...")
-    start_monitor(DEFAULT_INTERVAL)
-
-    # Keep main thread alive
-    while True:
-        time.sleep(3600)
+__all__ = ["HealthMonitor"]
