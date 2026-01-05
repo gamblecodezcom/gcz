@@ -25,7 +25,9 @@ export const SiteCardGrid = ({ sites, onRedirect, loading }: SiteCardGridProps) 
     );
   }
 
-  if (sites.length === 0) {
+  const visibleSites = sites.filter((site) => site.status !== 'blacklisted');
+
+  if (visibleSites.length === 0) {
     return (
       <div className="text-center py-12">
         <p className="text-text-muted text-lg">No sites found</p>
@@ -35,7 +37,7 @@ export const SiteCardGrid = ({ sites, onRedirect, loading }: SiteCardGridProps) 
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-      {sites.map((site) => (
+      {visibleSites.map((site) => (
         <SiteCard key={site.id} site={site} onRedirect={onRedirect} />
       ))}
     </div>

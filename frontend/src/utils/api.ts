@@ -52,6 +52,8 @@ export interface Socials {
 }
 
 const API_BASE = API_BASE_URL.replace(/\/$/, '');
+const DEFAULT_TIMEOUT_MS = 10000;
+const MAX_RETRIES = 2;
 
 const getStoredValue = (key: string) => {
   if (typeof window === 'undefined') return null;
@@ -95,46 +97,68 @@ const parseJson = (text: string) => {
   }
 };
 
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 const apiFetch = async <T>(
   path: string,
   options: RequestInit = {},
-  { includeUser = true, includePin = false }: { includeUser?: boolean; includePin?: boolean } = {}
+  { includeUser = true, includePin = false, timeoutMs = DEFAULT_TIMEOUT_MS }: { includeUser?: boolean; includePin?: boolean; timeoutMs?: number } = {}
 ): Promise<T> => {
-  const headers = new Headers(options.headers || {});
+  let lastError: Error | null = null;
 
-  if (options.body && !headers.has('Content-Type')) {
-    headers.set('Content-Type', 'application/json');
-  }
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt += 1) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const headers = new Headers(options.headers || {});
 
-  if (includeUser) {
-    const userId = getUserId();
-    if (userId) {
-      headers.set('x-user-id', userId);
+      if (options.body && !headers.has('Content-Type')) {
+        headers.set('Content-Type', 'application/json');
+      }
+
+      if (includeUser) {
+        const userId = getUserId();
+        if (userId) {
+          headers.set('x-user-id', userId);
+        }
+      }
+
+      if (includePin) {
+        const pin = getPin();
+        if (pin) {
+          headers.set('x-pin', pin);
+        }
+      }
+
+      const response = await fetch(`${API_BASE}${path}`, {
+        ...options,
+        headers,
+        signal: controller.signal,
+      });
+
+      const text = await response.text();
+      const data = parseJson(text);
+
+      if (!response.ok) {
+        const errorMessage = (data as any)?.error || (data as any)?.message || `Request failed with status ${response.status}`;
+        throw new Error(errorMessage);
+      }
+
+      clearTimeout(timeout);
+      return data as T;
+    } catch (error) {
+      clearTimeout(timeout);
+      lastError = error instanceof Error ? error : new Error('Request failed');
+      if (attempt < MAX_RETRIES) {
+        await sleep(300 * (attempt + 1));
+      }
     }
   }
 
-  if (includePin) {
-    const pin = getPin();
-    if (pin) {
-      headers.set('x-pin', pin);
-    }
-  }
-
-  const response = await fetch(`${API_BASE}${path}`, {
-    ...options,
-    headers,
-  });
-
-  const text = await response.text();
-  const data = parseJson(text);
-
-  if (!response.ok) {
-    const errorMessage = (data as any)?.error || (data as any)?.message || `Request failed with status ${response.status}`;
-    throw new Error(errorMessage);
-  }
-
-  return data as T;
+  throw lastError || new Error('Request failed');
 };
+
+const validateEmail = (email: string) => /\S+@\S+\.\S+/.test(email);
 
 export const setDegenLoginSession = (telegramId: string, username?: string) => {
   setStoredValue('gcz_user_id', telegramId);
@@ -263,10 +287,15 @@ export const spinWheel = () =>
 
 export const getWheelHistory = () => apiFetch<WheelSpinResult[]>('/api/daily-spin/history');
 
-export const getSites = (params?: { jurisdiction?: string; category?: string; page?: number; limit?: number }) =>
-  apiFetch<{ data: SiteCard[]; page: number; limit: number; total: number; totalPages: number }>(
-    `/api/sites${buildQuery(params)}`
+export const getSites = (params?: { jurisdiction?: string; category?: string; page?: number; limit?: number }) => {
+  const normalizedParams = {
+    ...params,
+    category: params?.category ? params.category.replace(/\s+/g, '') : undefined,
+  };
+  return apiFetch<{ data: SiteCard[]; page: number; limit: number; total: number; totalPages: number }>(
+    `/api/sites${buildQuery(normalizedParams)}`
   );
+};
 
 export const getRecentSites = (params?: { jurisdiction?: string; category?: string; page?: number; limit?: number }) =>
   apiFetch<{ data: SiteCard[]; page: number; limit: number; total: number; totalPages: number }>(
@@ -318,15 +347,27 @@ export const markPushNotificationRead = (id: string) =>
   });
 
 export const getLiveNotification = async () => {
-  const data = await apiFetch<{ banner: any }>('/api/admin/live-banner');
-  if (!data?.banner) return null;
-  return {
-    id: data.banner.id?.toString() ?? 'live-banner',
-    message: data.banner.message,
-    type: data.banner.type || 'info',
-    dismissible: true,
-    linkUrl: data.banner.link_url || undefined,
-  } as LiveNotification;
+  try {
+    const data = await apiFetch<{ banner: any }>('/api/notifications/live');
+    if (!data?.banner) return null;
+    return {
+      id: data.banner.id?.toString() ?? 'live-banner',
+      message: data.banner.message,
+      type: data.banner.type || 'info',
+      dismissible: true,
+      linkUrl: data.banner.link_url || undefined,
+    } as LiveNotification;
+  } catch {
+    const fallback = await apiFetch<{ banner: any }>('/api/admin/live-banner');
+    if (!fallback?.banner) return null;
+    return {
+      id: fallback.banner.id?.toString() ?? 'live-banner',
+      message: fallback.banner.message,
+      type: fallback.banner.type || 'info',
+      dismissible: true,
+      linkUrl: fallback.banner.link_url || undefined,
+    } as LiveNotification;
+  }
 };
 
 export const getSocials = () => apiFetch<Socials>('/api/socials');
@@ -339,14 +380,22 @@ export const submitContact = (payload: { name: string; email: string; subject?: 
 
 export const getBlacklist = () => apiFetch<any>('/api/blacklist');
 
-export const subscribeNewsletter = (email: string) =>
-  apiFetch<{ success: boolean; status: string }>('/api/newsletter/subscribe', {
+export const subscribeNewsletter = (email: string) => {
+  if (!validateEmail(email)) {
+    return Promise.reject(new Error('Invalid email address'));
+  }
+  return apiFetch<{ success: boolean; status: string }>('/api/newsletter/subscribe', {
     method: 'POST',
     body: JSON.stringify({ email }),
   });
+};
 
-export const unsubscribeNewsletter = (email: string) =>
-  apiFetch<{ success: boolean; status: string }>('/api/newsletter/unsubscribe', {
+export const unsubscribeNewsletter = (email: string) => {
+  if (!validateEmail(email)) {
+    return Promise.reject(new Error('Invalid email address'));
+  }
+  return apiFetch<{ success: boolean; status: string }>('/api/newsletter/unsubscribe', {
     method: 'POST',
     body: JSON.stringify({ email }),
   });
+};
