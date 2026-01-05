@@ -1,80 +1,52 @@
-from typing import Dict, Any
-import json
-from db import fetchone
-from memory_store import log_health, log_anomaly
-from ai_logger import get_logger
+from __future__ import annotations
+
+from typing import Any, Dict
+
+from ai.ai_logger import get_logger
+from ai.db import DB
+from ai.memory_store import log_health, log_anomaly
 
 logger = get_logger("gcz-ai.health")
 
 
 def _json_safe(value: Any) -> Any:
-    """
-    Converts psycopg2 RealDictRow or any non-JSON-serializable
-    object into a JSON-safe dict or string.
-    """
-    try:
-        # Convert RealDictRow → dict
-        if hasattr(value, "items"):
-            value = dict(value)
-
-        # Try JSON dump to validate
-        json.dumps(value)
+    if isinstance(value, dict):
         return value
-    except Exception:
-        # Fallback: convert to string
-        return {"raw": str(value)}
+    return {"raw": str(value)}
 
 
-def _check_db() -> Dict[str, Any]:
-    """
-    Simple DB health check using SELECT 1.
-    Returns a structured, JSON-safe result dict.
-    """
-    row = fetchone("SELECT 1 AS ok;")
+async def _check_db() -> Dict[str, Any]:
+    row = await DB.fetchrow("SELECT 1 AS ok;")
     ok = bool(row and row.get("ok") == 1)
-
-    return {
-        "service": "neon_db",
-        "ok": ok,
-        "details": _json_safe(row or {})
-    }
+    return {"service": "db", "ok": ok, "details": _json_safe(row or {})}
 
 
-def run_health_scan() -> Dict[str, Any]:
-    """
-    Runs a full health scan of the AI system.
-    Logs to service_health and anomalies.
-    Returns a summary dict.
-    """
-    results = {}
+async def run_health_scan() -> Dict[str, Any]:
+    results: Dict[str, Any] = {}
 
     try:
-        db_result = _check_db()
-        results["neon_db"] = db_result
+        db_result = await _check_db()
+        results["db"] = db_result
 
         if db_result["ok"]:
-            log_health("neon_db", "ok", db_result["details"])
-            logger.info("Health scan: neon_db OK")
-
+            await log_health("db", "ok", db_result["details"])
+            logger.info("Health scan OK")
         else:
-            log_health("neon_db", "error", db_result["details"])
-            log_anomaly(
+            await log_health("db", "error", db_result["details"])
+            await log_anomaly(
                 "db_failure",
-                "Neon DB health check returned non-OK result",
-                db_result["details"]
+                "DB health check returned non-OK result",
+                db_result["details"],
             )
-            logger.error("Health scan: neon_db NOT OK")
-
-    except Exception as e:
-        err = {"error": str(e)}
-        log_health("neon_db", "error", err)
-        log_anomaly("db_failure", "Neon DB health scan crashed", err)
-        logger.error(f"Health scan exception: {e}")
-
-        results["neon_db"] = {
-            "service": "neon_db",
-            "ok": False,
-            "error": str(e)
-        }
+            logger.error("Health scan DB not OK")
+    except Exception as exc:
+        err = {"error": str(exc)}
+        await log_health("db", "error", err)
+        await log_anomaly("db_failure", "DB health scan crashed", err)
+        logger.error("Health scan exception", extra={"error": str(exc)})
+        results["db"] = {"service": "db", "ok": False, "error": str(exc)}
 
     return results
+
+
+__all__ = ["run_health_scan"]

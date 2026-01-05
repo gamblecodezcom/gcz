@@ -1,162 +1,152 @@
-import os
-import time
-import psycopg2
-import psycopg2.extras
-import psycopg2.pool
-from typing import Optional, Any, Dict, List
-from pathlib import Path
+from __future__ import annotations
 
-from ai_logger import get_logger
+import asyncio
+import json
+import os
+from pathlib import Path
+import random
+from typing import Any, Iterable, Optional
+
+import asyncpg
+
+from ai.ai_logger import get_logger
+from ai.config.loader import build_settings
+
 logger = get_logger("gcz-ai.db")
 
-# ============================================================
-# ENV LOADING (supports .env in project root)
-# ============================================================
 
-ROOT = Path(__file__).resolve().parents[1]
-ENV_FILE = ROOT / ".env"
+def _normalize_param(value: Any) -> Any:
+    if isinstance(value, (dict, list)):
+        return json.dumps(value)
+    return value
 
-if ENV_FILE.exists():
-    logger.info(f"Loading environment from {ENV_FILE}")
-    for line in ENV_FILE.read_text().splitlines():
-        if "=" in line and not line.strip().startswith("#"):
-            key, value = line.split("=", 1)
-            os.environ.setdefault(key.strip(), value.strip())
 
-# ============================================================
-# DATABASE URL RESOLUTION
-# ============================================================
+def _normalize_params(params: Optional[Iterable[Any]]) -> list[Any]:
+    if not params:
+        return []
+    return [_normalize_param(value) for value in params]
 
-DB_URL = (
-    os.getenv("GCZ_DB") or
-    os.getenv("AI_AGENT_NEON_DB_URL") or
-    os.getenv("DATABASE_URL")
-)
 
-if not DB_URL:
-    logger.error(
-        "❌ No database URL found. Expected one of: GCZ_DB, AI_AGENT_NEON_DB_URL, DATABASE_URL"
-    )
-    raise RuntimeError("No valid database URL found in environment variables")
+class Database:
+    def __init__(self, dsn: Optional[str], min_size: int = 1, max_size: int = 5) -> None:
+        self._dsn = dsn
+        self._pool: Optional[asyncpg.Pool] = None
+        self._lock = asyncio.Lock()
+        self._min_size = min_size
+        self._max_size = max_size
+        self._cooldown_until: float = 0.0
 
-logger.info(f"Using database URL source: {DB_URL[:40]}...")
+    @property
+    def enabled(self) -> bool:
+        return bool(self._dsn)
 
-# ============================================================
-# CONNECTION POOL (AI + MCP + High‑load safe)
-# ============================================================
+    async def init(self, retries: int = 5, base_delay: float = 0.5) -> bool:
+        if not self.enabled:
+            logger.error("Database disabled: no connection string found.")
+            return False
 
-_POOL: Optional[psycopg2.pool.SimpleConnectionPool] = None
+        async with self._lock:
+            if self._pool:
+                return True
+            now = asyncio.get_event_loop().time()
+            if now < self._cooldown_until:
+                return False
 
-def _init_pool(minconn: int = 1, maxconn: int = 5, retries: int = 5, delay: float = 1.0) -> None:
-    """
-    Initializes the connection pool with retry logic.
-    Neon sometimes drops cold-start connections — this handles it.
-    """
-    global _POOL
-    if _POOL is not None:
-        return
+            for attempt in range(1, retries + 1):
+                try:
+                    logger.info("Initializing async DB pool", extra={"attempt": attempt})
+                    self._pool = await asyncpg.create_pool(
+                        dsn=self._dsn,
+                        min_size=self._min_size,
+                        max_size=self._max_size,
+                        command_timeout=10,
+                    )
+                    logger.info("DB pool initialized")
+                    return True
+                except Exception as exc:
+                    logger.error("DB pool init failed", extra={"error": str(exc), "attempt": attempt})
+                    await asyncio.sleep(base_delay * (2 ** (attempt - 1)) + random.uniform(0, 0.25))
 
-    for attempt in range(1, retries + 1):
+            logger.error("DB pool init failed after retries")
+            self._cooldown_until = asyncio.get_event_loop().time() + 10
+            return False
+
+    async def close(self) -> None:
+        if self._pool:
+            await self._pool.close()
+            self._pool = None
+            logger.info("DB pool closed")
+
+    async def _ensure_pool(self) -> bool:
+        if not self._pool:
+            return await self.init()
+        return True
+
+    async def fetchrow(self, query: str, params: Optional[Iterable[Any]] = None) -> Optional[dict]:
+        if not await self._ensure_pool():
+            return None
+
+        values = _normalize_params(params)
         try:
-            logger.info(f"Initializing DB pool (attempt {attempt}/{retries})")
-            _POOL = psycopg2.pool.SimpleConnectionPool(
-                minconn=minconn,
-                maxconn=maxconn,
-                dsn=DB_URL,
-                sslmode="require"
-            )
-            logger.info("DB pool initialized successfully")
-            return
-        except Exception as e:
-            logger.error(f"DB pool init failed: {e}")
-            time.sleep(delay)
+            async with self._pool.acquire() as conn:
+                row = await conn.fetchrow(query, *values)
+                return dict(row) if row else None
+        except (asyncpg.PostgresConnectionError, asyncpg.InterfaceError) as exc:
+            logger.error("DB connection error", extra={"error": str(exc)})
+            await self.close()
+            await self.init()
+            return await self.fetchrow(query, params)
+        except Exception as exc:
+            logger.error("DB query failed", extra={"error": str(exc)})
+            return None
 
-    raise RuntimeError("Failed to initialize DB connection pool after retries")
+    async def fetch(self, query: str, params: Optional[Iterable[Any]] = None) -> list[dict]:
+        if not await self._ensure_pool():
+            return []
 
-def _get_pool() -> psycopg2.pool.SimpleConnectionPool:
-    global _POOL
-    if _POOL is None:
-        _init_pool()
-    return _POOL
+        values = _normalize_params(params)
+        try:
+            async with self._pool.acquire() as conn:
+                rows = await conn.fetch(query, *values)
+                return [dict(row) for row in rows]
+        except (asyncpg.PostgresConnectionError, asyncpg.InterfaceError) as exc:
+            logger.error("DB connection error", extra={"error": str(exc)})
+            await self.close()
+            await self.init()
+            return await self.fetch(query, params)
+        except Exception as exc:
+            logger.error("DB query failed", extra={"error": str(exc)})
+            return []
 
-# ============================================================
-# RAW CONNECTION (legacy compatibility)
-# ============================================================
+    async def execute(self, query: str, params: Optional[Iterable[Any]] = None) -> bool:
+        if not await self._ensure_pool():
+            return False
 
-def get_conn():
-    """Legacy direct connection (no pooling)."""
-    try:
-        return psycopg2.connect(DB_URL, sslmode="require")
-    except Exception as e:
-        logger.error(f"Legacy DB connection failed: {e}")
-        raise
+        values = _normalize_params(params)
+        try:
+            async with self._pool.acquire() as conn:
+                await conn.execute(query, *values)
+                return True
+        except (asyncpg.PostgresConnectionError, asyncpg.InterfaceError) as exc:
+            logger.error("DB connection error", extra={"error": str(exc)})
+            await self.close()
+            await self.init()
+            return await self.execute(query, params)
+        except Exception as exc:
+            logger.error("DB query failed", extra={"error": str(exc)})
+            return False
 
-# ============================================================
-# POOLED CONNECTION HELPERS
-# ============================================================
+    async def health_check(self) -> dict:
+        row = await self.fetchrow("SELECT 1 AS ok;")
+        return {"ok": bool(row and row.get("ok") == 1)}
 
-def get_pooled_conn():
-    pool = _get_pool()
-    try:
-        return pool.getconn()
-    except Exception as e:
-        logger.error(f"Failed to get pooled connection: {e}")
-        raise
 
-def release_pooled_conn(conn):
-    try:
-        pool = _get_pool()
-        pool.putconn(conn)
-    except Exception as e:
-        logger.error(f"Failed to release pooled connection: {e}")
+def get_database() -> Database:
+    root_path = Path(__file__).resolve().parents[1]
+    settings = build_settings(root_path)
+    return Database(settings.database_url)
 
-# ============================================================
-# INTERNAL EXECUTION WRAPPER
-# ============================================================
 
-def _execute(query: str, params: Optional[List[Any]], fetch: str):
-    conn = get_pooled_conn()
-    try:
-        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
-            cur.execute(query, params or ())
-            if fetch == "one":
-                result = cur.fetchone()
-            elif fetch == "all":
-                result = cur.fetchall()
-            else:
-                result = cur.fetchall() if cur.description else []
-            conn.commit()
-            return result
-    except Exception as e:
-        conn.rollback()
-        logger.error(f"DB query failed: {e} | Query: {query} | Params: {params}")
-        raise
-    finally:
-        release_pooled_conn(conn)
+DB = get_database()
 
-# ============================================================
-# PUBLIC QUERY HELPERS
-# ============================================================
-
-def fetchone(query: str, params: Optional[List[Any]] = None) -> Optional[Dict[str, Any]]:
-    return _execute(query, params, "one")
-
-def fetchall(query: str, params: Optional[List[Any]] = None) -> List[Dict[str, Any]]:
-    return _execute(query, params, "all")
-
-def execute(query: str, params: Optional[List[Any]] = None) -> None:
-    _execute(query, params, "none")
-
-def run_query(query: str, params: Optional[List[Any]] = None):
-    return _execute(query, params, "raw")
-
-# ============================================================
-# POOL SHUTDOWN
-# ============================================================
-
-def close_pool():
-    global _POOL
-    if _POOL:
-        logger.info("Closing DB pool...")
-        _POOL.closeall()
-        _POOL = None
+__all__ = ["DB", "Database"]

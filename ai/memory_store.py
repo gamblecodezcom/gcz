@@ -1,64 +1,57 @@
-from typing import Optional, Any, Dict
-from db import execute
-from ai_logger import get_logger
+from __future__ import annotations
+
+from typing import Any, Dict, Optional
+
+from ai.ai_logger import get_logger
+from ai.db import DB
 
 logger = get_logger("gcz-ai.memory")
 
 
-def _json(meta: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
-    return meta if isinstance(meta, dict) else None
-
-
-def add_memory(
+async def add_memory(
     category: str,
     message: str,
     source: str = "system",
-    meta: Optional[Dict[str, Any]] = None
-) -> None:
-    """
-    Inserts a memory entry into ai_memory.
-    """
-    logger.debug(f"add_memory: category={category}, source={source}")
-    execute(
+    meta: Optional[Dict[str, Any]] = None,
+) -> bool:
+    logger.info("Recording memory", extra={"category": category, "source": source})
+    return await DB.execute(
         """
         INSERT INTO ai_memory (category, message, source, meta)
-        VALUES (%s, %s, %s, %s)
+        VALUES ($1, $2, $3, $4::jsonb)
         """,
-        (category, message, source, _json(meta))
+        (category, message, source, meta or {}),
     )
 
 
-def log_health(
+async def log_health(
     service: str,
     status: str,
-    details: Optional[Dict[str, Any]] = None
-) -> None:
-    """
-    Inserts a health check entry into service_health.
-    """
-    logger.debug(f"log_health: service={service}, status={status}")
-    execute(
+    details: Optional[Dict[str, Any]] = None,
+) -> bool:
+    logger.info("Recording health", extra={"service": service, "status": status})
+    return await DB.execute(
         """
         INSERT INTO service_health (service, status, details)
-        VALUES (%s, %s, %s)
+        VALUES ($1, $2, $3::jsonb)
         """,
-        (service, status, _json(details))
+        (service, status, details or {}),
     )
 
 
-def log_anomaly(
+async def log_anomaly(
     anomaly_type: str,
     message: str,
-    meta: Optional[Dict[str, Any]] = None
-) -> None:
-    """
-    Inserts an anomaly entry into anomalies.
-    """
-    logger.warning(f"log_anomaly: type={anomaly_type}, message={message}")
-    execute(
+    meta: Optional[Dict[str, Any]] = None,
+) -> bool:
+    logger.warning("Recording anomaly", extra={"type": anomaly_type, "anomaly_message": message})
+    return await DB.execute(
         """
         INSERT INTO anomalies (type, message, meta)
-        VALUES (%s, %s, %s)
+        VALUES ($1, $2, $3::jsonb)
         """,
-        (anomaly_type, message, _json(meta))
+        (anomaly_type, message, meta or {}),
     )
+
+
+__all__ = ["add_memory", "log_health", "log_anomaly"]
