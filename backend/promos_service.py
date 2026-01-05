@@ -41,16 +41,7 @@ async def get_promo_codes():
 
     except Exception as e:
         logger.error(f"[PROMOS] Failed to load promo codes: {e}")
-
-        # fallback mock
-        return [{
-            "id": "mock1",
-            "site": "stake.us",
-            "code": "GCZ50",
-            "description": "50 Free Sweeps Coins",
-            "createdAt": "2026-01-01T00:00:00Z",
-            "verified": True
-        }]
+        return []
 
 
 # ============================================================
@@ -90,12 +81,4 @@ async def get_promo_links():
 
     except Exception as e:
         logger.error(f"[PROMOS] Failed to load promo links: {e}")
-
-        return [{
-            "id": "mock1",
-            "site": "rollbit",
-            "url": "https://rollbit.com/ref/gcz",
-            "description": "10% Lootbox Boost",
-            "createdAt": "2026-01-01T00:00:00Z",
-            "verified": True
-        }]
+        return []

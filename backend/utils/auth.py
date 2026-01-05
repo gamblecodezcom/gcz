@@ -6,7 +6,7 @@ Centralized permission enforcement for GambleCodez backend.
 Supports:
 - SUPER_ADMIN_ID from .env
 - Multiple admin IDs (optional)
-- DB-backed role system via auth_roles table
+- DB-backed role system via telegram_roles + telegramuserroles
 - Clean HTTPException handling
 - Logging for denied access
 """
@@ -20,7 +20,7 @@ settings = get_settings()
 logger = get_logger("permissions")
 
 # Normalize env values
-SUPER_ADMIN_ID = str(settings.SUPER_ADMIN_ID).strip()
+SUPER_ADMIN_ID = str(getattr(settings, "SUPER_ADMIN_ID", "")).strip()
 
 # Optional: comma-separated admin list
 ADMIN_IDS = set(
@@ -45,14 +45,20 @@ ROLE_LEVELS = {
 
 async def fetch_user_role(telegram_id: int) -> str:
     """
-    Fetches the user's role from the DB via auth_roles table.
+    Fetches the user's role from the DB via telegram_roles table.
     Falls back to 'user' if not found.
     """
     try:
         db = await get_db()
         row = await db.fetchrow(
-            "SELECT role FROM auth_roles WHERE telegram_id = $1",
-            telegram_id
+            """
+            SELECT tr.name AS role
+            FROM telegramuserroles tur
+            JOIN telegram_roles tr ON tr.id = tur.roleid
+            WHERE tur.telegram_id = $1
+            LIMIT 1
+            """,
+            int(telegram_id),
         )
         return row["role"] if row else "user"
 
@@ -79,7 +85,7 @@ async def require_admin(telegram_id: int, role: str = None):
     tid = str(telegram_id)
 
     # SUPER ADMIN OVERRIDE
-    if tid == SUPER_ADMIN_ID:
+    if SUPER_ADMIN_ID and tid == SUPER_ADMIN_ID:
         return True
 
     # ENV-BASED ADMIN LIST
