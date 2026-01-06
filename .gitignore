@@ -74,3 +74,24 @@ raffle_chunk_*
 daily_spin_chunk_*
 rafflev2*
 bot*.zip
+
+# ============================
+# Python cache / build files
+# ============================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pyd
+*.pdb
+*.egg-info/
+*.egg
+*.whl
+build/
+dist/
+pip-wheel-metadata/
+
+# Virtual environments
+venv/
+.env/
+.venv/

@@ -84,12 +84,12 @@ PM2_SERVICES = [
     "gcz-bot",
     "gcz-discord",
     "gcz-ai",
-    "gcz-mcp",
+    # "gcz-mcp",  # REMOVED — no longer a production service
     "gcz-watchdog",
 ]
 
 EXTERNAL_HEALTH = [
-    "https://gamblecodez.com/health",
+    "https://gamble-codez.com/health",  # FIXED SSL hostname
 ]
 
 MAX_FAILS = 3
@@ -194,16 +194,15 @@ def external_health_ok() -> bool:
 def run_cycle():
     logger.info("🔍 GCZ Watchdog cycle starting")
 
-    # 1. Ensure PM2 services exist (and are at least known)
+    # 1. Ensure PM2 services exist
     for svc in PM2_SERVICES:
         if not pm2_exists(svc):
             logger.error(f"[watchdog] Missing PM2 service (describe failed): {svc}")
-            # restart is still safest atomic action; PM2 will log if truly missing
             pm2_restart(svc)
 
     pm2_save()
 
-    # 2. AI engine health scan (includes DB + internal services)
+    # 2. AI engine health scan
     ai = health_scan()
     ai_ok = ai.get("neon_db", {}).get("ok", False)
 

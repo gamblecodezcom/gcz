@@ -126,39 +126,19 @@ module.exports = {
     {
       name: "gcz-ai",
       script: "uvicorn",
-      args: "server:app --host 0.0.0.0 --port 8010",
-      cwd: "/var/www/html/gcz/ai",
+      args: "ai.server:app --host 0.0.0.0 --port 8010",
+      cwd: "/var/www/html/gcz",
       interpreter: "python3",
       exec_mode: "fork",
       instances: 1,
       env: {
         GCZ_ENV: "prod",
-        PYTHONPATH: "/var/www/html/gcz/ai",
+        PYTHONPATH: "/var/www/html/gcz",
         DATABASE_URL: process.env.DATABASE_URL,
         AI_AGENT_NEON_DB_URL: process.env.AI_AGENT_NEON_DB_URL
       },
       out_file: "/var/www/html/gcz/logs/gcz-ai-out.log",
       error_file: "/var/www/html/gcz/logs/gcz-ai-error.log"
-    },
-
-    // =====================================================
-    // GCZ CLI MCP SERVER (TYPESCRIPT → RUNS dist/gcz.js)
-    // =====================================================
-    {
-      name: "gcz-mcp",
-      script: "dist/gcz.js",
-      cwd: "/var/www/html/gcz/cli",
-      interpreter: "node",
-      exec_mode: "fork",
-      instances: 1,
-      env: {
-        NODE_ENV: "production",
-        DATABASE_URL: process.env.DATABASE_URL,
-        AI_AGENT_NEON_DB_URL: process.env.AI_AGENT_NEON_DB_URL,
-        GCZ_AI_URL: "http://127.0.0.1:8010"
-      },
-      out_file: "/var/www/html/gcz/logs/gcz-mcp-out.log",
-      error_file: "/var/www/html/gcz/logs/gcz-mcp-error.log"
     }
   ]
 };
