@@ -1,0 +1,1 @@
+{ "urls":["http://127.0.0.1:8000/health","http://127.0.0.1:8001/health","http://127.0.0.1:8002/health","http://127.0.0.1:8010/health","http://127.0.0.1:9010/health"],"telegram_required":true,"discord_required":true,"timeout_ms":3000,"max_failures":3 }

@@ -1,0 +1,1 @@
+{ "restart_on_crash":true,"graceful_shutdown":true,"block_scale_above":4 }

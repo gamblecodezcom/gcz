@@ -1,0 +1,1 @@
+{ "enabled":true,"validate_after_restore":true,"restore_fail_revert":true,"retain_days":21,"max_total_gb":10 }

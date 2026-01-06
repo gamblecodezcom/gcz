@@ -1,0 +1,1 @@
+{ "mode":"production","require_approval":true,"block_destructive":true,"pm2_prefix":"gcz","restrict_write_patterns":["backend/*","ai/*","api/*","frontend/*"],"log_path":"/var/www/html/gcz/logs" }

@@ -1,0 +1,1 @@
+{ "telegram":{"required":["TELEGRAM_BOT_TOKEN","TELEGRAM_ADMIN_ID","TELEGRAM_GROUP_ID","TELEGRAM_CHANNEL_ID"]},"discord":{"required":["DISCORD_BOT_TOKEN","DISCORD_SERVER_ID","DISCORD_SC_LINKS_CHANNEL_ID","DISCORD_SC_CODES_CHANNEL_ID"]},"rules":{"check_env_presence":true,"check_http_health":true,"require_pm2_running":true,"fail_if_missing":true}}

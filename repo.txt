@@ -1,0 +1,900 @@
+.
+├── .cline
+│   └── ai
+│       └── sonar.py
+├── .cursor
+│   ├── cursor.json
+│   └── environment.json
+├── .env
+├── .gitignore
+├── AIAGENT_MASTERCONTROL.txt
+├── RUNBOOK.md
+├── TODO.txt
+├── __init__.py
+├── admin
+│   ├── .env
+│   ├── admin-users.html
+│   ├── ads-dashboard.html
+│   ├── ads.html
+│   ├── affiliates.html
+│   ├── app.js
+│   ├── blacklist.html
+│   ├── daily-drops.html
+│   ├── drops.html
+│   ├── health.html
+│   ├── js
+│   │   ├── admin-utils.js
+│   │   ├── ai
+│   │   │   └── sonar.js
+│   │   └── health.js
+│   ├── live-banner.html
+│   ├── login.html
+│   ├── logs.html
+│   ├── newsletter.html
+│   ├── promo-candidates.html
+│   ├── promos.html
+│   ├── raffles-wheel.html
+│   ├── raffles.html
+│   ├── redirects.html
+│   ├── settings.html
+│   ├── site-push.html
+│   ├── sites.html
+│   ├── spinlogs.html
+│   ├── styles.css
+│   ├── telegram-bot.html
+│   ├── users.html
+│   └── winners.html
+├── ai
+│   ├── __init__.py
+│   ├── __pycache__
+│   │   ├── __init__.cpython-310.pyc
+│   │   ├── ai_logger.cpython-310.pyc
+│   │   ├── db.cpython-310.pyc
+│   │   ├── gcz_ai.cpython-310.pyc
+│   │   ├── health_engine.cpython-310.pyc
+│   │   ├── memory_monitor.cpython-310.pyc
+│   │   ├── memory_store.cpython-310.pyc
+│   │   └── server.cpython-310.pyc
+│   ├── ai_logger.py
+│   ├── config
+│   │   ├── __init__.py
+│   │   ├── __pycache__
+│   │   │   ├── __init__.cpython-310.pyc
+│   │   │   └── loader.cpython-310.pyc
+│   │   └── loader.py
+│   ├── config.py
+│   ├── dashboard
+│   │   ├── app.js
+│   │   ├── index.html
+│   │   └── styles.css
+│   ├── db.py
+│   ├── gcz-sandbox
+│   │   ├── logs
+│   │   │   ├── gcz-sandbox-api-error-13.log
+│   │   │   ├── gcz-sandbox-api-out-13.log
+│   │   │   ├── gcz-sandbox-drops-error-14.log
+│   │   │   ├── gcz-sandbox-drops-out-14.log
+│   │   │   ├── gcz-sandbox-redirect-error-15.log
+│   │   │   └── gcz-sandbox-redirect-out-15.log
+│   │   └── mcp
+│   │       ├── package-lock.json
+│   │       ├── package.json
+│   │       ├── src
+│   │       │   ├── config
+│   │       │   │   └── settings.ts
+│   │       │   ├── index.ts
+│   │       │   ├── routes
+│   │       │   │   ├── db.ts
+│   │       │   │   ├── gcz.ts
+│   │       │   │   └── health.ts
+│   │       │   ├── server.ts
+│   │       │   ├── services
+│   │       │   │   ├── ai_client.ts
+│   │       │   │   └── db.ts
+│   │       │   └── utils
+│   │       │       ├── env.ts
+│   │       │       ├── logger.ts
+│   │       │       └── types.ts
+│   │       └── tsconfig.json
+│   ├── gcz_ai.py
+│   ├── gcz_ai_cli.py
+│   ├── health_engine.py
+│   ├── health_index.json
+│   ├── memory_client.py
+│   ├── memory_index.json
+│   ├── memory_monitor.py
+│   ├── memory_store.py
+│   ├── requirements.txt
+│   ├── server.py
+│   ├── tools
+│   │   ├── __init__.py
+│   │   ├── __pycache__
+│   │   │   ├── __init__.cpython-310.pyc
+│   │   │   └── ai_clients.cpython-310.pyc
+│   │   └── ai_clients.py
+│   └── workflows
+│       ├── __init__.py
+│       ├── __pycache__
+│       │   ├── __init__.cpython-310.pyc
+│       │   ├── engine.cpython-310.pyc
+│       │   ├── registry.cpython-310.pyc
+│       │   └── tasks.cpython-310.pyc
+│       ├── engine.py
+│       ├── registry.py
+│       └── tasks.py
+├── archive
+│   ├── ADMIN_DASH.txt
+│   ├── ADS_CLEANUP_COMPLETE.md
+│   ├── AIAGENT_MASTERCONTROL.txt
+│   ├── AUDIT_REPORT.md
+│   ├── BACKEND_API_IMPLEMENTATION_REPORT.md
+│   ├── BACKEND_API_SUMMARY.md
+│   ├── BOT_UPGRADE_AUDIT_REPORT.md
+│   ├── CSS_UI_UPGRADE_SUMMARY.md
+│   ├── DEGENPAN_ADMINDASH.txt
+│   ├── DEGEN_PROFILE_AUDIT_REPORT.md
+│   ├── DISCORD_PIPELINE_REPORT.md
+│   ├── DROPS_ADMIN_HEALTH_CHECK.md
+│   ├── DROPS_ENGINE_COMPLETE.md
+│   ├── Degen_Profile.txt
+│   ├── ENV_VARIABLES.md
+│   ├── FULL_PHASE_IMPLEMENTATION_SUMMARY.md
+│   ├── FULL_POST_DEPLOY_AUDIT_REPORT.md
+│   ├── GAMBLECODEZ_DROPS_IMPLEMENTATION_SUMMARY.md
+│   ├── GCZ_DEPLOY_PLAN.md
+│   ├── GambleCodez_socials.txt
+│   ├── IMPLEMENTATION_COMPLETE_SUMMARY.md
+│   ├── IMPLEMENTATION_SUMMARY.md
+│   ├── MULTI_LEVEL_ADMIN_SYSTEM_COMPLETE.md
+│   ├── NEXT_PHASE_IMPLEMENTATION_SUMMARY.md
+│   ├── PROMOTIONAL_ADS_ADDED.md
+│   ├── PROMOTIONAL_ADS_ADDED_V2.md
+│   ├── README.md
+│   ├── REPAIR_REPORT.md
+│   ├── SEO_UX_DEPLOYMENT_SUMMARY.md
+│   ├── STABILITY_VERIFICATION_REPORT.md
+│   ├── STEP1_COMPLETION_REPORT.md
+│   ├── STEP2_COMPLETION_REPORT.md
+│   ├── STEP3_COMPLETION_REPORT.md
+│   ├── agents archive
+│   │   ├── .agent-memory.json
+│   │   ├── .cursorignore
+│   │   ├── .cursorrc
+│   │   ├── .llm.config.json
+│   │   ├── SNYK_RESULTS.txt
+│   │   ├── SONAR_RESULTS.txt
+│   │   ├── admin_shortcuts.sh
+│   │   ├── agent-data
+│   │   │   ├── health.log
+│   │   │   ├── history.log
+│   │   │   ├── lastcmd.txt
+│   │   │   ├── project_index.txt
+│   │   │   ├── project_memory.md
+│   │   │   ├── session.txt
+│   │   │   └── version.log
+│   │   ├── agents
+│   │   │   ├── __pycache__
+│   │   │   │   └── ai_writer.cpython-310.pyc
+│   │   │   ├── ai_writer.py
+│   │   │   ├── config.json
+│   │   │   ├── gcz-devagent.sh
+│   │   │   ├── gcz-devagent.sh.save
+│   │   │   ├── memory_index.json
+│   │   │   └── task_engine.py
+│   │   ├── auto_wiring_enabled.flag
+│   │   ├── backup_tools.sh
+│   │   ├── dashboard_backend.sh
+│   │   ├── dashboard_bots.sh
+│   │   ├── dashboard_db.sh
+│   │   ├── dashboard_logs.sh
+│   │   ├── dashboard_pm2.sh
+│   │   ├── dashboard_system.sh
+│   │   ├── db.sh
+│   │   ├── docker-compose.agent.yml
+│   │   ├── docker-compose.yml
+│   │   ├── gcz-agent.env
+│   │   ├── gcz-control.sh
+│   │   ├── gcz-diagnose.sh
+│   │   ├── gcz-env.sh
+│   │   ├── gcz-godmode.sh
+│   │   ├── gcz-health.sh
+│   │   ├── gcz-installer.sh
+│   │   ├── gcz-wagchdog.sh
+│   │   ├── oi.sh
+│   │   ├── openhands-data
+│   │   │   ├── TODO.txt -> /workdir/TODO.txt
+│   │   │   └── settings.json
+│   │   ├── pm2_tools.sh
+│   │   ├── redirect_menu.sh
+│   │   ├── sonar-project.properties
+│   │   ├── sync_test_only.sh
+│   │   └── tools_menu.sh
+│   ├── back-old
+│   │   ├── API Routes
+│   │   ├── affiliates.js
+│   │   ├── app.js
+│   │   ├── bash
+│   │   ├── dailySpin.js
+│   │   ├── dailySpinController.js
+│   │   ├── health.html
+│   │   ├── health.js
+│   │   ├── index.html
+│   │   ├── logs.html
+│   │   ├── main.py
+│   │   ├── newsletter.js
+│   │   ├── raffles.js
+│   │   ├── redirect.py
+│   │   ├── serveFrontend.js
+│   │   ├── server1.txt
+│   │   ├── server2.txt
+│   │   ├── spinLog.js
+│   │   ├── stats.js
+│   │   ├── validateCsv.js
+│   │   └── winners.html
+│   ├── backup.zip
+│   ├── bot.zip
+│   ├── bot_fully_rebuilt_final.zip
+│   ├── deploy.sh
+│   ├── ecosystem.config.cjs
+│   ├── front-old
+│   │   ├── App.jsx
+│   │   ├── DailySpin.jsx
+│   │   ├── DegenWheel.css
+│   │   ├── DegenWheel.jsx
+│   │   ├── Footer.jsx
+│   │   ├── Header.jsx
+│   │   ├── Home.jsx
+│   │   ├── Raffles.jsx
+│   │   ├── api.js
+│   │   ├── global.css
+│   │   ├── index.html
+│   │   ├── main.jsx
+│   │   ├── tailwind.config.js
+│   │   └── vite.config.js
+│   ├── frontend-broken-old
+│   │   ├── .env -> /var/www/html/gcz/.env
+│   │   ├── .gitignore
+│   │   ├── README.md
+│   │   ├── app.js
+│   │   ├── index.html
+│   │   ├── package-lock.json
+│   │   ├── package.json
+│   │   ├── postcss.config.js
+│   │   ├── public
+│   │   │   ├── icons
+│   │   │   ├── manifest.json
+│   │   │   ├── screenshots
+│   │   │   └── sw.js
+│   │   ├── src
+│   │   │   ├── App.jsx
+│   │   │   ├── api.js
+│   │   │   ├── assets
+│   │   │   │   ├── animations
+│   │   │   │   ├── icons
+│   │   │   │   └── images
+│   │   │   ├── chunk_aa
+│   │   │   ├── components
+│   │   │   │   ├── Ads
+│   │   │   │   │   └── PromoPopup.jsx
+│   │   │   │   ├── DegenWheel.css
+│   │   │   │   ├── DegenWheel.jsx
+│   │   │   │   ├── Footer.jsx
+│   │   │   │   ├── Forms
+│   │   │   │   ├── Header.jsx
+│   │   │   │   ├── Home
+│   │   │   │   ├── Layout
+│   │   │   │   │   ├── App.jsx
+│   │   │   │   │   ├── Footer.jsx
+│   │   │   │   │   ├── Header.jsx
+│   │   │   │   │   └── Navigation.jsx
+│   │   │   │   ├── PWA
+│   │   │   │   ├── Raffles
+│   │   │   │   ├── Sites
+│   │   │   │   └── UI
+│   │   │   │       ├── CategoryBadge.jsx
+│   │   │   │       ├── Modal.jsx
+│   │   │   │       ├── NeonButton.jsx
+│   │   │   │       ├── NeonCard.jsx
+│   │   │   │       └── Toast.jsx
+│   │   │   ├── context
+│   │   │   │   ├── AdsContext.jsx
+│   │   │   │   ├── SitesContext.jsx
+│   │   │   │   └── UserContext.jsx
+│   │   │   ├── hooks
+│   │   │   ├── index.css
+│   │   │   ├── main.jsx
+│   │   │   ├── pages
+│   │   │   │   ├── AllSites.jsx
+│   │   │   │   ├── Blacklist.jsx
+│   │   │   │   ├── CategoryPage.jsx
+│   │   │   │   ├── Contact.jsx
+│   │   │   │   ├── DailySpin.jsx
+│   │   │   │   ├── Home.jsx
+│   │   │   │   ├── Newsletter.jsx
+│   │   │   │   ├── NotFound.jsx
+│   │   │   │   ├── Raffles.jsx
+│   │   │   │   └── raffles
+│   │   │   ├── styles
+│   │   │   │   ├── DegenWheel.css
+│   │   │   │   └── global.css
+│   │   │   └── utils
+│   │   │       ├── api.js
+│   │   │       └── constants.js
+│   │   ├── styles.css
+│   │   ├── tailwind.config.js
+│   │   └── vite.config.js
+│   ├── gcz-bootstrap-degen.sh
+│   ├── gcz-profile-report.txt
+│   ├── gcz-report.sh
+│   ├── gcz-report.txt
+│   ├── gcz-supermode.sh
+│   ├── goose-finisher.sh
+│   ├── goose.txt
+│   ├── install-goose.sh
+│   ├── master_affiliates - Copy.csv
+│   ├── nginx.conf
+│   ├── plan.md
+│   ├── raffle_chunk_aa
+│   ├── rafflev2.zip
+│   ├── schema_rules.md
+│   └── server.js
+├── backend
+│   ├── .env -> /var/www/html/gcz/.env
+│   ├── __init__.py
+│   ├── __pycache__
+│   │   ├── __init__.cpython-310.pyc
+│   │   ├── drops.cpython-310.pyc
+│   │   ├── logger.cpython-310.pyc
+│   │   ├── logging_config.cpython-310.pyc
+│   │   ├── main.cpython-310.pyc
+│   │   ├── promos_service.cpython-310.pyc
+│   │   └── redirect.cpython-310.pyc
+│   ├── config
+│   │   ├── __init__.py
+│   │   ├── __pycache__
+│   │   │   ├── __init__.cpython-310.pyc
+│   │   │   ├── ai_profiles.cpython-310.pyc
+│   │   │   ├── config.cpython-310.pyc
+│   │   │   └── env_loader.cpython-310.pyc
+│   │   ├── ai_profiles.py
+│   │   ├── config.py
+│   │   ├── env_loader.py
+│   │   └── test_config.py
+│   ├── database.py
+│   ├── drops.py
+│   ├── logger.py
+│   ├── logging_config.py
+│   ├── logs
+│   │   ├── gcz-api-error-0.log
+│   │   ├── gcz-api-out-0.log
+│   │   ├── gcz-drops-error-2.log
+│   │   ├── gcz-drops-out-2.log
+│   │   ├── gcz-redirect-error-1.log
+│   │   └── gcz-redirect-out-1.log
+│   ├── main.py
+│   ├── middleware
+│   │   ├── __init__.py
+│   │   ├── __pycache__
+│   │   │   ├── __init__.cpython-310.pyc
+│   │   │   ├── auth_guard.cpython-310.pyc
+│   │   │   └── rate_limit.cpython-310.pyc
+│   │   ├── auth_guard.py
+│   │   └── rate_limit.py
+│   ├── models
+│   │   ├── __init__.py
+│   │   ├── affiliate.py
+│   │   ├── casino.py
+│   │   ├── giveaway.py
+│   │   ├── promos.py
+│   │   ├── raffle.py
+│   │   └── user.py
+│   ├── promos_service.py
+│   ├── redirect.py
+│   ├── routes
+│   │   ├── __init__.py
+│   │   ├── __pycache__
+│   │   │   ├── __init__.cpython-310.pyc
+│   │   │   ├── admin.cpython-310.pyc
+│   │   │   ├── affiliates.cpython-310.pyc
+│   │   │   ├── ai.cpython-310.pyc
+│   │   │   ├── auth_roles.cpython-310.pyc
+│   │   │   ├── casinos.cpython-310.pyc
+│   │   │   ├── dashboard.cpython-310.pyc
+│   │   │   ├── giveaway.cpython-310.pyc
+│   │   │   ├── profile.cpython-310.pyc
+│   │   │   ├── promos.cpython-310.pyc
+│   │   │   ├── redeem.cpython-310.pyc
+│   │   │   └── sc.cpython-310.pyc
+│   │   ├── admin.py
+│   │   ├── affiliates.py
+│   │   ├── ai.py
+│   │   ├── auth.py
+│   │   ├── auth_roles.py
+│   │   ├── casinos.py
+│   │   ├── dashboard.py
+│   │   ├── giveaway.py
+│   │   ├── health.py
+│   │   ├── profile.py
+│   │   ├── promos.py
+│   │   ├── redeem.py
+│   │   ├── redirect.py
+│   │   └── sc.py
+│   ├── scripts
+│   │   ├── __init__.py
+│   │   ├── health_check.py
+│   │   ├── import_affiliates_csv.py
+│   │   ├── rebuild_redirects.py
+│   │   ├── sync_casinos.py
+│   │   ├── sync_giveaways.py
+│   │   ├── sync_promos.py
+│   │   └── sync_raffles.py
+│   ├── services
+│   │   ├── __init__.py
+│   │   ├── __pycache__
+│   │   │   ├── __init__.cpython-310.pyc
+│   │   │   ├── affiliates_service.cpython-310.pyc
+│   │   │   ├── auth.cpython-310.pyc
+│   │   │   ├── cache.cpython-310.pyc
+│   │   │   ├── db.cpython-310.pyc
+│   │   │   ├── promos_service.cpython-310.pyc
+│   │   │   └── sc_service.cpython-310.pyc
+│   │   ├── affiliates_service.py
+│   │   ├── ai
+│   │   │   ├── __init__.py
+│   │   │   ├── __pycache__
+│   │   │   │   ├── __init__.cpython-310.pyc
+│   │   │   │   ├── ask_perplexity.cpython-310.pyc
+│   │   │   │   ├── perplexity_embeddings.cpython-310.pyc
+│   │   │   │   ├── perplexity_models.cpython-310.pyc
+│   │   │   │   ├── perplexity_search.cpython-310.pyc
+│   │   │   │   └── perplexity_stream.cpython-310.pyc
+│   │   │   ├── ask_perplexity.py
+│   │   │   ├── perplexity_client.py
+│   │   │   ├── perplexity_embeddings.py
+│   │   │   ├── perplexity_models.py
+│   │   │   ├── perplexity_search.py
+│   │   │   └── perplexity_stream.py
+│   │   ├── auth.py
+│   │   ├── cache.py
+│   │   ├── db.py
+│   │   ├── promos_service.py
+│   │   └── sc_service.py
+│   └── utils
+│       ├── __init__.py
+│       ├── __pycache__
+│       │   ├── __init__.cpython-310.pyc
+│       │   ├── auth.cpython-310.pyc
+│       │   ├── crypto.cpython-310.pyc
+│       │   ├── sc.cpython-310.pyc
+│       │   ├── time.cpython-310.pyc
+│       │   └── validators.cpython-310.pyc
+│       ├── auth.py
+│       ├── crypto.py
+│       ├── sc.py
+│       ├── time.py
+│       └── validators.py
+├── backups
+│   ├── gcz-2026-01-02.sql
+│   ├── gcz-2026-01-03.sql
+│   ├── gcz-2026-01-04.sql
+│   ├── gcz-2026-01-05.sql
+│   ├── gcz-2026-01-06.sql
+│   └── pre-deploy-20260101-055514.sql
+├── bot
+│   ├── .env -> /root/gcz/.env
+│   ├── bot.js
+│   ├── commands
+│   │   ├── commands user.js
+│   │   ├── commands.autoresponse.js
+│   │   ├── commands.stats.js
+│   │   └── commands.wheel.js
+│   ├── config.js
+│   ├── health.js
+│   ├── routes
+│   │   ├── commands.admin.js
+│   │   ├── commands.autoresponse.js
+│   │   ├── commands.codes.js
+│   │   ├── commands.commands.js
+│   │   ├── commands.daily.js
+│   │   ├── commands.drops.js
+│   │   ├── commands.giveaways.js
+│   │   ├── commands.help.js
+│   │   ├── commands.inbox.js
+│   │   ├── commands.leaderboard.js
+│   │   ├── commands.menu.js
+│   │   ├── commands.points.js
+│   │   ├── commands.promos.js
+│   │   ├── commands.raffles.js
+│   │   ├── commands.roles.js
+│   │   ├── commands.start.js
+│   │   ├── commands.stats.js
+│   │   ├── commands.user.js
+│   │   ├── commands.vip.js
+│   │   ├── commands.wheel.js
+│   │   └── index.js
+│   ├── services
+│   │   ├── autoresponses.js
+│   │   ├── badges.js
+│   │   ├── channel.js
+│   │   ├── codes.js
+│   │   ├── daily.js
+│   │   ├── drops.js
+│   │   ├── giveaways.js
+│   │   ├── inbox.js
+│   │   ├── messages.js
+│   │   ├── missions.js
+│   │   ├── notifications.js
+│   │   ├── points.js
+│   │   ├── progress.js
+│   │   ├── promos.js
+│   │   ├── raffles.js
+│   │   ├── scheduler.js
+│   │   ├── stats.js
+│   │   ├── telegramRoles.js
+│   │   ├── vip.js
+│   │   └── wheel.js
+│   ├── utils
+│   │   ├── errors.js
+│   │   ├── formatters.js
+│   │   ├── inline.js
+│   │   ├── logger.js
+│   │   ├── permissions.js
+│   │   ├── storage.js
+│   │   └── validators.js
+│   └── watchdog.js
+├── cli
+│   ├── src
+│   │   └── gcz.ts
+│   └── utils
+│       └── logger.ts
+├── controllers
+│   └── dailySpinController.js
+├── discord
+│   ├── client.js
+│   ├── config.js
+│   ├── handlers
+│   │   └── messageHandler.js
+│   ├── start-discord.js
+│   └── utils
+│       ├── logger.js
+│       └── sanitizer.js
+├── dist
+│   ├── ICONS_NEEDED.txt
+│   ├── ICONS_README.md
+│   ├── assets
+│   │   ├── css
+│   │   │   └── index-Bs3NzU3a.css
+│   │   └── js
+│   │       ├── index-DvzHonza.js
+│   │       ├── react-vendor-2VshckmO.js
+│   │       └── utils-BiNvczpk.js
+│   ├── bug-report.html
+│   ├── favicon.ico
+│   ├── icon-1024.png
+│   ├── icon-128.png
+│   ├── icon-16.png
+│   ├── icon-192.png
+│   ├── icon-256.png
+│   ├── icon-32.png
+│   ├── icon-384.png
+│   ├── icon-48.png
+│   ├── icon-512.png
+│   ├── icon-64.png
+│   ├── icon.jpeg
+│   ├── icon.png
+│   ├── index.html
+│   ├── manifest.json
+│   ├── maskable-icon-192.png
+│   ├── maskable-icon-512.png
+│   ├── og-image.jpg
+│   ├── robots.txt
+│   ├── service-worker.js
+│   ├── sitemap.xml
+│   ├── sw.js
+│   └── vite.svg
+├── ecosystem.config.cjs
+├── ecosystem.sandbox.cjs
+├── frontend
+│   ├── .gitignore
+│   ├── README.md
+│   ├── dist
+│   │   ├── ICONS_NEEDED.txt
+│   │   ├── ICONS_README.md
+│   │   ├── assets
+│   │   │   ├── css
+│   │   │   │   └── index-Dhr84QJ0.css
+│   │   │   └── js
+│   │   │       ├── index-BSdBpRgk.js
+│   │   │       ├── react-vendor-2VshckmO.js
+│   │   │       └── utils-LQpE9Nyn.js
+│   │   ├── bug-report.html
+│   │   ├── favicon.ico
+│   │   ├── icon-192.png
+│   │   ├── icon-512.png
+│   │   ├── index.html
+│   │   ├── manifest.json
+│   │   ├── maskable-icon-192.png
+│   │   ├── maskable-icon-512.png
+│   │   ├── og-image.jpg
+│   │   ├── robots.txt
+│   │   ├── service-worker.js
+│   │   ├── sitemap.xml
+│   │   ├── sw.js
+│   │   └── vite.svg
+│   ├── eslint.config.js
+│   ├── index.html
+│   ├── jest.config.js
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── postcss.config.js
+│   ├── public
+│   │   ├── ICONS_NEEDED.txt
+│   │   ├── ICONS_README.md
+│   │   ├── bug-report.html
+│   │   ├── favicon.ico
+│   │   ├── icon-192.png
+│   │   ├── icon-512.png
+│   │   ├── manifest.json
+│   │   ├── maskable-icon-192.png
+│   │   ├── maskable-icon-512.png
+│   │   ├── og-image.jpg
+│   │   ├── robots.txt
+│   │   ├── service-worker.js
+│   │   ├── sitemap.xml
+│   │   ├── sw.js
+│   │   └── vite.svg
+│   ├── src
+│   │   ├── App.tsx
+│   │   ├── __tests__
+│   │   │   ├── pinChange.test.ts
+│   │   │   └── wheel.test.ts
+│   │   ├── assets
+│   │   │   └── react.svg
+│   │   ├── components
+│   │   │   ├── Admin
+│   │   │   │   └── AnalyticsCharts.tsx
+│   │   │   ├── Ads
+│   │   │   │   └── AdSystem.tsx
+│   │   │   ├── Animations
+│   │   │   │   ├── AnimatedDice.tsx
+│   │   │   │   ├── CrownAnimation.tsx
+│   │   │   │   └── RainbowFlash.tsx
+│   │   │   ├── Common
+│   │   │   │   ├── BrandedBadge.tsx
+│   │   │   │   ├── ErrorBoundary.tsx
+│   │   │   │   ├── FallbackUI.tsx
+│   │   │   │   ├── LoadingState.tsx
+│   │   │   │   ├── SEOHead.tsx
+│   │   │   │   └── Tooltip.tsx
+│   │   │   ├── Dashboard
+│   │   │   │   ├── AchievementsPanel.tsx
+│   │   │   │   ├── ActivityLog.tsx
+│   │   │   │   ├── DegenWheelPanel.tsx
+│   │   │   │   ├── GiveawayRewardsPanel.tsx
+│   │   │   │   ├── LinkedCasinoAccountsGrid.tsx
+│   │   │   │   ├── LiveDashboard.tsx
+│   │   │   │   ├── MissionsPanel.tsx
+│   │   │   │   ├── PinUnlockModal.tsx
+│   │   │   │   ├── PlayerIdentityHeader.tsx
+│   │   │   │   ├── RafflesPanel.tsx
+│   │   │   │   ├── SettingsPanel.tsx
+│   │   │   │   └── XPLevelPanel.tsx
+│   │   │   ├── DegenWheel.css
+│   │   │   ├── Drops
+│   │   │   │   └── DropsBoard.tsx
+│   │   │   ├── ErrorBoundary.tsx
+│   │   │   ├── Filters
+│   │   │   │   └── FiltersBar.tsx
+│   │   │   ├── Layout
+│   │   │   │   ├── Footer.tsx
+│   │   │   │   └── Navbar.tsx
+│   │   │   ├── Notifications
+│   │   │   │   ├── LiveBanner.tsx
+│   │   │   │   └── PushNotificationBell.tsx
+│   │   │   ├── PWA
+│   │   │   │   ├── NotificationPermissionPrompt.tsx
+│   │   │   │   └── PWAInstallPrompt.tsx
+│   │   │   ├── Raffles
+│   │   │   │   └── RaffleJoinModal.tsx
+│   │   │   └── Sites
+│   │   │       ├── SiteCard.tsx
+│   │   │       └── SiteCardGrid.tsx
+│   │   ├── hooks
+│   │   │   └── useRealtime.ts
+│   │   ├── index.css
+│   │   ├── lib
+│   │   │   └── ai
+│   │   │       └── sonar.ts
+│   │   ├── main.tsx
+│   │   ├── pages
+│   │   │   ├── Affiliates.tsx
+│   │   │   ├── Blacklist.tsx
+│   │   │   ├── Casino.tsx
+│   │   │   ├── Contact.tsx
+│   │   │   ├── Dashboard.tsx
+│   │   │   ├── DegenLogin.tsx
+│   │   │   ├── Drops.tsx
+│   │   │   ├── Home.tsx
+│   │   │   ├── Leaderboard.tsx
+│   │   │   ├── Newsletter.tsx
+│   │   │   ├── Privacy.tsx
+│   │   │   ├── Profile.tsx
+│   │   │   ├── Raffles.tsx
+│   │   │   ├── RecentSites.tsx
+│   │   │   ├── Terms.tsx
+│   │   │   └── Wheel.tsx
+│   │   ├── setupTests.ts
+│   │   ├── types
+│   │   │   └── index.ts
+│   │   ├── utils
+│   │   │   ├── api.ts
+│   │   │   ├── categoryColors.ts
+│   │   │   ├── constants.ts
+│   │   │   └── errorHandler.ts
+│   │   └── vite-env.d.ts
+│   ├── tailwind.config.js
+│   ├── tsconfig.json
+│   ├── tsconfig.node.json
+│   └── vite.config.js
+├── gcz-ai-core.py
+├── gcz_watchdog.py
+├── jobs
+│   ├── daily.js
+│   ├── lock.js
+│   ├── reconcile.js
+│   └── warmup.js
+├── logs
+│   ├── gcz-ai-core.log
+│   ├── gcz-ai-error-10.log
+│   ├── gcz-ai-error-11.log
+│   ├── gcz-ai-error-6.log
+│   ├── gcz-ai-error-9.log
+│   ├── gcz-ai-out-10.log
+│   ├── gcz-ai-out-11.log
+│   ├── gcz-ai-out-6.log
+│   ├── gcz-ai-out-9.log
+│   ├── gcz-api-error-1.log
+│   ├── gcz-api-out-1.log
+│   ├── gcz-backend.log
+│   ├── gcz-backend.log.1
+│   ├── gcz-backend.log.2
+│   ├── gcz-backend.log.3
+│   ├── gcz-backend.log.4
+│   ├── gcz-backend.log.5
+│   ├── gcz-bot-error-0.log
+│   ├── gcz-bot-out-0.log
+│   ├── gcz-discord-error-4.log
+│   ├── gcz-discord-out-4.log
+│   ├── gcz-drops-error-3.log
+│   ├── gcz-drops-out-3.log
+│   ├── gcz-mcp-error-7.log
+│   ├── gcz-mcp-out-7.log
+│   ├── gcz-redirect-error-2.log
+│   ├── gcz-redirect-out-2.log
+│   ├── gcz-watchdog-error-5.log
+│   └── gcz-watchdog-out-5.log
+├── manifest.json
+├── master_affiliates.csv
+├── mcp.json
+├── middleware
+│   ├── adminAuth.js
+│   ├── auth.js
+│   ├── permissions.js
+│   ├── rateLimit.js
+│   ├── rbac.js
+│   ├── security.js
+│   ├── superAdminOnly.js
+│   └── userAuth.js
+├── models
+│   └── spinLog.js
+├── package-lock.json
+├── package.json
+├── public
+│   ├── admin
+│   │   ├── bug-admin.html
+│   │   └── bug-reports.html
+│   ├── assets
+│   │   ├── css
+│   │   │   └── index-Bs3NzU3a.css
+│   │   └── js
+│   │       ├── index-DvzHonza.js
+│   │       ├── react-vendor-2VshckmO.js
+│   │       └── utils-BiNvczpk.js
+│   ├── badge-96.png
+│   ├── bug-report.html
+│   ├── icon-192.png
+│   ├── icon.svg
+│   ├── index.html
+│   └── vite.svg
+├── repo.txt
+├── routes
+│   ├── activity.js
+│   ├── admin
+│   │   ├── adminUsers.js
+│   │   ├── ads.js
+│   │   ├── adsDashboard.js
+│   │   ├── affiliateAnalytics.js
+│   │   ├── affiliates.js
+│   │   ├── auth.js
+│   │   ├── blacklist.js
+│   │   ├── dailyDrops.js
+│   │   ├── giveaways.js
+│   │   ├── health.js
+│   │   ├── index.js
+│   │   ├── liveBanner.js
+│   │   ├── newsletter.js
+│   │   ├── overrides.js
+│   │   ├── promos.js
+│   │   ├── push.js
+│   │   ├── raffles.js
+│   │   ├── redirects.js
+│   │   ├── settings.js
+│   │   ├── telegramBot.js
+│   │   ├── users.js
+│   │   └── wheel.js
+│   ├── admin.js
+│   ├── ads.js
+│   ├── affiliates.js
+│   ├── analytics.js
+│   ├── api.js
+│   ├── blacklist.js
+│   ├── bugReports.js
+│   ├── casino.js
+│   ├── contact.js
+│   ├── dailySpin.js
+│   ├── dashboard.js
+│   ├── drops.js
+│   ├── gamification.js
+│   ├── giveaways.js
+│   ├── liveDashboard.js
+│   ├── newsletter.js
+│   ├── notifications.js
+│   ├── profile.js
+│   ├── promos.js
+│   ├── push.js
+│   ├── raffles.js
+│   ├── rafflesExtended.js
+│   ├── realtime.js
+│   ├── sites.js
+│   ├── socials.js
+│   └── stats.js
+├── scripts
+│   ├── generate-sitemap.js
+│   ├── load-test.js
+│   └── stress-test.sh
+├── services
+│   ├── dropsAI.js
+│   ├── dropsNotifications.js
+│   ├── promoTelegram.js
+│   ├── promosService.js
+│   └── siteRoles.py
+├── sql
+│   ├── base_schema.sql
+│   └── migrations
+│       ├── ai_core.sql
+│       ├── base_schema.sql
+│       ├── bot_schema.sql
+│       ├── gcz_giveaway_schema.sql
+│       ├── gcz_gratification_schema.sql
+│       ├── promo_ai.sql
+│       └── promos.sql
+├── stack_tree.txt
+├── utils
+│   ├── db.js
+│   ├── dropEngine.js
+│   ├── dropEngine.js.save
+│   ├── logger.js
+│   ├── raffleEntries.js
+│   ├── raffleValidation.js
+│   ├── socials.js
+│   └── validateCsv.js
+└── var
+    └── www
+        └── html
+            └── gcz
+                └── dashboard
+                    ├── app.js
+                    ├── index.html
+                    └── styles.css
+
+138 directories, 759 files

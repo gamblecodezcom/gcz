@@ -1,5 +1,6 @@
 module.exports = {
   apps: [
+
     // =====================================================
     // TELEGRAM BOT — SANDBOX
     // =====================================================
@@ -11,10 +12,10 @@ module.exports = {
       exec_mode: "fork",
       instances: 1,
       max_memory_restart: "300M",
+      env_file: "/var/www/html/gcz/.env.sandbox",
       env: {
         NODE_ENV: "sandbox",
-        DATABASE_URL: process.env.DATABASE_URL,
-        AI_AGENT_NEON_DB_URL: process.env.AI_AGENT_NEON_DB_URL
+        GCZ_ENV: "sandbox"
       }
     },
 
@@ -29,11 +30,11 @@ module.exports = {
       interpreter: "python3",
       exec_mode: "fork",
       instances: 1,
+      env_file: "/var/www/html/gcz/.env.sandbox",
       env: {
         PYTHONPATH: "/var/www/html/gcz/ai/gcz-sandbox",
         NODE_ENV: "sandbox",
-        DATABASE_URL: process.env.DATABASE_URL,
-        AI_AGENT_NEON_DB_URL: process.env.AI_AGENT_NEON_DB_URL
+        GCZ_ENV: "sandbox"
       }
     },
 
@@ -48,11 +49,11 @@ module.exports = {
       interpreter: "python3",
       exec_mode: "fork",
       instances: 1,
+      env_file: "/var/www/html/gcz/.env.sandbox",
       env: {
         PYTHONPATH: "/var/www/html/gcz/ai/gcz-sandbox",
         NODE_ENV: "sandbox",
-        DATABASE_URL: process.env.DATABASE_URL,
-        AI_AGENT_NEON_DB_URL: process.env.AI_AGENT_NEON_DB_URL
+        GCZ_ENV: "sandbox"
       }
     },
 
@@ -67,16 +68,16 @@ module.exports = {
       interpreter: "python3",
       exec_mode: "fork",
       instances: 1,
+      env_file: "/var/www/html/gcz/.env.sandbox",
       env: {
         PYTHONPATH: "/var/www/html/gcz/ai/gcz-sandbox",
         NODE_ENV: "sandbox",
-        DATABASE_URL: process.env.DATABASE_URL,
-        AI_AGENT_NEON_DB_URL: process.env.AI_AGENT_NEON_DB_URL
+        GCZ_ENV: "sandbox"
       }
     },
 
     // =====================================================
-    // DISCORD BOT — SANDBOX
+    // DISCORD BOT — SANDBOX (READ ONLY)
     // =====================================================
     {
       name: "gcz-sandbox-discord",
@@ -86,10 +87,10 @@ module.exports = {
       exec_mode: "fork",
       instances: 1,
       node_args: "--experimental-modules",
+      env_file: "/var/www/html/gcz/.env.sandbox",
       env: {
         NODE_ENV: "sandbox",
-        DATABASE_URL: process.env.DATABASE_URL,
-        AI_AGENT_NEON_DB_URL: process.env.AI_AGENT_NEON_DB_URL
+        GCZ_ENV: "sandbox"
       }
     },
 
@@ -104,11 +105,11 @@ module.exports = {
       exec_mode: "fork",
       instances: 1,
       max_memory_restart: "200M",
+      env_file: "/var/www/html/gcz/.env.sandbox",
       env: {
         PYTHONPATH: "/var/www/html/gcz/ai/gcz-sandbox",
         NODE_ENV: "sandbox",
-        DATABASE_URL: process.env.DATABASE_URL,
-        AI_AGENT_NEON_DB_URL: process.env.AI_AGENT_NEON_DB_URL
+        GCZ_ENV: "sandbox"
       }
     },
 
@@ -123,16 +124,16 @@ module.exports = {
       interpreter: "python3",
       exec_mode: "fork",
       instances: 1,
+      env_file: "/var/www/html/gcz/.env.sandbox",
       env: {
         GCZ_ENV: "sandbox",
         PYTHONPATH: "/var/www/html/gcz/ai/gcz-sandbox",
-        DATABASE_URL: process.env.DATABASE_URL,
-        AI_AGENT_NEON_DB_URL: process.env.AI_AGENT_NEON_DB_URL
+        NODE_ENV: "sandbox"
       }
     },
 
     // =====================================================
-    // MCP CLI SERVER — SANDBOX (WITH CP)
+    // MCP CLI SERVER — SANDBOX
     // =====================================================
     {
       name: "gcz-sandbox-mcp",
@@ -141,10 +142,10 @@ module.exports = {
       interpreter: "node",
       exec_mode: "fork",
       instances: 1,
+      env_file: "/var/www/html/gcz/.env.sandbox",
       env: {
         NODE_ENV: "sandbox",
-        DATABASE_URL: process.env.DATABASE_URL,
-        AI_AGENT_NEON_DB_URL: process.env.AI_AGENT_NEON_DB_URL,
+        GCZ_ENV: "sandbox",
         GCZ_AI_URL: "http://127.0.0.1:9010"
       }
     }

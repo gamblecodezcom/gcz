@@ -1,0 +1,43 @@
+GAMBLECODEZ — SHORT‑TERM CC TO‑DO LIST (NEXT 10 ITEMS)
+======================================================
+
+1) Create sandbox log directory
+   - Ensure `/var/www/html/gcz/ai/gcz-sandbox/logs` exists with correct permissions.
+
+2) Apply the updated ecosystem.sandbox.cjs patch
+   - Fix cwd paths, PYTHONPATH, GCZ_DB fallback chain, AI_PORT, GCZ_ENV, and log paths.
+
+3) Verify MCP build output
+   - Confirm `/var/www/html/gcz/ai/gcz-sandbox/mcp/dist/index.js` exists.
+   - If missing, run `npm run build` inside `ai/gcz-sandbox/mcp`.
+
+4) Remove any remaining references to old sandbox paths
+   - Search for `/var/www/html/gcz/ai/gcz-sandbox` in backend, AI, MCP, bot, and discord.
+   - Update imports to use `/var/www/html/gcz`.
+
+5) Restart the entire sandbox stack using the new PM2 config
+   - Stop, delete, and restart all sandbox services using `ecosystem.sandbox.cjs`.
+
+6) Validate service health after restart
+   - API on `9000`, redirect on `9001`, drops on `9002`, AI on `9010`.
+   - Check logs for import errors, DB errors, or port conflicts.
+
+7) Confirm environment variable resolution
+   - Print and verify: `GCZ_DB`, `AI_AGENT_NEON_DB_URL`, `DATABASE_URL`, `GCZ_ENV`, `NODE_ENV`, `AI_PORT`.
+
+8) Test MCP → AI communication
+   - Ensure MCP can reach AI at `http://127.0.0.1:9010`.
+   - Validate MCP DB access via `GCZ_DB`.
+
+9) Test backend DB connectivity
+   - Confirm backend uses `GCZ_DB` consistently.
+   - Validate queries from `backend/services/db.py` and `backend/database.py`.
+
+10) Run a full sandbox smoke test
+   - Hit all major endpoints:
+     - `/api/health`
+     - `/api/sites`
+     - `/api/drops`
+     - `/api/raffles`
+     - AI health endpoint
+   - Confirm no 500 errors and logs are clean.

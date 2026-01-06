@@ -1,0 +1,1 @@
+{ "enabled":true,"location":"/var/www/html/gcz/_auto_backups","exclude":["node_modules",".git","__pycache__"],"compress":true,"rotate":true,"retain_days":21,"max_total_gb":10,"auto_restore_on_failure":true }

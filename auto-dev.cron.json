@@ -1,0 +1,1 @@
+{ "jobs":[{"name":"backup-nightly","schedule":"0 3 * * *","task":"backup"},{"name":"validate-health","schedule":"*/5 * * * *","task":"healthcheck"},{"name":"watchdog","schedule":"*/2 * * * *","task":"watchdog"},{"name":"verify-bot-connections","schedule":"*/10 * * * *","task":"validate_bots"}]}

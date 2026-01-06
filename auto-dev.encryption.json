@@ -1,0 +1,1 @@
+{ "enabled":true,"method":"aes256","key_source":"ENV:BACKUP_KEY" }

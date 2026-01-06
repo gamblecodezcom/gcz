@@ -1,0 +1,1 @@
+{ "primary":"postgresql://USER:PASSWORD@neon-host/db","fallback":"postgresql://USER:PASSWORD@localhost/db","ssl_required":true,"retry":3,"timeout_ms":5000 }

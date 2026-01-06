@@ -1,0 +1,1 @@
+{ "enabled":true,"trigger_on_health_fail":true,"max_downtime_sec":90,"validate_after_restore":true }

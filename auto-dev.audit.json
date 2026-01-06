@@ -1,0 +1,1 @@
+{ "enabled":true,"path":"/var/www/html/gcz/logs/auto-dev.log","include_actions":true,"redact_env":true }

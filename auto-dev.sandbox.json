@@ -1,0 +1,1 @@
+{ "mode":"sandbox","pm2_prefix":"gcz-sandbox","safe_ports":[9000,9001,9002,9010],"log_path":"/var/www/html/gcz/logs/sandbox","block_prod_changes":true }
