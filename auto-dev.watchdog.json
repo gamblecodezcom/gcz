@@ -1,1 +1,107 @@
-{ "enabled":true,"interval_sec":60,"max_failures":3,"actions":{"restart_pm2_service":true,"restore_from_backup_if_needed":true},"notify_log":"/var/www/html/gcz/logs/auto-dev-watchdog.log","targets":["gcz-bot","gcz-discord","gcz-api","gcz-redirect","gcz-drops","gcz-ai","gcz-sandbox-bot","gcz-sandbox-discord","gcz-sandbox-api","gcz-sandbox-redirect","gcz-sandbox-drops","gcz-sandbox-ai"]}
+{
+  "apps": [
+    {
+      "name": "gcz-sandbox-bot",
+      "script": "bot.js",
+      "cwd": "/var/www/html/gcz/ai/gcz-sandbox/bot",
+      "interpreter": "node",
+      "exec_mode": "fork",
+      "instances": 1,
+      "max_memory_restart": "300M",
+      "env_file": "/var/www/html/gcz/.env.sandbox",
+      "env": {
+        "NODE_ENV": "sandbox",
+        "GCZ_ENV": "sandbox"
+      }
+    },
+    {
+      "name": "gcz-sandbox-api",
+      "script": "uvicorn",
+      "args": "backend.main:app --host 0.0.0.0 --port 9000",
+      "cwd": "/var/www/html/gcz/ai/gcz-sandbox",
+      "interpreter": "python3",
+      "exec_mode": "fork",
+      "instances": 1,
+      "env_file": "/var/www/html/gcz/.env.sandbox",
+      "env": {
+        "PYTHONPATH": "/var/www/html/gcz/ai/gcz-sandbox",
+        "NODE_ENV": "sandbox",
+        "GCZ_ENV": "sandbox"
+      }
+    },
+    {
+      "name": "gcz-sandbox-redirect",
+      "script": "uvicorn",
+      "args": "backend.redirect:app --host 0.0.0.0 --port 9001",
+      "cwd": "/var/www/html/gcz/ai/gcz-sandbox",
+      "interpreter": "python3",
+      "exec_mode": "fork",
+      "instances": 1,
+      "env_file": "/var/www/html/gcz/.env.sandbox",
+      "env": {
+        "PYTHONPATH": "/var/www/html/gcz/ai/gcz-sandbox",
+        "NODE_ENV": "sandbox",
+        "GCZ_ENV": "sandbox"
+      }
+    },
+    {
+      "name": "gcz-sandbox-drops",
+      "script": "uvicorn",
+      "args": "backend.drops:app --host 0.0.0.0 --port 9002",
+      "cwd": "/var/www/html/gcz/ai/gcz-sandbox",
+      "interpreter": "python3",
+      "exec_mode": "fork",
+      "instances": 1,
+      "env_file": "/var/www/html/gcz/.env.sandbox",
+      "env": {
+        "PYTHONPATH": "/var/www/html/gcz/ai/gcz-sandbox",
+        "NODE_ENV": "sandbox",
+        "GCZ_ENV": "sandbox"
+      }
+    },
+    {
+      "name": "gcz-sandbox-discord",
+      "script": "start-discord.js",
+      "cwd": "/var/www/html/gcz/ai/gcz-sandbox/discord",
+      "interpreter": "node",
+      "exec_mode": "fork",
+      "instances": 1,
+      "node_args": "--experimental-modules",
+      "env_file": "/var/www/html/gcz/.env.sandbox",
+      "env": {
+        "NODE_ENV": "sandbox",
+        "GCZ_ENV": "sandbox"
+      }
+    },
+    {
+      "name": "gcz-sandbox-watchdog",
+      "script": "ai/ai_watchdog.py",
+      "cwd": "/var/www/html/gcz",
+      "interpreter": "python3",
+      "exec_mode": "fork",
+      "instances": 1,
+      "max_memory_restart": "200M",
+      "env_file": "/var/www/html/gcz/.env.sandbox",
+      "env": {
+        "PYTHONPATH": "/var/www/html/gcz",
+        "NODE_ENV": "sandbox",
+        "GCZ_ENV": "sandbox"
+      }
+    },
+    {
+      "name": "gcz-sandbox-ai",
+      "script": "uvicorn",
+      "args": "ai.server:app --host 0.0.0.0 --port 9010",
+      "cwd": "/var/www/html/gcz/ai/gcz-sandbox",
+      "interpreter": "python3",
+      "exec_mode": "fork",
+      "instances": 1,
+      "env_file": "/var/www/html/gcz/.env.sandbox",
+      "env": {
+        "GCZ_ENV": "sandbox",
+        "PYTHONPATH": "/var/www/html/gcz/ai/gcz-sandbox",
+        "NODE_ENV": "sandbox"
+      }
+    }
+  ]
+}

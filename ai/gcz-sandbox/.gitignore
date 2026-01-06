@@ -1,0 +1,19 @@
+# env
+.env*
+*.log
+logs/
+__pycache__/
+*.pyc
+
+# node
+node_modules/
+dist/
+
+# backups
+*.zip
+*.tar.gz
+
+# system
+.DS_Store
+.idea/
+.vscode/

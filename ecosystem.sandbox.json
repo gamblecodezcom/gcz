@@ -14,6 +14,7 @@
         "GCZ_ENV": "sandbox"
       }
     },
+
     {
       "name": "gcz-sandbox-api",
       "script": "uvicorn",
@@ -29,6 +30,7 @@
         "GCZ_ENV": "sandbox"
       }
     },
+
     {
       "name": "gcz-sandbox-redirect",
       "script": "uvicorn",
@@ -44,6 +46,7 @@
         "GCZ_ENV": "sandbox"
       }
     },
+
     {
       "name": "gcz-sandbox-drops",
       "script": "uvicorn",
@@ -59,6 +62,7 @@
         "GCZ_ENV": "sandbox"
       }
     },
+
     {
       "name": "gcz-sandbox-discord",
       "script": "start-discord.js",
@@ -73,21 +77,22 @@
         "GCZ_ENV": "sandbox"
       }
     },
+
     {
       "name": "gcz-sandbox-watchdog",
-      "script": "ai_watchdog.py",
-      "cwd": "/var/www/html/gcz/ai/gcz-sandbox",
+      "script": "ai/ai_watchdog.py",
+      "cwd": "/var/www/html/gcz",
       "interpreter": "python3",
       "exec_mode": "fork",
       "instances": 1,
       "max_memory_restart": "200M",
       "env_file": "/var/www/html/gcz/.env.sandbox",
       "env": {
-        "PYTHONPATH": "/var/www/html/gcz/ai/gcz-sandbox",
         "NODE_ENV": "sandbox",
         "GCZ_ENV": "sandbox"
       }
     },
+
     {
       "name": "gcz-sandbox-ai",
       "script": "uvicorn",
@@ -103,6 +108,7 @@
         "NODE_ENV": "sandbox"
       }
     },
+
     {
       "name": "gcz-sandbox-mcp",
       "script": "dist/gcz.js",

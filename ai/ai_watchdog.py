@@ -1,110 +1,87 @@
-import subprocess, logging, time, os, requests, smtplib
+#!/usr/bin/env python3
+import time, os, json, subprocess, logging, traceback
 
-LOG="/var/www/html/gcz/logs/ai_watchdog.log"
-logging.basicConfig(filename=LOG, level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+LOG = "/var/log/gcz/watchdog_sandbox.log"
+CHECK_INTERVAL = 20
+MAX_RESTARTS_PER_MIN = 4
+SANDBOX_TAG = "gcz-sandbox"
 
-ENV=os.getenv("GCZ_ENV","production")
-PREFIX="gcz-" if ENV=="production" else "gcz-sandbox-"
+restart_timestamps = []
 
-TARGETS=[PREFIX+x for x in ["api","redirect","drops","ai","bot","discord"]]
-FAIL_LIMIT=3
-failures={t:0 for t in TARGETS}
-ALERTED=set()
-
-############################################
-# SECURITY — BLOCK ROOT/SUDO
-############################################
-if os.geteuid()==0:
-    logging.error("Refusing to run as root")
-    raise SystemExit(1)
+logging.basicConfig(
+    filename=LOG,
+    level=logging.INFO,
+    format="%(asctime)s [WATCHDOG] %(message)s"
+)
 
 
-############################################
-# ALERTING
-############################################
-SLACK=os.getenv("SLACK_WEBHOOK_URL")
-MAIL=os.getenv("MAIL_TO_CONTACT")
-FROM=os.getenv("MAIL_FROM","noreply@example.com")
+def rate_limit():
+    global restart_timestamps
+    now = time.time()
+    restart_timestamps = [t for t in restart_timestamps if now - t < 60]
 
-def notify(msg):
-    logging.warning(msg)
+    if len(restart_timestamps) >= MAX_RESTARTS_PER_MIN:
+        logging.warning("Rate limit hit. Cooling 2m")
+        time.sleep(120)
+        restart_timestamps = []
 
-    if SLACK:
-        try: requests.post(SLACK,json={"text":msg},timeout=4)
-        except: pass
+    restart_timestamps.append(now)
 
-    if MAIL:
+
+def pm2_list():
+    out = subprocess.check_output(["pm2", "jlist"]).decode()
+    return json.loads(out)
+
+
+def restart_service(name):
+    if "watchdog" in name:
+        return
+
+    rate_limit()
+
+    logging.warning(f"Restarting {name}")
+
+    subprocess.Popen(
+        ["pm2", "restart", name],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL
+    )
+
+
+def check_services():
+
+    for proc in pm2_list():
+
+        name = proc["name"]
+        status = proc["pm2_env"]["status"]
+        restarts = proc["pm2_env"]["restart_time"]
+
+        if SANDBOX_TAG not in name:
+            continue
+
+        if "watchdog" in name:
+            continue
+
+        if status != "online":
+            logging.warning(f"{name} offline")
+            restart_service(name)
+
+        elif restarts > 50:
+            logging.warning(f"{name} restart storm detected")
+            restart_service(name)
+
+
+def main():
+    logging.info("Watchdog online — sandbox safe mode")
+
+    while True:
         try:
-            s=smtplib.SMTP("localhost")
-            s.sendmail(FROM,[MAIL],f"Subject:GCZ Alert\n\n{msg}")
-            s.quit()
-        except: pass
+            check_services()
+        except Exception:
+            logging.error(traceback.format_exc())
+
+        time.sleep(CHECK_INTERVAL)
 
 
-############################################
-# MCP TRIGGER (optional)
-############################################
-def mcp_trigger():
-    try:
-        requests.post("http://127.0.0.1:9010/reindex",timeout=3)
-    except Exception:
-        pass
-
-
-############################################
-# HEALTHCHECK CALL
-############################################
-def healthy():
-    return subprocess.call(["python3","/var/www/html/gcz/ai/ai_healthcheck.py"])==0
-
-
-############################################
-# PM2 HELPERS
-############################################
-def pm2_running(n):
-    return n in subprocess.getoutput("pm2 jlist")
-
-def restart(n):
-    subprocess.call(["pm2","restart",n])
-
-def restart_pm2():
-    subprocess.call(["pm2","kill"])
-    subprocess.call(["pm2","start","/var/www/html/gcz/ecosystem.config.cjs"])
-
-
-############################################
-# MAIN
-############################################
-def watchdog():
-    global ALERTED
-    recovered=False
-
-    if not healthy():
-        notify(f"Health degraded env={ENV}")
-        mcp_trigger()
-
-    for t in TARGETS:
-        if not pm2_running(t):
-            failures[t]+=1
-            if failures[t]>=FAIL_LIMIT:
-                notify(f"Restarting {t}")
-                restart(t)
-                failures[t]=0
-                recovered=True
-        else:
-            failures[t]=0
-            if t in ALERTED:
-                ALERTED.remove(t)
-
-    if recovered:
-        notify("Recovery action triggered")
-
-    if sum(failures.values())>len(TARGETS)*2:
-        notify("Entering HA failover mode — restarting PM2")
-        restart_pm2()
-
-    logging.info("watchdog cycle complete")
-
-
-if __name__=="__main__":
-    watchdog()
+if __name__ == "__main__":
+    main()

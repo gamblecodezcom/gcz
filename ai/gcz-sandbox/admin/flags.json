@@ -1,0 +1,1 @@
+{"ai_can_write_db":false,"require_admin_approval":true,"sql_dry_run":true,"canary_mode":true,"telemetry_strict":true,"kill_guard":true,"max_privilege_minutes":60}

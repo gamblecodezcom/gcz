@@ -1,3 +1,5 @@
+if (process.env.DISCORD_READ_ONLY === "true") { try { const Discord = require("discord.js"); const safeSend = () => (console.log("[SANDBOX] Discord send() blocked — READ ONLY MODE"), Promise.resolve()); Discord.TextChannel.prototype.send = safeSend; Discord.ThreadChannel.prototype.send = safeSend; Discord.User.prototype.send = safeSend; console.log("[SANDBOX] Discord READ-ONLY mode active"); } catch(e){ console.error("READ-ONLY hook failed:", e); }}
+
 import('./client.js')
   .then(() => {
     console.log('[GCZ-DISCORD] Client started successfully');

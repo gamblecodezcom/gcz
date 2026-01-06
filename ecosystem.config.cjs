@@ -1,7 +1,8 @@
 module.exports = {
   apps: [
+
     // =====================================================
-    // TELEGRAM BOT (PRODUCTION)
+    // TELEGRAM BOT — PRODUCTION (WEBHOOK MODE)
     // =====================================================
     {
       name: "gcz-bot",
@@ -11,13 +12,31 @@ module.exports = {
       exec_mode: "fork",
       instances: 1,
       max_memory_restart: "300M",
+      env_file: "/var/www/html/gcz/.env",
       env: {
-        NODE_ENV: "production",
-        DATABASE_URL: process.env.DATABASE_URL,
-        AI_AGENT_NEON_DB_URL: process.env.AI_AGENT_NEON_DB_URL
+        NODE_ENV: "production"
       },
       out_file: "/var/www/html/gcz/logs/gcz-bot-out.log",
       error_file: "/var/www/html/gcz/logs/gcz-bot-error.log"
+    },
+
+    // =====================================================
+    // TELEGRAM WEBHOOK HANDLER — PRODUCTION
+    // =====================================================
+    {
+      name: "gcz-webhook",
+      script: "telegram-webhook.py",
+      cwd: "/var/www/html/gcz",
+      interpreter: "python3",
+      exec_mode: "fork",
+      instances: 1,
+      env_file: "/var/www/html/gcz/.env",
+      env: {
+        NODE_ENV: "production",
+        PYTHONPATH: "/var/www/html/gcz"
+      },
+      out_file: "/var/www/html/gcz/logs/gcz-webhook-out.log",
+      error_file: "/var/www/html/gcz/logs/gcz-webhook-error.log"
     },
 
     // =====================================================
@@ -31,10 +50,9 @@ module.exports = {
       interpreter: "python3",
       exec_mode: "fork",
       instances: 1,
+      env_file: "/var/www/html/gcz/.env",
       env: {
-        PYTHONPATH: "/var/www/html/gcz",
-        DATABASE_URL: process.env.DATABASE_URL,
-        AI_AGENT_NEON_DB_URL: process.env.AI_AGENT_NEON_DB_URL
+        PYTHONPATH: "/var/www/html/gcz"
       },
       out_file: "/var/www/html/gcz/logs/gcz-api-out.log",
       error_file: "/var/www/html/gcz/logs/gcz-api-error.log"
@@ -51,10 +69,9 @@ module.exports = {
       interpreter: "python3",
       exec_mode: "fork",
       instances: 1,
+      env_file: "/var/www/html/gcz/.env",
       env: {
-        PYTHONPATH: "/var/www/html/gcz",
-        DATABASE_URL: process.env.DATABASE_URL,
-        AI_AGENT_NEON_DB_URL: process.env.AI_AGENT_NEON_DB_URL
+        PYTHONPATH: "/var/www/html/gcz"
       },
       out_file: "/var/www/html/gcz/logs/gcz-redirect-out.log",
       error_file: "/var/www/html/gcz/logs/gcz-redirect-error.log"
@@ -71,10 +88,9 @@ module.exports = {
       interpreter: "python3",
       exec_mode: "fork",
       instances: 1,
+      env_file: "/var/www/html/gcz/.env",
       env: {
-        PYTHONPATH: "/var/www/html/gcz",
-        DATABASE_URL: process.env.DATABASE_URL,
-        AI_AGENT_NEON_DB_URL: process.env.AI_AGENT_NEON_DB_URL
+        PYTHONPATH: "/var/www/html/gcz"
       },
       out_file: "/var/www/html/gcz/logs/gcz-drops-out.log",
       error_file: "/var/www/html/gcz/logs/gcz-drops-error.log"
@@ -91,10 +107,9 @@ module.exports = {
       exec_mode: "fork",
       instances: 1,
       node_args: "--experimental-modules",
+      env_file: "/var/www/html/gcz/.env",
       env: {
-        NODE_ENV: "production",
-        DATABASE_URL: process.env.DATABASE_URL,
-        AI_AGENT_NEON_DB_URL: process.env.AI_AGENT_NEON_DB_URL
+        NODE_ENV: "production"
       },
       out_file: "/var/www/html/gcz/logs/gcz-discord-out.log",
       error_file: "/var/www/html/gcz/logs/gcz-discord-error.log"
@@ -111,17 +126,16 @@ module.exports = {
       exec_mode: "fork",
       instances: 1,
       max_memory_restart: "200M",
+      env_file: "/var/www/html/gcz/.env",
       env: {
-        PYTHONPATH: "/var/www/html/gcz",
-        DATABASE_URL: process.env.DATABASE_URL,
-        AI_AGENT_NEON_DB_URL: process.env.AI_AGENT_NEON_DB_URL
+        PYTHONPATH: "/var/www/html/gcz"
       },
       out_file: "/var/www/html/gcz/logs/gcz-watchdog-out.log",
       error_file: "/var/www/html/gcz/logs/gcz-watchdog-error.log"
     },
 
     // =====================================================
-    // AI ENGINE (FastAPI server.py via uvicorn)
+    // AI ENGINE — PRODUCTION
     // =====================================================
     {
       name: "gcz-ai",
@@ -131,11 +145,10 @@ module.exports = {
       interpreter: "python3",
       exec_mode: "fork",
       instances: 1,
+      env_file: "/var/www/html/gcz/.env",
       env: {
         GCZ_ENV: "prod",
-        PYTHONPATH: "/var/www/html/gcz",
-        DATABASE_URL: process.env.DATABASE_URL,
-        AI_AGENT_NEON_DB_URL: process.env.AI_AGENT_NEON_DB_URL
+        PYTHONPATH: "/var/www/html/gcz"
       },
       out_file: "/var/www/html/gcz/logs/gcz-ai-out.log",
       error_file: "/var/www/html/gcz/logs/gcz-ai-error.log"

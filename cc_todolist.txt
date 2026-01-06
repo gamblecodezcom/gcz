@@ -1,43 +1,283 @@
-GAMBLECODEZ — SHORT‑TERM CC TO‑DO LIST (NEXT 10 ITEMS)
-======================================================
+# 🔥 GAMBLECODEZ — FULL STACK TODO LIST (EXPANDED VERSION)
+## Start at **FRONTEND** → then Backend → Admin → Telegram → Discord → Drops Pipeline → Infra
 
-1) Create sandbox log directory
-   - Ensure `/var/www/html/gcz/ai/gcz-sandbox/logs` exists with correct permissions.
+This version is **more descriptive**, **more explicit**, and written exactly for what *GambleCodez* needs — brand‑aligned, neon‑dark, fast, accessible, and built for automated drops → Telegram channel.
 
-2) Apply the updated ecosystem.sandbox.cjs patch
-   - Fix cwd paths, PYTHONPATH, GCZ_DB fallback chain, AI_PORT, GCZ_ENV, and log paths.
+---
 
-3) Verify MCP build output
-   - Confirm `/var/www/html/gcz/ai/gcz-sandbox/mcp/dist/index.js` exists.
-   - If missing, run `npm run build` inside `ai/gcz-sandbox/mcp`.
+# 1. FRONTEND — https://gamblecodez.com  
+### Goal: A neon‑dark, animated, high‑performance site that explains GCZ, lists drops, funnels users to Telegram/Discord, and stays legally safe.
 
-4) Remove any remaining references to old sandbox paths
-   - Search for `/var/www/html/gcz/ai/gcz-sandbox` in backend, AI, MCP, bot, and discord.
-   - Update imports to use `/var/www/html/gcz`.
+---
 
-5) Restart the entire sandbox stack using the new PM2 config
-   - Stop, delete, and restart all sandbox services using `ecosystem.sandbox.cjs`.
+## 1.1 Frontend Stack & Architecture
+- [ ] **Choose final stack (recommended: Next.js 15 + App Router)**
+  - SSR for SEO, static for speed, API routes for simple backend helpers.
+  - Perfect for GCZ’s neon‑dark animated UI.
+- [ ] **Install TailwindCSS with GCZ theme tokens**
+  - Custom colors: neon green, neon purple, deep black, charcoal.
+  - Add glow utilities, animated gradients, and branded shadows.
+- [ ] **Set up global layout**
+  - Sticky header with GCZ logo + navigation.
+  - Footer with legal links, newsletter link, social links.
+  - Mobile-first responsive grid.
 
-6) Validate service health after restart
-   - API on `9000`, redirect on `9001`, drops on `9002`, AI on `9010`.
-   - Check logs for import errors, DB errors, or port conflicts.
+---
 
-7) Confirm environment variable resolution
-   - Print and verify: `GCZ_DB`, `AI_AGENT_NEON_DB_URL`, `DATABASE_URL`, `GCZ_ENV`, `NODE_ENV`, `AI_PORT`.
+## 1.2 Public Pages (High Detail)
 
-8) Test MCP → AI communication
-   - Ensure MCP can reach AI at `http://127.0.0.1:9010`.
-   - Validate MCP DB access via `GCZ_DB`.
+### **1.2.1 Home Page**
+- [ ] **Hero section**
+  - GCZ neon animated crown.
+  - Tagline: *“Redeem today, flex tomorrow.”*
+  - CTA buttons: **Join Telegram**, **Join Discord**, **View Drops**.
+- [ ] **What is GambleCodez?**
+  - Clear, compliance-safe explanation.
+  - No promises, no financial claims.
+- [ ] **How Drops Work**
+  - Step-by-step: Join → Wait → Redeem → Flex.
+  - Visual icons + micro animations.
+- [ ] **Community Section**
+  - Telegram, Discord, Newsletter.
+  - Live stats (optional): members, drops completed.
+- [ ] **Legal Notice**
+  - Age requirement.
+  - Risk disclaimers.
 
-9) Test backend DB connectivity
-   - Confirm backend uses `GCZ_DB` consistently.
-   - Validate queries from `backend/services/db.py` and `backend/database.py`.
+---
 
-10) Run a full sandbox smoke test
-   - Hit all major endpoints:
-     - `/api/health`
-     - `/api/sites`
-     - `/api/drops`
-     - `/api/raffles`
-     - AI health endpoint
-   - Confirm no 500 errors and logs are clean.
+### **1.2.2 Drops Page**
+- [ ] **Active Drops List**
+  - Cards with: title, description, status, start/end time.
+  - “Join via Telegram” button → deep link.
+  - Glow border for active drops.
+- [ ] **Archived Drops**
+  - Past drops with results.
+  - Optional: winners list (if allowed).
+- [ ] **Drop Details Page**
+  - Full description.
+  - Rules.
+  - Participation instructions.
+  - Countdown timer.
+
+---
+
+### **1.2.3 News / Updates Page**
+- [ ] List of announcements from backend.
+- [ ] Categories: Dev Logs, Drops, Policy, Community.
+- [ ] Auto-sync with Telegram/Discord announcements.
+
+---
+
+### **1.2.4 About Page**
+- [ ] GCZ mission, brand story, transparency.
+- [ ] Safety-first philosophy.
+- [ ] “Why Telegram + Discord?” explanation.
+
+---
+
+### **1.2.5 Support / FAQ**
+- [ ] Common questions.
+- [ ] Clear disclaimers.
+- [ ] Contact support (email or Telegram).
+
+---
+
+### **1.2.6 Legal Pages**
+- [ ] Terms of Service.
+- [ ] Privacy Policy.
+- [ ] Age/Jurisdiction notice.
+- [ ] Risk disclosures.
+
+---
+
+## 1.3 Optional: User Accounts (If Needed)
+- [ ] Login/Register UI.
+- [ ] Link Telegram/Discord accounts.
+- [ ] Notification preferences.
+
+---
+
+## 1.4 Frontend Integrations
+- [ ] **API Client**
+  - Auto-inject auth tokens.
+  - Handle errors gracefully.
+- [ ] **Drops API**
+  - Fetch active/archived drops.
+  - Fetch drop details.
+- [ ] **Announcements API**
+  - Sync news page with backend.
+- [ ] **Telemetry**
+  - Track CTA clicks (Telegram, Discord, Join Drop).
+  - Privacy-respecting analytics.
+
+---
+
+# 2. BACKEND — Core API  
+### Goal: A clean, secure, audit-friendly backend powering drops, announcements, and user linking.
+
+---
+
+## 2.1 Architecture
+- [ ] Node.js (Fastify/Nest recommended).
+- [ ] Centralized error handler.
+- [ ] Zod/Joi validation for all inputs.
+- [ ] Logging middleware.
+
+---
+
+## 2.2 Database Schema (Non-destructive, Migration-first)
+- [ ] `users` — telegram_id, discord_id, email, created_at.
+- [ ] `drops` — title, description, start_at, end_at, status.
+- [ ] `drop_entries` — user_id, drop_id, source, created_at.
+- [ ] `announcements` — title, body, channel, published_at.
+- [ ] `audit_logs` — actor_id, action, meta_json.
+
+---
+
+## 2.3 API Endpoints
+- [ ] `GET /api/drops`
+- [ ] `GET /api/drops/:id`
+- [ ] `POST /api/drops` (admin)
+- [ ] `PATCH /api/drops/:id` (admin)
+- [ ] `GET /api/announcements`
+- [ ] `POST /api/announcements` (admin)
+- [ ] `GET /api/users/me`
+- [ ] `GET /api/stats`
+
+---
+
+# 3. ADMIN PANEL  
+### Goal: A neon-dark dashboard to manage drops, announcements, users, and bot health.
+
+---
+
+## 3.1 Dashboard
+- [ ] Active drops count.
+- [ ] Total users.
+- [ ] Recent entries.
+- [ ] Bot health indicators.
+
+---
+
+## 3.2 Drops Management
+- [ ] Create/edit drop.
+- [ ] Schedule start/end.
+- [ ] Toggle visibility.
+- [ ] View participants.
+- [ ] Export CSV.
+
+---
+
+## 3.3 Announcements
+- [ ] Create announcement.
+- [ ] Choose channels: Web, Telegram, Discord.
+- [ ] Preview message.
+- [ ] Publish + log.
+
+---
+
+## 3.4 User Management
+- [ ] Search by Telegram/Discord/email.
+- [ ] View participation history.
+- [ ] Ban/flag users.
+
+---
+
+# 4. TELEGRAM BOT  
+### Goal: Primary user funnel + drop participation engine.
+
+---
+
+## 4.1 Bot Setup
+- [ ] Create bot via BotFather.
+- [ ] Store token in env.
+- [ ] Connect bot to GCZ Telegram channel.
+
+---
+
+## 4.2 Bot Features
+- [ ] `/start` onboarding.
+- [ ] Link Telegram user → backend.
+- [ ] Consent message.
+- [ ] “Join Drop” button.
+- [ ] Confirm participation.
+- [ ] Error handling + retries.
+
+---
+
+## 4.3 Announcements
+- [ ] Backend → Telegram channel broadcast.
+- [ ] Templates for drop announcements.
+- [ ] Logging for each message.
+
+---
+
+# 5. DISCORD BOT  
+### Goal: Mirror announcements + optional drop participation.
+
+---
+
+## 5.1 Server Setup
+- [ ] Channels: announcements, drops, rules, support.
+- [ ] Invite bot with correct permissions.
+
+---
+
+## 5.2 Bot Features
+- [ ] `/link` command → connect Discord user.
+- [ ] Announcements mirroring.
+- [ ] Optional: join drop via Discord.
+
+---
+
+# 6. DROPS → TELEGRAM PIPELINE  
+### Goal: Fully automated drop lifecycle.
+
+---
+
+## 6.1 Drop Lifecycle Automation
+- [ ] Create drop in admin panel.
+- [ ] Auto-schedule announcement at start time.
+- [ ] Auto-close at end time.
+- [ ] Auto-publish results.
+- [ ] Log everything.
+
+---
+
+## 6.2 Worker / Cron Jobs
+- [ ] Check upcoming drops.
+- [ ] Send scheduled announcements.
+- [ ] Close drops.
+- [ ] Trigger result workflow.
+
+---
+
+# 7. INFRASTRUCTURE  
+### Goal: Stable, secure, monitored, recoverable.
+
+---
+
+## 7.1 Hosting
+- [ ] PM2 ecosystem configs (prod + sandbox).
+- [ ] Health checks for API + bots.
+
+---
+
+## 7.2 Security
+- [ ] HTTPS everywhere.
+- [ ] Secure token storage.
+- [ ] Strong admin auth.
+
+---
+
+## 7.3 Monitoring
+- [ ] Structured logs.
+- [ ] Error alerts.
+- [ ] Metrics dashboard.
+
+---
+
+## 7.4 Backups
+- [ ] Daily DB backups.
+- [ ] Tested restore procedure.
