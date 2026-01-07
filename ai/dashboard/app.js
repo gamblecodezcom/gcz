@@ -1,19 +1,54 @@
-const API = "http://localhost:8010";
+const API = "http://127.0.0.1:8010";
 
-async function load() {
-  render("memory", await (await fetch(`${API}/memory`)).json());
-  render("health", await (await fetch(`${API}/health`)).json());
-  render("anomalies", await (await fetch(`${API}/anomalies`)).json());
+async function api(path, options = {}) {
+  try {
+    const res = await fetch(`${API}${path}`, {
+      headers: { "Content-Type": "application/json" },
+      ...options
+    });
+
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}`);
+    }
+
+    return await res.json();
+
+  } catch (err) {
+    console.error(`API ERROR ${path}:`, err);
+    return { error: true, message: err.message };
+  }
 }
 
-function render(id, rows) {
-  document.getElementById(id).innerHTML =
-    rows.map(r => `<div class="card">${JSON.stringify(r)}</div>`).join("");
+async function load() {
+  render("memory", await api("/memory"));
+  render("health", await api("/health"));
+  render("anomalies", await api("/anomalies"));
+}
+
+function render(id, data) {
+  const el = document.getElementById(id);
+
+  if (!data || data.error) {
+    el.innerHTML = `<div class="card error">⚠ API Offline</div>`;
+    return;
+  }
+
+  if (Array.isArray(data)) {
+    el.innerHTML = data
+      .map(r => `<div class="card">${escape(JSON.stringify(r, null, 2))}</div>`)
+      .join("");
+  } else {
+    el.innerHTML = `<div class="card">${escape(JSON.stringify(data, null, 2))}</div>`;
+  }
+}
+
+function escape(x) {
+  return x.replace(/[&<>]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;" }[c]));
 }
 
 async function scan() {
-  await fetch(`${API}/scan`, { method: "POST" });
-  load();
+  await api("/scan", { method: "POST" });
+  await load();
 }
 
 load();

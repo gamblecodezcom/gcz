@@ -1,11 +1,16 @@
-import { Server } from "@modelcontextprotocol/sdk";
-import { query } from "../services/db";
-import { log } from "../utils/logger";
+import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import { pool } from "../services/db.js";
 
 export function registerDbRoutes(server: Server) {
-  server.tool("db.query", async ({ sql, params }) => {
-    log(`DB query requested`);
-    const rows = await query(sql, params || []);
-    return { rows };
+
+  server.setRequestHandler<any,any>("gcz.db.query", async (extra: any) => {
+    const { sql, params } = (extra.params || {}) as any;
+
+    const rows = (await pool.query(sql, params || [])).rows;
+
+    return {
+      content:[{type:"json",json:{rows}}]
+    };
   });
+
 }

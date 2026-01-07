@@ -1,0 +1,1 @@
+const mem=new Map<string,any[]>();export const writeTimeline=(k:string,e:any)=>{if(!mem.has(k))mem.set(k,[]);mem.get(k)!.push({ts:new Date().toISOString(),...e});};export const readTimeline=(k:string)=>mem.get(k)||[];

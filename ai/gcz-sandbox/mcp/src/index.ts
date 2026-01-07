@@ -1,11 +1,10 @@
-import { createServer } from "./server";
-import { log } from "./utils/logger";
+import { createServer } from "./server.js";
+import { log } from "./utils/logger.js";
 
 async function main() {
-  log("🚀 Starting GCZ MCP server…");
   const server = await createServer();
-  await server.start();
-  log("✨ GCZ MCP server is live");
+  await server.connectStdio();
+  log("GCZ MCP server online via STDIO");
 }
 
 main();

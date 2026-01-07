@@ -1,0 +1,1 @@
+"use client";import{io}from"socket.io-client";import useSWR from"swr";const socket=io("http://localhost:3002",{transports:["websocket"]});export function useFeed(channel:string){return useSWR(channel,()=>new Promise(resolve=>{socket.on(channel,data=>resolve(data));}));}

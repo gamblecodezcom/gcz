@@ -1,185 +1,325 @@
+# ==================  GCZ CODEX — GOD MODE v4.0  ==================
+from __future__ import annotations
 import os
 import json
-import time
-import subprocess
 import datetime
-import traceback
-from fastapi import FastAPI, HTTPException
+import subprocess
+import sqlite3
+from pathlib import Path
+from typing import Any, Dict, List
+
+from fastapi import FastAPI
 from pydantic import BaseModel
-from threading import Thread, Event
+import requests
+
 
 # =========================================================
-# CONSTANTS
+# CONFIG
 # =========================================================
 ENV = os.getenv("GCZ_ENV", "sandbox")
-SELF_HEAL_ENABLED = True
-WATCH_INTERVAL = 30
 
+ROOT = Path("/var/www/html/gcz")
 LOG_FILE = "/var/log/gcz/codex_sandbox_log.jsonl"
-MEMORY_FILE = "/var/www/html/gcz/ai/gcz-sandbox/data/memory.json"
+DB = "/var/www/html/gcz/ai/gcz-sandbox/codex_memory.db"
 
-SANDBOX_SERVICES = [
-    "gcz-sandbox-ai",
-    "gcz-sandbox-api",
-    "gcz-sandbox-bot",
-    "gcz-sandbox-redirect",
-    "gcz-sandbox-drops",
-    "gcz-sandbox-discord",
-    "gcz-sandbox-watchdog"
-]
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN_SANDBOX") or os.getenv("TELEGRAM_BOT_TOKEN")
+TELEGRAM_ADMIN = os.getenv("TELEGRAM_ADMIN_ID")
+TG = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}"
+
+CANARY_STAGES = [10, 50, 100]
+FREEZE = False
+APPROVAL_QUEUE: Dict[str, dict] = {}
 
 # =========================================================
 # FASTAPI
 # =========================================================
-app = FastAPI(title="GCZ Codex — Sandbox GOD MODE (AUTO-HEAL)")
-
-
-class ChatRequest(BaseModel):
-    message: str
-    user: str | None = "anonymous"
-
-
-# =========================================================
-# MEMORY
-# =========================================================
-def memory_get(key):
-    if not os.path.exists(MEMORY_FILE):
-        return None
-    with open(MEMORY_FILE, "r") as f:
-        data = json.load(f)
-    return data.get(key)
-
-
-def memory_set(key, value):
-    os.makedirs(os.path.dirname(MEMORY_FILE), exist_ok=True)
-    if os.path.exists(MEMORY_FILE):
-        with open(MEMORY_FILE, "r") as f:
-            data = json.load(f)
-    else:
-        data = {}
-    data[key] = value
-    with open(MEMORY_FILE, "w") as f:
-        json.dump(data, f, indent=2)
+app = FastAPI(title="GCZ Codex — GOD MODE", version="4.0")
 
 
 # =========================================================
 # LOGGING
 # =========================================================
-def log_event(event, payload):
-    os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
+def log_event(event_type: str, payload: Dict[str, Any]):
     entry = {
         "ts": datetime.datetime.utcnow().isoformat(),
         "env": ENV,
-        "event": event,
+        "type": event_type,
         "payload": payload
     }
+    os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
     with open(LOG_FILE, "a") as f:
         f.write(json.dumps(entry) + "\n")
 
 
 # =========================================================
-# PM2 HELPERS
+# MEMORY DB
 # =========================================================
-def get_pm2():
-    out = subprocess.check_output(["pm2", "jlist"]).decode()
-    return json.loads(out)
+def db():
+    return sqlite3.connect(DB)
 
 
-def restart_service(name):
-    subprocess.call(["pm2", "restart", name])
-    log_event("auto_heal_restart", {"service": name})
+def init_db():
+    c = db()
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS memory (
+        k TEXT PRIMARY KEY,
+        v TEXT,
+        ts TEXT
+    )
+    """)
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS anomalies (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        ts TEXT,
+        event TEXT,
+        details TEXT
+    )
+    """)
+    c.commit()
+    c.close()
+
+
+init_db()
+
+
+def memory_set(k, v):
+    c = db()
+    c.execute("REPLACE INTO memory VALUES (?, ?, ?)",
+              (k, v, datetime.datetime.utcnow().isoformat()))
+    c.commit()
+    c.close()
+
+
+def memory_get(k):
+    c = db()
+    q = c.execute("SELECT v FROM memory WHERE k=?", (k,))
+    r = q.fetchone()
+    c.close()
+    return r[0] if r else None
+
+
+# =========================================================
+# TELEGRAM
+# =========================================================
+def tg(msg: str):
+    if not TELEGRAM_TOKEN or not TELEGRAM_ADMIN:
+        return
+    try:
+        requests.post(f"{TG}/sendMessage",
+            json={"chat_id": TELEGRAM_ADMIN,
+                  "text": msg,
+                  "parse_mode": "Markdown"},
+            timeout=5)
+    except:
+        pass
+
+
+def tg_buttons(text, buttons):
+    requests.post(f"{TG}/sendMessage",
+        json={
+            "chat_id": TELEGRAM_ADMIN,
+            "text": text,
+            "reply_markup": {
+                "inline_keyboard": buttons
+            }
+        },
+        timeout=5
+    )
 
 
 # =========================================================
 # RISK ENGINE
 # =========================================================
-def risk_score(service):
-    if "bot" in service.lower():
-        return 3
-    if "api" in service.lower():
-        return 5
-    return 2
+def risk_score(goal: str):
+    score = 0
+    g = goal.lower()
+
+    if "restart" in g:
+        score += 40
+    if "deploy" in g:
+        score += 35
+    if "db" in g:
+        score += 30
+    if "webhook" in g:
+        score += 15
+
+    return min(score, 100)
 
 
 # =========================================================
-# SELF HEAL LOOP
-# =========================================================
-stop_flag = Event()
-
-
-def self_heal_loop():
-    while not stop_flag.is_set():
-        try:
-            pm2 = get_pm2()
-
-            for proc in pm2:
-                name = proc.get("name")
-                status = proc.get("pm2_env", {}).get("status")
-                restarts = proc.get("pm2_env", {}).get("restart_time", 0)
-
-                if name not in SANDBOX_SERVICES:
-                    continue
-
-                if status != "online":
-                    restart_service(name)
-
-                if restarts > 20:
-                    restart_service(name)
-
-        except Exception as e:
-            log_event("heal_error", {"error": str(e)})
-
-        time.sleep(WATCH_INTERVAL)
-
-
-Thread(target=self_heal_loop, daemon=True).start()
-
-
-# =========================================================
-# ROUTES
+# HEALTH
 # =========================================================
 @app.get("/health")
 async def health():
-    return {"status": "ok", "env": ENV, "healing": SELF_HEAL_ENABLED}
+    return {"status": "ok", "env": ENV}
+
+
+# =========================================================
+# CHAT
+# =========================================================
+class ChatRequest(BaseModel):
+    message: str
+    user: str | None = "anonymous"
 
 
 @app.post("/chat")
 async def chat(req: ChatRequest):
+
     txt = req.message.lower()
+    log_event("chat_in", req.dict())
 
-    if "status" in txt:
-        return {"reply": "System healthy. Auto-healing is active."}
+    if "hello" in txt:
+        reply = "Codex online. GOD-MODE engaged 😎"
 
-    if "who" in txt:
-        return {"reply": "I am GCZ Codex — Autonomous Ops AI."}
+    elif "status" in txt:
+        reply = "Heartbeat stable. Ops green."
 
-    return {"reply": "Message received. I am monitoring."}
+    elif "risk" in txt:
+        goal = txt.replace("risk", "").strip()
+        reply = f"Risk={risk_score(goal)} for goal `{goal}`"
+
+    elif "help" in txt:
+        reply = (
+            "Commands:\n"
+            "- audit system\n"
+            "- risk <goal>\n"
+            "- normalize dotenv\n"
+            "- deploy <service>\n"
+            "- freeze deploys\n"
+            "- approve deploy\n"
+        )
+
+    else:
+        reply = "Acknowledged. Standing by."
+
+    log_event("chat_reply", {"reply": reply})
+    tg(f"💬 Chat:\n{txt}")
+
+    return {"reply": reply}
 
 
+# =========================================================
+# PLAN
+# =========================================================
+@app.post("/codex/plan")
+async def codex_plan(req: ChatRequest):
+
+    goal = req.message
+    score = risk_score(goal)
+
+    plan = [
+        "Check AI health",
+        "Inspect PM2",
+        "Validate webhook",
+        "Verify DB",
+        "Detect crash loops",
+        "Confirm listening ports",
+        "Log timeline"
+    ]
+
+    log_event("plan", {"goal": goal, "risk": score})
+    tg(f"📋 Plan Generated\nRisk={score}\nGoal={goal}")
+
+    return {"goal": goal, "plan": plan, "risk": score}
+
+
+# =========================================================
+# AUDIT
+# =========================================================
 @app.get("/codex/audit")
-async def audit():
-    try:
-        pm2 = get_pm2()
-        ports = subprocess.check_output(["ss", "-lntp"]).decode()
+async def audit_cluster():
 
-        audit = {
-            "pm2": pm2,
-            "ports": ports
-        }
+    pm2_json = subprocess.check_output(["pm2", "jlist"]).decode()
 
-        log_event("audit", audit)
-        return {"status": "ok", "audit": audit}
+    result = {
+        "pm2": json.loads(pm2_json),
+        "ports": subprocess.check_output(["ss", "-lntp"]).decode(),
+    }
 
-    except Exception as e:
-        log_event("audit_error", {"error": traceback.format_exc()})
-        raise HTTPException(status_code=500, detail=str(e))
+    log_event("audit", result)
+
+    return {"status": "ok", "env": ENV, "audit": result}
 
 
+# =========================================================
+# HUMAN-APPROVAL PIPELINE
+# =========================================================
+def queue_action(action, risk):
+    aid = datetime.datetime.utcnow().strftime("%Y%m%d%H%M%S")
+    APPROVAL_QUEUE[aid] = {"action": action, "risk": risk}
+
+    tg_buttons(
+        f"⚠️ DEPLOY ACTION REQUIRES APPROVAL\nRisk={risk}\n{action}",
+        [[
+            {"text": "✅ Approve", "callback_data": f"approve:{aid}"},
+            {"text": "❌ Reject", "callback_data": f"reject:{aid}"}
+        ]]
+    )
+
+    return aid
+
+
+# =========================================================
+# WRITE-MODE EXEC ENGINE
+# =========================================================
+@app.post("/codex/exec")
+async def codex_exec(req: ChatRequest):
+
+    cmd = req.message.lower()
+    log_event("exec", {"cmd": cmd})
+
+    # Ping
+    if "ping" in cmd:
+        return {"status": "ok"}
+
+    # Dotenv Normalization
+    if "dotenv" in cmd and "normalize" in cmd:
+
+        changed: List[str] = []
+
+        for pkg in ROOT.rglob("package.json"):
+
+            pkg_json = json.loads(pkg.read_text())
+            esm = pkg_json.get("type") == "module"
+            service = pkg.parent
+
+            for js in service.rglob("*.js"):
+
+                txt = js.read_text()
+
+                if "dotenv" in txt:
+                    continue
+
+                if esm:
+                    block = (
+                        'import dotenv from "dotenv";\n'
+                        'dotenv.config({ path: "/var/www/html/gcz/.env.sandbox" });\n'
+                    )
+                else:
+                    block = (
+                        'require("dotenv").config({ path: "/var/www/html/gcz/.env.sandbox" });\n'
+                    )
+
+                js.write_text(block + txt)
+                changed.append(str(js))
+
+        log_event("dotenv_normalized", {"files": changed})
+        tg(f"🛠 Dotenv normalized across {len(changed)} files")
+
+        return {"status": "ok", "updated": changed}
+
+    # Deploy Protection
+    if "deploy" in cmd or "restart" in cmd:
+        score = risk_score(cmd)
+        aid = queue_action(cmd, score)
+        return {"status": "pending_approval", "action_id": aid}
+
+    return {"status": "noop"}
+
+
+# =========================================================
+# ROOT
+# =========================================================
 @app.get("/")
 async def root():
-    return {"msg": "GCZ Codex Sandbox AI — GOD MODE AUTO-HEAL"}
-
-
-@app.on_event("shutdown")
-def shutdown():
-    stop_flag.set()
+    return {"msg": "GCZ Codex — GOD MODE v4.0"}
