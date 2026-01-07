@@ -1,4 +1,5 @@
-import { log } from "../utils/logger.js";
+import fetch from "node-fetch";
+import { log } from "../utils/logger";
 
 const AI_URL = process.env.GCZ_AI_URL || "http://127.0.0.1:8010";
 
@@ -9,7 +10,7 @@ async function get(path: string) {
   return res.json();
 }
 
-async function post(path: string, body: Record<string, unknown> = {}) {
+async function post(path: string, body: any = {}) {
   const url = `${AI_URL}${path}`;
   log(`AI POST → ${url}`);
   const res = await fetch(url, {

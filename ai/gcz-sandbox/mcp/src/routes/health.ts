@@ -1,9 +1,9 @@
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import { Server } from "@modelcontextprotocol/sdk";
+import { log } from "../utils/logger";
 
 export function registerHealthRoutes(server: Server) {
-  server.setRequestHandler<any,any>("gcz.health", async () => {
-    return {
-      content:[{type:"json",json:{ok:true,service:"gcz-mcp"}}]
-    };
+  server.tool("health.check", async () => {
+    log("Health check requested");
+    return { ok: true, service: "gcz-mcp" };
   });
 }
