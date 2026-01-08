@@ -24,16 +24,16 @@ export const SiteCard = ({ site, onRedirect }: SiteCardProps) => {
 
   return (
     <div
-      className="group relative bg-bg-dark-2 border-2 border-neon-cyan/30 rounded-xl p-6 card-hover cursor-pointer overflow-hidden transform transition-all duration-300"
+      className="group relative bg-bg-dark-2 border border-white/10 rounded-2xl p-6 card-hover cursor-pointer overflow-hidden transform transition-all duration-300"
       onClick={handleClick}
     >
       {/* Animated Background Gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-neon-cyan/0 via-neon-pink/0 to-neon-yellow/0 group-hover:from-neon-cyan/5 group-hover:via-neon-pink/5 group-hover:to-neon-yellow/5 transition-all duration-500" />
+      <div className="absolute inset-0 bg-gradient-to-br from-neon-cyan/0 via-neon-pink/0 to-neon-yellow/0 group-hover:from-neon-cyan/8 group-hover:via-neon-pink/8 group-hover:to-neon-yellow/6 transition-all duration-500" />
 
       {/* Top Pick Badge */}
       {site.is_top_pick && (
         <div className="absolute top-2 right-2 z-10 animate-pulse">
-          <span className="px-3 py-1 bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 text-black text-xs font-bold rounded-full shadow-neon-gold flex items-center gap-1">
+          <span className="px-3 py-1 bg-gradient-to-r from-neon-yellow via-neon-gold to-neon-yellow text-bg-dark text-xs font-bold rounded-full shadow-neon-gold flex items-center gap-1">
             <span className="text-sm">👑</span>
             <span>TOP PICK</span>
           </span>
@@ -43,7 +43,7 @@ export const SiteCard = ({ site, onRedirect }: SiteCardProps) => {
       {/* NEW Badge */}
       {isNew && (
         <div className="absolute top-2 left-2 z-10">
-          <span className="px-3 py-1 bg-gradient-to-r from-neon-pink to-pink-600 text-white text-xs font-bold rounded-full shadow-neon-pink animate-pulse flex items-center gap-1">
+          <span className="px-3 py-1 bg-gradient-to-r from-neon-pink to-neon-pink/80 text-white text-xs font-bold rounded-full shadow-neon-pink animate-pulse flex items-center gap-1">
             <span className="w-2 h-2 bg-white rounded-full animate-ping" />
             <span>NEW</span>
           </span>
@@ -57,15 +57,15 @@ export const SiteCard = ({ site, onRedirect }: SiteCardProps) => {
             <img
               src={site.icon_url}
               alt={site.name}
-              className="w-20 h-20 object-contain rounded-xl transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3"
+              className="w-20 h-20 object-contain rounded-2xl transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3 bg-white/5 p-2"
               onError={() => setImageError(true)}
             />
           ) : (
-            <div className="w-20 h-20 bg-gradient-to-br from-bg-dark to-bg-dark-2 rounded-xl flex items-center justify-center text-4xl group-hover:scale-110 transition-transform duration-300">
+            <div className="w-20 h-20 bg-gradient-to-br from-bg-dark to-bg-dark-2 rounded-2xl flex items-center justify-center text-4xl group-hover:scale-110 transition-transform duration-300">
               🎰
             </div>
           )}
-          <div className="absolute inset-0 rounded-xl bg-neon-cyan/0 group-hover:bg-neon-cyan/20 transition-all duration-300 blur-sm -z-10" />
+          <div className="absolute inset-0 rounded-2xl bg-neon-cyan/0 group-hover:bg-neon-cyan/20 transition-all duration-300 blur-sm -z-10" />
         </div>
       </div>
 
@@ -82,7 +82,7 @@ export const SiteCard = ({ site, onRedirect }: SiteCardProps) => {
           return (
             <span
               key={cat}
-              className={`px-2 py-1 text-xs rounded-full ${config.color} ${config.glow} border border-current/30 transition-all duration-300 group-hover:scale-105 group-hover:border-current/60`}
+              className={`px-2 py-1 text-xs rounded-full ${config.color} border border-current/30 transition-all duration-300 group-hover:scale-105 group-hover:border-current/60`}
             >
               {config.emblem} {cat}
             </span>
@@ -104,7 +104,7 @@ export const SiteCard = ({ site, onRedirect }: SiteCardProps) => {
       {site.bonus_code && (
         <div className="mb-2 relative z-10">
           <div className="text-xs text-text-muted mb-1">Bonus Code:</div>
-          <div className="text-sm font-mono text-neon-cyan font-bold bg-neon-cyan/10 px-2 py-1 rounded border border-neon-cyan/30 group-hover:bg-neon-cyan/20 group-hover:shadow-neon-cyan transition-all duration-300">
+          <div className="text-sm font-mono text-neon-cyan font-bold bg-neon-cyan/10 px-2 py-1 rounded-xl border border-neon-cyan/30 group-hover:bg-neon-cyan/20 transition-all duration-300">
             {site.bonus_code}
           </div>
         </div>
@@ -133,7 +133,7 @@ export const SiteCard = ({ site, onRedirect }: SiteCardProps) => {
       </div>
 
       {/* Enhanced Hover Glow Effect */}
-      <div className="absolute inset-0 border-2 border-neon-cyan/0 group-hover:border-neon-cyan/50 rounded-xl transition-all duration-500 pointer-events-none" />
+      <div className="absolute inset-0 border-2 border-neon-cyan/0 group-hover:border-neon-cyan/50 rounded-2xl transition-all duration-500 pointer-events-none" />
       
       {/* Shimmer effect on hover */}
       <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">

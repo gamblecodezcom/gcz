@@ -7,36 +7,36 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        'orbitron': ['Orbitron', 'sans-serif'],
-        'sans': ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+        'orbitron': ['Unbounded', 'sans-serif'],
+        'sans': ['Sora', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
       },
       colors: {
         // Primary Neon Colors
         'neon': {
-          'cyan': '#00F5FF',
-          'pink': '#FF007A',
-          'yellow': '#FFD600',
-          'green': '#00FF85',
-          'gold': '#FFD700',
+          'cyan': '#21f1ff',
+          'pink': '#ff5f7b',
+          'yellow': '#ffd166',
+          'green': '#b9ff3e',
+          'gold': '#ffcc5c',
           'red': '#FF3B3B',
-          'purple': '#B026FF',
-          'orange': '#FF6B35',
+          'purple': '#7d6cff',
+          'orange': '#ff9f1c',
         },
         // Background Colors
         'bg': {
-          'dark': '#02040A',
-          'dark-2': '#050816',
-          'dark-3': '#0A0F1E',
-          'dark-4': '#0F1626',
-          'card': 'rgba(5, 8, 22, 0.8)',
-          'card-hover': 'rgba(5, 8, 22, 0.95)',
+          'dark': '#05070d',
+          'dark-2': '#0b1020',
+          'dark-3': '#11182a',
+          'dark-4': '#1a2032',
+          'card': 'rgba(11, 16, 32, 0.78)',
+          'card-hover': 'rgba(11, 16, 32, 0.95)',
         },
         // Text Colors
         'text': {
-          'primary': '#F5F5F5',
-          'secondary': '#E0E0E0',
-          'muted': '#9FA6B2',
-          'disabled': '#6B7280',
+          'primary': '#f3f7ff',
+          'secondary': '#e0e7ff',
+          'muted': '#9aa4b2',
+          'disabled': '#6b7280',
         },
         // Semantic Colors
         'success': '#00FF85',
@@ -55,13 +55,13 @@ export default {
         '3xl': '2rem',
       },
       backgroundImage: {
-        'gradient-dark': 'linear-gradient(180deg, #02040A 0%, #050816 100%)',
-        'gradient-dark-radial': 'radial-gradient(circle at center, #050816 0%, #02040A 100%)',
-        'gradient-neon-cyan': 'linear-gradient(135deg, rgba(0, 245, 255, 0.1) 0%, rgba(0, 245, 255, 0.05) 100%)',
-        'gradient-neon-pink': 'linear-gradient(135deg, rgba(255, 0, 122, 0.1) 0%, rgba(255, 0, 122, 0.05) 100%)',
-        'gradient-neon-yellow': 'linear-gradient(135deg, rgba(255, 214, 0, 0.1) 0%, rgba(255, 214, 0, 0.05) 100%)',
-        'gradient-rainbow': 'linear-gradient(135deg, #FF007A 0%, #00F5FF 25%, #FFD600 50%, #00FF85 75%, #FF007A 100%)',
-        'gradient-crown': 'linear-gradient(135deg, #FFD600 0%, #FFA500 100%)',
+        'gradient-dark': 'linear-gradient(180deg, #05070d 0%, #0b1020 100%)',
+        'gradient-dark-radial': 'radial-gradient(circle at center, #0b1020 0%, #05070d 100%)',
+        'gradient-neon-cyan': 'linear-gradient(135deg, rgba(33, 241, 255, 0.12) 0%, rgba(33, 241, 255, 0.04) 100%)',
+        'gradient-neon-pink': 'linear-gradient(135deg, rgba(255, 95, 123, 0.12) 0%, rgba(255, 95, 123, 0.04) 100%)',
+        'gradient-neon-yellow': 'linear-gradient(135deg, rgba(255, 209, 102, 0.12) 0%, rgba(255, 209, 102, 0.04) 100%)',
+        'gradient-rainbow': 'linear-gradient(135deg, #ff5f7b 0%, #21f1ff 25%, #ffd166 50%, #b9ff3e 75%, #ff5f7b 100%)',
+        'gradient-crown': 'linear-gradient(135deg, #ffd166 0%, #ff9f1c 100%)',
       },
       boxShadow: {
         'neon-cyan': '0 0 10px rgba(0, 245, 255, 0.5), 0 0 20px rgba(0, 245, 255, 0.3), 0 0 30px rgba(0, 245, 255, 0.2)',

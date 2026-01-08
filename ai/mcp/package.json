@@ -11,11 +11,16 @@
     "clean": "rm -rf dist",
     "test": "echo \"No tests configured\" && exit 0"
   },
-  "keywords": ["mcp", "gcz", "server", "ai"],
+  "keywords": [
+    "mcp",
+    "gcz",
+    "server",
+    "ai"
+  ],
   "author": "GambleCodez",
   "license": "ISC",
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.25.1",
+    "@modelcontextprotocol/sdk": "^1.25.2",
     "pg": "^8.16.3"
   },
   "devDependencies": {
@@ -25,5 +30,8 @@
   },
   "engines": {
     "node": ">=18"
+  },
+  "overrides": {
+    "@modelcontextprotocol/sdk": "latest"
   }
 }

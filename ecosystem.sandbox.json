@@ -12,7 +12,16 @@
       "env": {
         "NODE_ENV": "sandbox",
         "GCZ_ENV": "sandbox"
-      }
+      },
+      "merge_logs": true,
+      "time": true,
+      "max_size": "10M",
+      "retain": 10,
+      "out_file": "/var/www/html/gcz/logs/sandbox-bot-out.log",
+      "error_file": "/var/www/html/gcz/logs/sandbox-bot-error.log",
+      "min_uptime": "10s",
+      "max_restarts": 10,
+      "restart_delay": 5000
     },
 
     {
@@ -25,10 +34,19 @@
       "instances": 1,
       "env_file": "/var/www/html/gcz/.env.sandbox",
       "env": {
-        "PYTHONPATH": "/var/www/html/gcz/ai/gcz-sandbox",
         "NODE_ENV": "sandbox",
-        "GCZ_ENV": "sandbox"
-      }
+        "GCZ_ENV": "sandbox",
+        "PYTHONPATH": "/var/www/html/gcz/ai/gcz-sandbox"
+      },
+      "merge_logs": true,
+      "time": true,
+      "max_size": "10M",
+      "retain": 10,
+      "out_file": "/var/www/html/gcz/logs/sandbox-api-out.log",
+      "error_file": "/var/www/html/gcz/logs/sandbox-api-error.log",
+      "min_uptime": "10s",
+      "max_restarts": 10,
+      "restart_delay": 5000
     },
 
     {
@@ -41,10 +59,19 @@
       "instances": 1,
       "env_file": "/var/www/html/gcz/.env.sandbox",
       "env": {
-        "PYTHONPATH": "/var/www/html/gcz/ai/gcz-sandbox",
         "NODE_ENV": "sandbox",
-        "GCZ_ENV": "sandbox"
-      }
+        "GCZ_ENV": "sandbox",
+        "PYTHONPATH": "/var/www/html/gcz/ai/gcz-sandbox"
+      },
+      "merge_logs": true,
+      "time": true,
+      "max_size": "10M",
+      "retain": 10,
+      "out_file": "/var/www/html/gcz/logs/sandbox-redirect-out.log",
+      "error_file": "/var/www/html/gcz/logs/sandbox-redirect-error.log",
+      "min_uptime": "10s",
+      "max_restarts": 10,
+      "restart_delay": 5000
     },
 
     {
@@ -57,10 +84,19 @@
       "instances": 1,
       "env_file": "/var/www/html/gcz/.env.sandbox",
       "env": {
-        "PYTHONPATH": "/var/www/html/gcz/ai/gcz-sandbox",
         "NODE_ENV": "sandbox",
-        "GCZ_ENV": "sandbox"
-      }
+        "GCZ_ENV": "sandbox",
+        "PYTHONPATH": "/var/www/html/gcz/ai/gcz-sandbox"
+      },
+      "merge_logs": true,
+      "time": true,
+      "max_size": "10M",
+      "retain": 10,
+      "out_file": "/var/www/html/gcz/logs/sandbox-drops-out.log",
+      "error_file": "/var/www/html/gcz/logs/sandbox-drops-error.log",
+      "min_uptime": "10s",
+      "max_restarts": 10,
+      "restart_delay": 5000
     },
 
     {
@@ -75,7 +111,16 @@
       "env": {
         "NODE_ENV": "sandbox",
         "GCZ_ENV": "sandbox"
-      }
+      },
+      "merge_logs": true,
+      "time": true,
+      "max_size": "10M",
+      "retain": 10,
+      "out_file": "/var/www/html/gcz/logs/sandbox-discord-out.log",
+      "error_file": "/var/www/html/gcz/logs/sandbox-discord-error.log",
+      "min_uptime": "10s",
+      "max_restarts": 10,
+      "restart_delay": 5000
     },
 
     {
@@ -90,7 +135,16 @@
       "env": {
         "NODE_ENV": "sandbox",
         "GCZ_ENV": "sandbox"
-      }
+      },
+      "merge_logs": true,
+      "time": true,
+      "max_size": "10M",
+      "retain": 10,
+      "out_file": "/var/www/html/gcz/logs/sandbox-watchdog-out.log",
+      "error_file": "/var/www/html/gcz/logs/sandbox-watchdog-error.log",
+      "min_uptime": "10s",
+      "max_restarts": 25,
+      "restart_delay": 5000
     },
 
     {
@@ -103,25 +157,19 @@
       "instances": 1,
       "env_file": "/var/www/html/gcz/.env.sandbox",
       "env": {
-        "GCZ_ENV": "sandbox",
-        "PYTHONPATH": "/var/www/html/gcz/ai/gcz-sandbox",
-        "NODE_ENV": "sandbox"
-      }
-    },
-
-    {
-      "name": "gcz-sandbox-mcp",
-      "script": "dist/gcz.js",
-      "cwd": "/var/www/html/gcz/ai/gcz-sandbox/cli",
-      "interpreter": "node",
-      "exec_mode": "fork",
-      "instances": 1,
-      "env_file": "/var/www/html/gcz/.env.sandbox",
-      "env": {
         "NODE_ENV": "sandbox",
         "GCZ_ENV": "sandbox",
-        "GCZ_AI_URL": "http://127.0.0.1:9010"
-      }
+        "PYTHONPATH": "/var/www/html/gcz/ai/gcz-sandbox"
+      },
+      "merge_logs": true,
+      "time": true,
+      "max_size": "10M",
+      "retain": 10,
+      "out_file": "/var/www/html/gcz/logs/sandbox-ai-out.log",
+      "error_file": "/var/www/html/gcz/logs/sandbox-ai-error.log",
+      "min_uptime": "10s",
+      "max_restarts": 20,
+      "restart_delay": 4000
     }
   ]
 }

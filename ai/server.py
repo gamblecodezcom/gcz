@@ -1,3 +1,11 @@
+#!/usr/bin/env python3
+"""
+GCZ Codex Control Plane API
+Production + Sandbox aware
+Security-hardened
+Adds Redis AI memory + MCP Ops Bridge
+"""
+
 from __future__ import annotations
 import os
 import json
@@ -7,29 +15,54 @@ import subprocess
 from pathlib import Path
 from typing import Dict, Any, List
 
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
 import requests
+import redis
+from fastapi import FastAPI, HTTPException, Header
+from pydantic import BaseModel
 
 
 # ======================================================
-# GLOBALS
+# ENV + PATHS
 # ======================================================
-ENV = os.getenv("GCZ_ENV", "sandbox")
+ENV = os.getenv("GCZ_ENV", "sandbox").lower()
 ROOT = Path("/var/www/html/gcz")
-LOG_FILE = "/var/log/gcz/codex_sandbox_log.jsonl"
+
+LOG_FILE = (
+    "/var/log/gcz/prod/codex_log.jsonl"
+    if ENV == "production"
+    else "/var/log/gcz/sandbox/codex_log.jsonl"
+)
 
 TELEGRAM_BOT = os.getenv("TELEGRAM_BOT_TOKEN")
 TELEGRAM_ADMIN = os.getenv("TELEGRAM_ADMIN_ID")
+API = f"https://api.telegram.org/bot{TELEGRAM_BOT}" if TELEGRAM_BOT else None
 
-API = (
-    f"https://api.telegram.org/bot{TELEGRAM_BOT}"
-    if TELEGRAM_BOT else None
-)
+REDIS_URL = os.getenv("REDIS_URL", "redis://127.0.0.1:6379/3")
 
+# ======================================================
+# SECURE API KEY
+# ======================================================
+CONTROL_KEY = os.getenv("GCZ_CONTROL_KEY")
+
+def require_auth(x_gcz_key: str | None):
+    if not CONTROL_KEY:
+        return
+    if x_gcz_key != CONTROL_KEY:
+        raise HTTPException(status_code=403, detail="Forbidden")
+
+
+# ======================================================
+# REDIS — AI MEMORY
+# ======================================================
+r = redis.from_url(REDIS_URL, decode_responses=True)
+
+
+# ======================================================
+# APP
+# ======================================================
 app = FastAPI(
-    title="GCZ Codex — Sandbox GOD MODE",
-    version="3.0"
+    title=f"GCZ Codex Control — {ENV.upper()}",
+    version="4.0",
 )
 
 
@@ -37,13 +70,13 @@ app = FastAPI(
 # HELPERS
 # ======================================================
 def log_event(event_type: str, payload: Dict[str, Any]):
+    os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
     entry = {
         "ts": datetime.datetime.utcnow().isoformat(),
         "env": ENV,
         "type": event_type,
         "payload": payload,
     }
-    os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
     with open(LOG_FILE, "a") as f:
         f.write(json.dumps(entry) + "\n")
 
@@ -54,12 +87,8 @@ def telegram(msg: str):
     try:
         requests.post(
             f"{API}/sendMessage",
-            json={
-                "chat_id": TELEGRAM_ADMIN,
-                "text": msg,
-                "parse_mode": "Markdown"
-            },
-            timeout=5
+            json={"chat_id": TELEGRAM_ADMIN, "text": msg},
+            timeout=5,
         )
     except Exception:
         pass
@@ -73,57 +102,75 @@ class ChatRequest(BaseModel):
     user: str | None = "console"
 
 
+class MCPEvent(BaseModel):
+    tool: str
+    payload: dict
+
+
 # ======================================================
-# CORE ROUTES
+# GLOBAL HEALTH CHECK
 # ======================================================
 @app.get("/health")
 async def health():
-    return {"status": "ok", "env": ENV}
+    ok = True
+    issues = []
+
+    try:
+        r.ping()
+    except Exception:
+        ok = False
+        issues.append("redis")
+
+    return {
+        "status": "ok" if ok else "degraded",
+        "env": ENV,
+        "redis": "up" if not issues else "down",
+        "issues": issues,
+    }
 
 
+# ======================================================
+# SECURE CHAT OPS
+# ======================================================
 @app.post("/chat")
-async def chat(req: ChatRequest):
-    text = req.message.lower().strip()
+async def chat(req: ChatRequest, x_gcz_key: str | None = Header(default=None)):
 
-    if "hello" in text or "hi" in text:
-        reply = "Codex online. God-mode sandbox AI supervising cluster."
-    elif "status" in text:
-        reply = "System heartbeat nominal. PM2 services stable."
-    elif "help" in text:
-        reply = (
-            "Commands you can send via `cc`:\n"
-            "- audit system\n"
-            "- normalize dotenv\n"
-            "- risk check\n"
-            "- explain logs\n"
-        )
-    else:
-        reply = "Message received. I am listening."
+    require_auth(x_gcz_key)
 
-    log_event("chat", {"msg": text, "reply": reply})
-    telegram(f"💬 Codex Chat:\n{text}")
+    t = req.message.lower().strip()
+
+    replies = {
+        "hello": "Codex online.",
+        "status": "Cluster stable.",
+        "help": "Commands: audit / risk / memory / normalize dotenv",
+    }
+
+    reply = next((v for k, v in replies.items() if k in t), "Message received.")
+
+    log_event("chat", {"msg": t, "reply": reply})
+    telegram(f"💬 [{ENV}] Codex Chat:\n{t}")
 
     return {"reply": reply}
 
 
 # ======================================================
-# AUDIT MODE
+# AUDIT
 # ======================================================
 @app.get("/codex/audit")
-async def audit():
+async def audit(x_gcz_key: str | None = Header(default=None)):
+
+    require_auth(x_gcz_key)
+
     try:
         pm2 = json.loads(subprocess.check_output(["pm2", "jlist"]))
-        ports = subprocess.check_output(["ss", "-lntp"]).decode()
-        tg_env = {k: v for k, v in os.environ.items() if k.startswith("TELEGRAM_")}
 
         res = {
-            "pm2": pm2,
-            "ports": ports,
-            "telegram_env": tg_env
+            "pm2_processes": len(pm2),
+            "env": ENV,
         }
 
         log_event("audit", res)
-        return {"status": "ok", "env": ENV, "audit": res}
+        return {"status": "ok", **res}
 
     except Exception:
         log_event("audit_error", {"err": traceback.format_exc()})
@@ -131,18 +178,66 @@ async def audit():
 
 
 # ======================================================
-# WRITE MODE — EXECUTOR
+# REDIS AI MEMORY
+# ======================================================
+@app.post("/memory/write")
+async def memory_write(req: ChatRequest, x_gcz_key: str | None = Header(default=None)):
+
+    require_auth(x_gcz_key)
+
+    key = f"gcz:memory:{ENV}:{req.user}"
+    r.lpush(key, req.message)
+    r.ltrim(key, 0, 200)
+
+    log_event("memory_write", {"user": req.user, "msg": req.message})
+
+    return {"stored": True}
+
+
+@app.get("/memory/read/{user}")
+async def memory_read(user: str, x_gcz_key: str | None = Header(default=None)):
+
+    require_auth(x_gcz_key)
+
+    key = f"gcz:memory:{ENV}:{user}"
+    data = r.lrange(key, 0, 50)
+
+    return {"events": data}
+
+
+# ======================================================
+# MCP → OPS AI BRIDGE
+# ======================================================
+@app.post("/mcp/event")
+async def mcp_event(ev: MCPEvent, x_gcz_key: str | None = Header(default=None)):
+
+    require_auth(x_gcz_key)
+
+    log_event("mcp_event", ev.dict())
+
+    if ev.tool == "risk":
+        score = 0.77
+        telegram(f"⚠ RISK ALERT {score}")
+        return {"risk": score}
+
+    return {"status": "received"}
+
+
+# ======================================================
+# SANDBOX EXECUTOR
 # ======================================================
 @app.post("/codex/exec")
-async def codex_exec(req: ChatRequest):
+async def codex_exec(req: ChatRequest, x_gcz_key: str | None = Header(default=None)):
+
+    require_auth(x_gcz_key)
 
     cmd = req.message.lower()
 
-    # --------------------------------------------------
-    # 1) Dotenv Normalization
-    # --------------------------------------------------
-    if "dotenv" in cmd and "normalize" in cmd:
+    if ENV == "production":
+        telegram("⚠ Exec blocked in production")
+        return {"status": "blocked"}
 
+    if "normalize" in cmd and "dotenv" in cmd:
         changed: List[str] = []
 
         for pkg in ROOT.rglob("package.json"):
@@ -152,46 +247,25 @@ async def codex_exec(req: ChatRequest):
 
             for js in service.rglob("*.js"):
                 txt = js.read_text()
-
                 if "dotenv" in txt:
                     continue
 
-                if esm:
-                    block = (
-                        'import dotenv from "dotenv";\n'
-                        'dotenv.config({ path: "/var/www/html/gcz/.env.sandbox" });\n'
-                    )
-                else:
-                    block = (
-                        'require("dotenv").config({ path: "/var/www/html/gcz/.env.sandbox" });\n'
-                    )
+                block = (
+                    'import dotenv from "dotenv";\n'
+                    'dotenv.config({ path: "/var/www/html/gcz/.env.sandbox" });\n'
+                    if esm else
+                    'require("dotenv").config({ path: "/var/www/html/gcz/.env.sandbox" });\n'
+                )
 
                 js.write_text(block + txt)
                 changed.append(str(js))
 
         log_event("dotenv_normalized", {"files": changed})
-        telegram(f"🛠 Dotenv normalization updated {len(changed)} files")
+        telegram(f"🛠 Updated {len(changed)} files")
 
         return {"status": "ok", "updated": changed}
 
-    # --------------------------------------------------
-    # 2) Risk Engine Stub
-    # --------------------------------------------------
-    if "risk" in cmd:
-        score = 12  # placeholder
-        log_event("risk_scan", {"score": score})
-        telegram(f"⚠ Risk score = {score}")
-        return {"risk": score}
-
-    # --------------------------------------------------
-    # 3) Human Approval Mode
-    # --------------------------------------------------
-    if "deploy" in cmd:
-        telegram("🟡 Deployment approval required.")
-        log_event("deploy_request", {"msg": cmd})
-        return {"status": "awaiting human approval"}
-
-    return {"status": "noop", "msg": "No rule matched"}
+    return {"status": "noop"}
 
 
 # ======================================================
@@ -199,4 +273,4 @@ async def codex_exec(req: ChatRequest):
 # ======================================================
 @app.get("/")
 async def root():
-    return {"msg": "GCZ Codex Sandbox API — WRITE MODE ENABLED"}
+    return {"msg": f"GCZ Codex Control API — {ENV} mode"}

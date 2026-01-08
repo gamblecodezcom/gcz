@@ -110,8 +110,8 @@ export const DropsBoard = ({ jurisdiction, casinoId, featured }: DropsBoardProps
               onClick={() => setSelectedJurisdiction('Crypto Daily')}
               className={`px-4 py-2 rounded-lg font-bold transition-all ${
                 selectedJurisdiction === 'Crypto Daily'
-                  ? 'bg-purple-500 text-bg-dark'
-                  : 'bg-bg-dark-2 border-2 border-purple-500/30 text-purple-500 hover:border-purple-500'
+                  ? 'bg-neon-yellow text-bg-dark'
+                  : 'bg-bg-dark-2 border-2 border-neon-yellow/30 text-neon-yellow hover:border-neon-yellow'
               }`}
             >
               ₿ Crypto Daily
@@ -179,7 +179,7 @@ const DropCard = ({ promo, onCopyCode, onReport }: DropCardProps) => {
   const getJurisdictionBadge = (tag: string) => {
     const styles = {
       'USA Daily': 'bg-yellow-500/20 text-yellow-500 border-yellow-500/50',
-      'Crypto Daily': 'bg-purple-500/20 text-purple-500 border-purple-500/50',
+      'Crypto Daily': 'bg-neon-yellow/20 text-neon-yellow border-neon-yellow/50',
       'Everywhere': 'bg-neon-green/20 text-neon-green border-neon-green/50',
     };
     return (
@@ -327,7 +327,7 @@ const DropCard = ({ promo, onCopyCode, onReport }: DropCardProps) => {
           <span className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded">👥 Community</span>
         )}
         {promo.validity_flags?.admin_edited && (
-          <span className="px-2 py-1 bg-purple-500/20 text-purple-400 rounded">✏️ Admin Edited</span>
+          <span className="px-2 py-1 bg-neon-pink/20 text-neon-pink rounded">✏️ Admin Edited</span>
         )}
         {new Date(promo.created_at) > new Date(Date.now() - 24 * 60 * 60 * 1000) && (
           <span className="px-2 py-1 bg-neon-green/20 text-neon-green rounded">🆕 New</span>

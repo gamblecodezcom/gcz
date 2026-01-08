@@ -13,6 +13,7 @@ export const Footer = () => {
         telegram: SOCIAL_LINKS.telegram,
         twitter: SOCIAL_LINKS.twitter,
         email: SOCIAL_LINKS.email,
+        discord: SOCIAL_LINKS.discord,
         cwalletAffiliateUrl: '',
         websiteUrl: '',
       });
@@ -23,6 +24,7 @@ export const Footer = () => {
     telegram: SOCIAL_LINKS.telegram,
     twitter: SOCIAL_LINKS.twitter,
     email: SOCIAL_LINKS.email,
+    discord: SOCIAL_LINKS.discord,
     cwalletAffiliateUrl: '',
     websiteUrl: '',
   };
@@ -39,7 +41,7 @@ export const Footer = () => {
   ];
 
   return (
-    <footer className="bg-gradient-to-b from-bg-dark via-bg-dark-2 to-bg-dark border-t border-neon-cyan/30 mt-20 relative overflow-hidden">
+    <footer className="bg-gradient-to-b from-bg-dark via-bg-dark-2 to-bg-dark border-t border-white/10 mt-20 relative overflow-hidden">
       {/* Decorative gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-r from-neon-cyan/8 via-transparent to-neon-pink/8 pointer-events-none" />
       <div className="absolute inset-0 bg-gradient-radial from-neon-cyan/3 via-transparent to-transparent pointer-events-none" />
@@ -63,9 +65,9 @@ export const Footer = () => {
               </svg>
               <span className="text-lg font-bold font-orbitron neon-glow-yellow">GambleCodez</span>
             </div>
-            <p className="text-text-muted text-sm mb-4">Redeem today, flex tomorrow.</p>
+            <p className="text-text-muted text-sm mb-4">Sweeps-first drops. Always verified.</p>
             <p className="text-text-muted text-xs">
-              Your trusted source for casino drops, raffles, and rewards.
+              Curated sweepstakes casino promos, raffles, and community rewards.
             </p>
           </div>
 
@@ -121,6 +123,20 @@ export const Footer = () => {
                   <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
                 </svg>
               </a>
+              {displaySocials.discord && (
+                <a
+                  href={displaySocials.discord}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-14 h-14 rounded-full bg-gradient-to-br from-neon-pink/20 to-neon-pink/10 border-2 border-neon-pink/50 flex items-center justify-center hover:scale-110 hover:shadow-glow-pink hover:border-neon-pink hover:bg-neon-pink/30 transition-all duration-300 group relative overflow-hidden"
+                  aria-label="Discord"
+                >
+                  <span className="absolute inset-0 bg-neon-pink/0 group-hover:bg-neon-pink/20 transition-all duration-300 rounded-full" />
+                  <svg className="w-7 h-7 text-neon-pink group-hover:scale-110 transition-transform relative z-10" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M20.317 4.369a19.791 19.791 0 00-4.885-1.515.074.074 0 00-.078.037c-.211.375-.444.864-.608 1.249a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.249.077.077 0 00-.078-.037 19.736 19.736 0 00-4.885 1.515.07.07 0 00-.032.027C.533 9.045-.319 13.58.099 18.057a.082.082 0 00.031.056 19.9 19.9 0 005.993 3.03.077.077 0 00.084-.027c.462-.625.874-1.288 1.226-1.984a.076.076 0 00-.041-.105 13.201 13.201 0 01-1.872-.9.077.077 0 01-.008-.127c.126-.095.252-.194.371-.291a.074.074 0 01.077-.01c3.927 1.793 8.18 1.793 12.061 0a.074.074 0 01.078.01c.119.097.245.196.372.291a.077.077 0 01-.006.127 12.299 12.299 0 01-1.873.899.076.076 0 00-.04.106c.36.695.772 1.358 1.225 1.983a.076.076 0 00.084.028 19.876 19.876 0 005.994-3.03.077.077 0 00.031-.056c.5-5.177-.838-9.673-3.548-13.66a.061.061 0 00-.031-.03zM8.02 15.331c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.418 2.157-2.418 1.21 0 2.176 1.095 2.157 2.418 0 1.334-.955 2.419-2.157 2.419zm7.974 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.418 2.157-2.418 1.21 0 2.176 1.095 2.157 2.418 0 1.334-.946 2.419-2.157 2.419z" />
+                  </svg>
+                </a>
+              )}
             </div>
             <a
               href={`mailto:${displaySocials.email}`}
@@ -134,13 +150,13 @@ export const Footer = () => {
           </div>
         </div>
 
-        <div className="border-t border-neon-cyan/30 mt-12 pt-8 text-center relative">
+        <div className="border-t border-white/10 mt-12 pt-8 text-center relative">
           <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-24 h-0.5 bg-gradient-to-r from-transparent via-neon-cyan to-transparent" />
           <p className="text-text-muted text-sm mb-2">
             &copy; {new Date().getFullYear()} GambleCodez. All rights reserved.
           </p>
           <p className="text-text-muted text-xs">
-            Gamble responsibly. 18+ only. Terms apply.
+            Sweepstakes only. 18+ where permitted. Gamble responsibly.
           </p>
         </div>
       </div>

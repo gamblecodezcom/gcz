@@ -14,10 +14,23 @@ module.exports = {
       max_memory_restart: "300M",
       env_file: "/var/www/html/gcz/.env",
       env: {
-        NODE_ENV: "production"
+        NODE_ENV: "production",
+        GCZ_ENV: "production"
       },
+
+      // ---- LOG ROTATION ----
+      merge_logs: true,
+      max_size: "10M",
+      retain: 10,
+      time: true,
+
       out_file: "/var/www/html/gcz/logs/gcz-bot-out.log",
-      error_file: "/var/www/html/gcz/logs/gcz-bot-error.log"
+      error_file: "/var/www/html/gcz/logs/gcz-bot-error.log",
+
+      // ---- HEALTH CHECK ----
+      min_uptime: "10s",
+      max_restarts: 10,
+      restart_delay: 5000
     },
 
     // =====================================================
@@ -33,10 +46,21 @@ module.exports = {
       env_file: "/var/www/html/gcz/.env",
       env: {
         NODE_ENV: "production",
+        GCZ_ENV: "production",
         PYTHONPATH: "/var/www/html/gcz"
       },
+
+      merge_logs: true,
+      max_size: "10M",
+      retain: 10,
+      time: true,
+
       out_file: "/var/www/html/gcz/logs/gcz-webhook-out.log",
-      error_file: "/var/www/html/gcz/logs/gcz-webhook-error.log"
+      error_file: "/var/www/html/gcz/logs/gcz-webhook-error.log",
+
+      min_uptime: "10s",
+      max_restarts: 10,
+      restart_delay: 5000
     },
 
     // =====================================================
@@ -52,10 +76,22 @@ module.exports = {
       instances: 1,
       env_file: "/var/www/html/gcz/.env",
       env: {
+        NODE_ENV: "production",
+        GCZ_ENV: "production",
         PYTHONPATH: "/var/www/html/gcz"
       },
+
+      merge_logs: true,
+      max_size: "10M",
+      retain: 10,
+      time: true,
+
       out_file: "/var/www/html/gcz/logs/gcz-api-out.log",
-      error_file: "/var/www/html/gcz/logs/gcz-api-error.log"
+      error_file: "/var/www/html/gcz/logs/gcz-api-error.log",
+
+      min_uptime: "10s",
+      max_restarts: 10,
+      restart_delay: 5000
     },
 
     // =====================================================
@@ -71,10 +107,22 @@ module.exports = {
       instances: 1,
       env_file: "/var/www/html/gcz/.env",
       env: {
+        NODE_ENV: "production",
+        GCZ_ENV: "production",
         PYTHONPATH: "/var/www/html/gcz"
       },
+
+      merge_logs: true,
+      max_size: "10M",
+      retain: 10,
+      time: true,
+
       out_file: "/var/www/html/gcz/logs/gcz-redirect-out.log",
-      error_file: "/var/www/html/gcz/logs/gcz-redirect-error.log"
+      error_file: "/var/www/html/gcz/logs/gcz-redirect-error.log",
+
+      min_uptime: "10s",
+      max_restarts: 10,
+      restart_delay: 5000
     },
 
     // =====================================================
@@ -90,10 +138,22 @@ module.exports = {
       instances: 1,
       env_file: "/var/www/html/gcz/.env",
       env: {
+        NODE_ENV: "production",
+        GCZ_ENV: "production",
         PYTHONPATH: "/var/www/html/gcz"
       },
+
+      merge_logs: true,
+      max_size: "10M",
+      retain: 10,
+      time: true,
+
       out_file: "/var/www/html/gcz/logs/gcz-drops-out.log",
-      error_file: "/var/www/html/gcz/logs/gcz-drops-error.log"
+      error_file: "/var/www/html/gcz/logs/gcz-drops-error.log",
+
+      min_uptime: "10s",
+      max_restarts: 10,
+      restart_delay: 5000
     },
 
     // =====================================================
@@ -109,10 +169,21 @@ module.exports = {
       node_args: "--experimental-modules",
       env_file: "/var/www/html/gcz/.env",
       env: {
-        NODE_ENV: "production"
+        NODE_ENV: "production",
+        GCZ_ENV: "production"
       },
+
+      merge_logs: true,
+      max_size: "10M",
+      retain: 10,
+      time: true,
+
       out_file: "/var/www/html/gcz/logs/gcz-discord-out.log",
-      error_file: "/var/www/html/gcz/logs/gcz-discord-error.log"
+      error_file: "/var/www/html/gcz/logs/gcz-discord-error.log",
+
+      min_uptime: "10s",
+      max_restarts: 10,
+      restart_delay: 5000
     },
 
     // =====================================================
@@ -128,10 +199,22 @@ module.exports = {
       max_memory_restart: "200M",
       env_file: "/var/www/html/gcz/.env",
       env: {
+        NODE_ENV: "production",
+        GCZ_ENV: "production",
         PYTHONPATH: "/var/www/html/gcz"
       },
+
+      merge_logs: true,
+      max_size: "10M",
+      retain: 10,
+      time: true,
+
       out_file: "/var/www/html/gcz/logs/gcz-watchdog-out.log",
-      error_file: "/var/www/html/gcz/logs/gcz-watchdog-error.log"
+      error_file: "/var/www/html/gcz/logs/gcz-watchdog-error.log",
+
+      min_uptime: "10s",
+      max_restarts: 25,
+      restart_delay: 5000
     },
 
     // =====================================================
@@ -147,11 +230,57 @@ module.exports = {
       instances: 1,
       env_file: "/var/www/html/gcz/.env",
       env: {
-        GCZ_ENV: "prod",
+        NODE_ENV: "production",
+        GCZ_ENV: "production",
         PYTHONPATH: "/var/www/html/gcz"
       },
+
+      merge_logs: true,
+      max_size: "10M",
+      retain: 10,
+      time: true,
+
       out_file: "/var/www/html/gcz/logs/gcz-ai-out.log",
-      error_file: "/var/www/html/gcz/logs/gcz-ai-error.log"
+      error_file: "/var/www/html/gcz/logs/gcz-ai-error.log",
+
+      min_uptime: "10s",
+      max_restarts: 10,
+      restart_delay: 5000
+    },
+
+
+
+    // =====================================================
+    // ================= SANDBOX MIRROR ====================
+    // =====================================================
+
+    {
+      name: "gcz-sandbox-ai",
+      script: "uvicorn",
+      args: "ai.server:app --host 0.0.0.0 --port 9010",
+      cwd: "/var/www/html/gcz/ai/gcz-sandbox",
+      interpreter: "python3",
+      exec_mode: "fork",
+      env_file: "/var/www/html/gcz/.env.sandbox",
+      instances: 1,
+      env: {
+        NODE_ENV: "sandbox",
+        GCZ_ENV: "sandbox",
+        PYTHONPATH: "/var/www/html/gcz/ai/gcz-sandbox"
+      },
+
+      merge_logs: true,
+      max_size: "10M",
+      retain: 10,
+      time: true,
+
+      out_file: "/var/www/html/gcz/logs/sandbox-ai-out.log",
+      error_file: "/var/www/html/gcz/logs/sandbox-ai-error.log",
+
+      min_uptime: "10s",
+      max_restarts: 20,
+      restart_delay: 4000
     }
+
   ]
 };

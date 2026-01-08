@@ -1,6 +1,12 @@
 {
-  "name": "gcz-vps",
-  "version": "1.0.0",
-  "command": "node",
-  "args": ["dist/index.js"]
+  "gcz-ai-sandbox": {
+    "name": "GambleCodez AI Sandbox MCP",
+    "version": "3.1.0",
+    "command": "node",
+    "args": ["/var/www/html/gcz/ai/gcz-sandbox/mcp/dist/index.js"]
+  },
+  "context7": {
+    "command": "npx",
+    "args": ["-y", "@upstash/context7-mcp"]
+  }
 }

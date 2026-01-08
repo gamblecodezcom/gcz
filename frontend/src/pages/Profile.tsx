@@ -100,69 +100,68 @@ export const Profile = () => {
       />
       <div className="min-h-screen pt-24 px-4 pb-12">
         <div className="container mx-auto max-w-4xl">
-          <div className="mb-8">
-            <h1 className="text-4xl font-bold font-orbitron mb-4 neon-glow-cyan flex items-center gap-3">
-              <svg className="w-10 h-10 crown-animation" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M5 16L3 5L8.5 10L12 4L15.5 10L21 5L19 16H5Z"
-                  fill="url(#crownGradientProfile)"
-                  className="drop-shadow-[0_0_10px_rgba(255,215,0,0.8)]"
-                />
-                <defs>
-                  <linearGradient id="crownGradientProfile" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#FFD700" />
-                    <stop offset="100%" stopColor="#FFA500" />
-                  </linearGradient>
-                </defs>
-              </svg>
-              Degen Profile
-            </h1>
-            <p className="text-text-muted">Manage your identity, stats, and access</p>
+          <div className="rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/6 to-transparent p-8 md:p-10 mb-8 relative overflow-hidden">
+            <div className="absolute inset-0 hero-grid opacity-30" />
+            <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+              <div>
+                <div className="inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-xs uppercase tracking-[0.3em] text-neon-cyan mb-4">
+                  Degen Identity
+                </div>
+                <h1 className="text-4xl md:text-5xl font-orbitron mb-3">
+                  Degen Profile
+                  <span className="text-neon-pink"> control room.</span>
+                </h1>
+                <p className="text-text-muted">Secure your raffles, manage your handles, and track your sweeps.</p>
+              </div>
+              <div className="glass-sheen rounded-2xl px-6 py-4 border border-white/10">
+                <div className="text-xs uppercase tracking-[0.3em] text-text-muted">Degen Score</div>
+                <div className="text-3xl font-semibold text-neon-yellow">{degenScore}</div>
+              </div>
+            </div>
           </div>
 
-          <div className="bg-bg-dark-2 border-2 border-neon-cyan/30 rounded-xl p-8 space-y-8 card-hover relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-neon-cyan/5 via-neon-pink/5 to-neon-yellow/5 animate-pulse pointer-events-none" />
+          <div className="bg-bg-dark-2 border border-white/10 rounded-2xl p-8 space-y-8 card-hover relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-neon-cyan/8 via-neon-pink/6 to-neon-yellow/6 pointer-events-none" />
             <div className="relative z-10 space-y-8">
-              <div className="flex flex-col md:flex-row gap-6">
+              <div className="flex flex-col lg:flex-row gap-8">
                 <div className="flex items-center gap-6">
-                  <div className={`w-24 h-24 rounded-full bg-gradient-to-br ${getAvatarGradient(profile.user.username)} flex items-center justify-center text-2xl font-bold text-bg-dark border-2 border-neon-cyan/40`}
-                  >
+                  <div className={`w-24 h-24 rounded-2xl bg-gradient-to-br ${getAvatarGradient(profile.user.username)} flex items-center justify-center text-2xl font-bold text-bg-dark border border-white/15`}>
                     {profile.user.username ? profile.user.username.slice(0, 2).toUpperCase() : 'DG'}
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold text-neon-cyan">
+                    <h2 className="text-2xl font-semibold text-text-primary">
                       {profile.user.username ? `@${profile.user.username}` : 'Anonymous Degen'}
                     </h2>
-                    <p className="text-text-muted">Degen Score: <span className="text-neon-yellow font-semibold">{degenScore}</span></p>
-                    <div className="mt-2 flex flex-wrap gap-2 text-xs">
-                      <span className="px-2 py-1 rounded-full border border-neon-pink/40 text-neon-pink">Drops Redeemed: {dropsRedeemed}</span>
-                      <span className="px-2 py-1 rounded-full border border-neon-cyan/40 text-neon-cyan">Wheel Spins: {wheelSpins}</span>
-                      <span className="px-2 py-1 rounded-full border border-neon-green/40 text-neon-green">Linked Accounts: {linkedAccounts}</span>
+                    <p className="text-text-muted">Drops redeemed: <span className="text-neon-green font-semibold">{dropsRedeemed}</span></p>
+                    <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                      <span className="px-2 py-1 rounded-full border border-white/10 text-text-primary">Wheel spins: {wheelSpins}</span>
+                      <span className="px-2 py-1 rounded-full border border-white/10 text-text-primary">Linked accounts: {linkedAccounts}</span>
+                      <span className="px-2 py-1 rounded-full border border-white/10 text-text-primary">{newsletterOptIn ? 'Newsletter on' : 'Newsletter off'}</span>
                     </div>
                   </div>
                 </div>
 
                 <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="bg-bg-dark rounded-lg p-4 border border-neon-cyan/20">
-                    <label className="block text-sm text-text-muted mb-1">Discord Handle</label>
+                  <div className="glass-sheen rounded-xl p-4 border border-white/10">
+                    <label className="block text-xs uppercase tracking-widest text-text-muted mb-2">Discord</label>
                     <div className="text-text-primary font-semibold">
                       {profile.user.discord_username || 'Not linked'}
                     </div>
                   </div>
-                  <div className="bg-bg-dark rounded-lg p-4 border border-neon-cyan/20">
-                    <label className="block text-sm text-text-muted mb-1">Telegram Handle</label>
+                  <div className="glass-sheen rounded-xl p-4 border border-white/10">
+                    <label className="block text-xs uppercase tracking-widest text-text-muted mb-2">Telegram</label>
                     <div className="text-text-primary font-semibold">
                       {profile.user.telegram_username ? `@${profile.user.telegram_username}` : 'Not linked'}
                     </div>
                   </div>
-                  <div className="bg-bg-dark rounded-lg p-4 border border-neon-cyan/20">
-                    <label className="block text-sm text-text-muted mb-1">Newsletter Opt-in</label>
+                  <div className="glass-sheen rounded-xl p-4 border border-white/10">
+                    <label className="block text-xs uppercase tracking-widest text-text-muted mb-2">Newsletter</label>
                     <div className="text-text-primary font-semibold">
                       {newsletterOptIn ? 'Subscribed' : 'Not subscribed'}
                     </div>
                   </div>
-                  <div className="bg-bg-dark rounded-lg p-4 border border-neon-cyan/20">
-                    <label className="block text-sm text-text-muted mb-1">Cwallet ID</label>
+                  <div className="glass-sheen rounded-xl p-4 border border-white/10">
+                    <label className="block text-xs uppercase tracking-widest text-text-muted mb-2">Cwallet ID</label>
                     <div className="text-text-primary font-mono">
                       {profile.user.cwallet_id || 'Not set'}
                     </div>
@@ -171,7 +170,7 @@ export const Profile = () => {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-bg-dark rounded-lg p-4 border border-neon-pink/20">
+                <div className="bg-bg-dark rounded-2xl p-5 border border-white/10">
                   <h3 className="text-sm font-semibold text-neon-pink mb-3">Linked Accounts</h3>
                   <div className="space-y-2 text-sm text-text-muted">
                     <div className="flex justify-between">
@@ -189,21 +188,21 @@ export const Profile = () => {
                   </div>
                 </div>
 
-                <div className="bg-bg-dark rounded-lg p-4 border border-neon-yellow/20">
+                <div className="bg-bg-dark rounded-2xl p-5 border border-white/10">
                   <h3 className="text-sm font-semibold text-neon-yellow mb-3">Quick Links</h3>
                   <div className="flex flex-wrap gap-2 text-xs">
-                    <a href="/dashboard" className="px-3 py-2 rounded-lg border border-neon-cyan/30 text-neon-cyan hover:bg-neon-cyan/10">Dashboard</a>
-                    <a href="/drops" className="px-3 py-2 rounded-lg border border-neon-pink/30 text-neon-pink hover:bg-neon-pink/10">Drops</a>
-                    <a href="/newsletter" className="px-3 py-2 rounded-lg border border-neon-green/30 text-neon-green hover:bg-neon-green/10">Newsletter</a>
-                    <a href="/wheel" className="px-3 py-2 rounded-lg border border-neon-yellow/30 text-neon-yellow hover:bg-neon-yellow/10">Degen Wheel</a>
-                    <a href={SOCIAL_LINKS.discord} className="px-3 py-2 rounded-lg border border-purple-400/30 text-purple-300 hover:bg-purple-500/10">Discord</a>
-                    <a href={SOCIAL_LINKS.telegram.bot} className="px-3 py-2 rounded-lg border border-neon-cyan/30 text-neon-cyan hover:bg-neon-cyan/10">Telegram</a>
+                    <a href="/dashboard" className="px-3 py-2 rounded-lg border border-white/10 text-text-primary hover:bg-white/5">Dashboard</a>
+                    <a href="/drops" className="px-3 py-2 rounded-lg border border-white/10 text-text-primary hover:bg-white/5">Drops</a>
+                    <a href="/newsletter" className="px-3 py-2 rounded-lg border border-white/10 text-text-primary hover:bg-white/5">Newsletter</a>
+                    <a href="/wheel" className="px-3 py-2 rounded-lg border border-white/10 text-text-primary hover:bg-white/5">Degen Wheel</a>
+                    <a href={SOCIAL_LINKS.discord} className="px-3 py-2 rounded-lg border border-white/10 text-text-primary hover:bg-white/5">Discord</a>
+                    <a href={SOCIAL_LINKS.telegram.bot} className="px-3 py-2 rounded-lg border border-white/10 text-text-primary hover:bg-white/5">Telegram</a>
                   </div>
                 </div>
               </div>
 
-              <div className="border-t border-neon-cyan/20 pt-6">
-                <h2 className="text-xl font-bold text-neon-cyan mb-4 flex items-center gap-2">
+              <div className="border-t border-white/10 pt-6">
+                <h2 className="text-xl font-semibold text-neon-cyan mb-4 flex items-center gap-2">
                   <span className="text-2xl">🎟️</span>
                   Raffle Access
                 </h2>
@@ -212,9 +211,9 @@ export const Profile = () => {
                     <label className="block text-sm text-text-muted mb-1">Status</label>
                     <div className="text-text-primary">
                       {profile.user.hasRaffleAccess ? (
-                        <span className="text-green-400">✓ Active</span>
+                        <span className="text-neon-green">✓ Active</span>
                       ) : (
-                        <span className="text-red-400">✗ Not joined</span>
+                        <span className="text-neon-pink">✗ Not joined</span>
                       )}
                     </div>
                   </div>
@@ -222,9 +221,9 @@ export const Profile = () => {
                     <label className="block text-sm text-text-muted mb-1">Newsletter</label>
                     <div className="text-text-primary">
                       {newsletterOptIn ? (
-                        <span className="text-green-400">✓ Subscribed</span>
+                        <span className="text-neon-green">✓ Subscribed</span>
                       ) : (
-                        <span className="text-red-400">✗ Not subscribed</span>
+                        <span className="text-neon-pink">✗ Not subscribed</span>
                       )}
                     </div>
                   </div>
@@ -232,9 +231,9 @@ export const Profile = () => {
                     <label className="block text-sm text-text-muted mb-1">Raffle PIN</label>
                     <div className="text-text-primary">
                       {profile.rafflePinSet ? (
-                        <span className="text-green-400">✓ Set</span>
+                        <span className="text-neon-green">✓ Set</span>
                       ) : (
-                        <span className="text-red-400">✗ Not set</span>
+                        <span className="text-neon-pink">✗ Not set</span>
                       )}
                     </div>
                     {!profile.rafflePinSet && (
@@ -277,7 +276,7 @@ export const Profile = () => {
                       />
                     </div>
                     {pinError && (
-                      <div className="bg-red-500/20 border border-red-400/50 rounded-lg p-3 text-sm text-red-200">
+                      <div className="bg-neon-pink/20 border border-neon-pink/40 rounded-lg p-3 text-sm text-neon-pink">
                         {pinError}
                       </div>
                     )}
@@ -304,7 +303,7 @@ export const Profile = () => {
                   </form>
                 )}
 
-                <div className="mt-4 p-4 bg-neon-yellow/20 border border-neon-yellow/50 rounded-lg text-sm">
+                <div className="mt-4 p-4 bg-neon-yellow/15 border border-neon-yellow/40 rounded-2xl text-sm">
                   <div className="flex items-start gap-2">
                     <span className="text-lg">⚠️</span>
                     <div>
@@ -315,7 +314,7 @@ export const Profile = () => {
                 </div>
 
                 {!profile.user.cwallet_id && (
-                  <div className="mt-6 bg-neon-cyan/20 border border-neon-cyan/50 rounded-lg p-4">
+                  <div className="mt-6 bg-neon-cyan/15 border border-neon-cyan/40 rounded-2xl p-4">
                     <p className="text-sm text-neon-cyan mb-2 font-semibold">💡 Need Cwallet?</p>
                     <p className="text-xs text-text-muted mb-3">
                       Cwallet is required for raffle participation and crypto rewards.

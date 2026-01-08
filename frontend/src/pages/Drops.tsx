@@ -43,49 +43,54 @@ export const Drops = () => {
     <>
       <SEOHead {...pageSEO.drops} />
       <div className="min-h-screen pt-24 px-4 pb-12">
-      <div className="container mx-auto">
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-4xl font-bold font-orbitron mb-2 neon-glow-cyan">
-                🎯 GambleCodez Drops
-              </h1>
-              <p className="text-text-muted">
-                Real-time promo codes, bonus links, and exclusive drops from casinos
-              </p>
+        <div className="container mx-auto">
+          <div className="rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/5 to-transparent p-8 md:p-12 mb-10 relative overflow-hidden">
+            <div className="absolute inset-0 hero-grid opacity-30" />
+            <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
+              <div>
+                <div className="inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-xs uppercase tracking-[0.3em] text-neon-cyan mb-4">
+                  Live Drops
+                </div>
+                <h1 className="text-4xl md:text-5xl font-orbitron mb-3">
+                  Sweeps promos, <span className="text-neon-green">curated fresh.</span>
+                </h1>
+                <p className="text-text-muted max-w-2xl">
+                  We collect sweepstakes casino drops, verified bonuses, and community finds. Submit a promo to
+                  keep the vault full.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowSubmitForm(!showSubmitForm)}
+                className="btn-neon px-6 py-3 rounded-2xl bg-neon-cyan text-bg-dark font-semibold shadow-glow-cyan"
+              >
+                {showSubmitForm ? 'Close Form' : 'Submit a Promo'}
+              </button>
             </div>
-            <button
-              onClick={() => setShowSubmitForm(!showSubmitForm)}
-              className="px-6 py-3 bg-neon-cyan text-bg-dark font-bold rounded-xl hover:shadow-neon-cyan transition-all"
-            >
-              {showSubmitForm ? '✕ Cancel' : '+ Submit Promo'}
-            </button>
           </div>
 
-          {/* Submit Form */}
           {showSubmitForm && (
-            <div className="bg-bg-dark-2 border-2 border-neon-cyan/30 rounded-xl p-6 mb-8">
-              <h2 className="text-xl font-bold mb-4 text-neon-cyan">Submit a Promo</h2>
+            <div className="glass-sheen border border-white/10 rounded-2xl p-6 md:p-8 mb-10">
+              <h2 className="text-xl font-semibold mb-4 text-neon-cyan">Drop a promo</h2>
               <form onSubmit={handleSubmit}>
                 <textarea
                   value={submitText}
                   onChange={(e) => setSubmitText(e.target.value)}
-                  placeholder="Paste promo code, URL, or description here..."
-                  className="w-full p-4 bg-bg-dark border-2 border-neon-cyan/30 rounded-lg text-white placeholder-text-muted focus:border-neon-cyan focus:outline-none mb-4"
+                  placeholder="Paste promo code, URL, or short description..."
+                  className="w-full p-4 bg-bg-dark-2 border border-white/10 rounded-xl text-white placeholder-text-muted focus:border-neon-cyan focus:outline-none mb-4"
                   rows={4}
                   required
                 />
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-3">
                   <button
                     type="submit"
-                    className="px-6 py-2 bg-neon-cyan text-bg-dark font-bold rounded-lg hover:bg-neon-cyan/80 transition-all"
+                    className="btn-neon px-6 py-2 rounded-xl bg-neon-green text-bg-dark font-semibold"
                   >
-                    Submit
+                    Submit Drop
                   </button>
                   <button
                     type="button"
                     onClick={() => setShowSubmitForm(false)}
-                    className="px-6 py-2 bg-bg-dark-2 border-2 border-neon-cyan/30 text-neon-cyan font-bold rounded-lg hover:border-neon-cyan transition-all"
+                    className="px-6 py-2 rounded-xl border border-white/20 text-white font-semibold hover:bg-white/5"
                   >
                     Cancel
                   </button>
@@ -93,11 +98,15 @@ export const Drops = () => {
               </form>
             </div>
           )}
-        </div>
 
-        <DropsBoard />
+          <DropsBoard />
+
+          <div className="mt-12 rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-text-muted">
+            Sweepstakes only. No real-money gambling. Always check eligibility and redemption rules in your
+            jurisdiction.
+          </div>
+        </div>
       </div>
-    </div>
     </>
   );
 };

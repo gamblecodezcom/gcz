@@ -63,18 +63,11 @@ export const Navbar = () => {
 
   const navLinks = [
     { path: '/', label: 'Home' },
-    { path: '/degen-login', label: 'Degen Login' },
-    { path: '/degen-profile', label: 'Degen Profile' },
-    { path: '/dashboard', label: 'Dashboard' },
     { path: '/drops', label: 'Drops' },
     { path: '/raffles', label: 'Raffles' },
-    { path: '/wheel', label: 'Wheel' },
-    { path: '/newsletter', label: 'Newsletter' },
-    { path: '/affiliates', label: 'Affiliates' },
-    { path: '/sites/recent', label: 'Recent' },
-    { path: '/leaderboard', label: 'Leaderboard' },
-    { path: '/blacklist', label: 'Blacklist' },
-    { path: '/contact', label: 'Contact' },
+    { path: '/affiliates', label: 'Casinos' },
+    { path: '/dashboard', label: 'Dashboard' },
+    { path: '/contact', label: 'Support' },
   ];
 
   return (
@@ -96,7 +89,7 @@ export const Navbar = () => {
                   className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 relative group ${
                     location.pathname === link.path
                       ? 'text-neon-cyan neon-glow-cyan bg-neon-cyan/10'
-                      : 'text-text-muted hover:text-neon-cyan hover:bg-neon-cyan/5'
+                      : 'text-text-muted hover:text-neon-cyan hover:bg-white/5'
                   }`}
                 >
                   <span className="relative z-10">{link.label}</span>
@@ -107,13 +100,21 @@ export const Navbar = () => {
                     </>
                   )}
                   {!location.pathname.includes(link.path) && (
-                    <span className="absolute inset-0 bg-neon-cyan/0 rounded-lg transition-all duration-300 group-hover:bg-neon-cyan/5 -z-0" />
+                    <span className="absolute inset-0 bg-white/0 rounded-lg transition-all duration-300 group-hover:bg-white/5 -z-0" />
                   )}
                 </Link>
               ))}
             </div>
 
             <div className="flex items-center space-x-4">
+              <a
+                href="https://t.me/GCZDrops"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hidden md:inline-flex items-center gap-2 px-4 py-2 rounded-full bg-neon-cyan text-bg-dark text-xs font-semibold shadow-glow-cyan"
+              >
+                Join Telegram
+              </a>
               <PushNotificationBell />
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -157,6 +158,14 @@ export const Navbar = () => {
                 {link.label}
               </Link>
             ))}
+            <a
+              href="https://t.me/GCZDrops"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-4 py-3 rounded-lg text-sm font-semibold bg-neon-cyan text-bg-dark text-center shadow-glow-cyan"
+            >
+              Join Telegram
+            </a>
           </div>
         </div>
       </div>

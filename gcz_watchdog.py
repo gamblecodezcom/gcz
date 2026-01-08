@@ -84,7 +84,6 @@ PM2_SERVICES = [
     "gcz-bot",
     "gcz-discord",
     "gcz-ai",
-    # "gcz-mcp",  # REMOVED — no longer a production service
     "gcz-watchdog",
 ]
 
