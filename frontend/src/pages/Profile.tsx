@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { getProfile, setRafflePin } from '../utils/api';
 import { CWALLET_AFFILIATE_URL, SOCIAL_LINKS } from '../utils/constants';
 import { SEOHead } from '../components/Common/SEOHead';
+import { TelegramLinkWidget } from '../components/TelegramLinkWidget';
 import type { Profile as ProfileType } from '../types';
 
 const getAvatarGradient = (username?: string | null) => {
@@ -150,8 +151,21 @@ export const Profile = () => {
                   </div>
                   <div className="glass-sheen rounded-xl p-4 border border-white/10">
                     <label className="block text-xs uppercase tracking-widest text-text-muted mb-2">Telegram</label>
-                    <div className="text-text-primary font-semibold">
-                      {profile.user.telegram_username ? `@${profile.user.telegram_username}` : 'Not linked'}
+                    <div className="text-text-primary">
+                      {profile.user.telegram_username ? (
+                        <span className="font-semibold">@{profile.user.telegram_username}</span>
+                      ) : (
+                        <div className="space-y-2">
+                          <p className="text-sm text-text-muted">Not linked yet</p>
+                          {profile.user.cwallet_id ? (
+                            <TelegramLinkWidget cwalletId={profile.user.cwallet_id} />
+                          ) : (
+                            <p className="text-xs text-neon-yellow">
+                              Set your Cwallet ID first so the Telegram bot can attach to your Degen identity.
+                            </p>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div className="glass-sheen rounded-xl p-4 border border-white/10">

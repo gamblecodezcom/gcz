@@ -1,0 +1,6 @@
+Linked Telegram to Wallet-first Degen Profiles:
+1. FastAPI `/api/profile/telegram/link` verifies the Telegram login widget signature, enforces unique telegram+cwallet mappings, updates/inserts the shared `users` row, and responds with a lightweight success/error page.
+2. Added DB migration `sql/migrations/telegram_profile_constraints.sql` so `telegram_id` and `cwallet_id` are unique.
+3. Frontend profile page now renders a dynamic Telegram login widget (via `TelegramLinkWidget`) when a cwallet is present, plus contextual guidance when it's not.
+4. Bot commands `/link` and `/profile` were added via `bot/routes/commands.degen.js` so the Telegram side can resend the login link and preview the Degen profile summary.
+Next: rebuild/redeploy (`npm --prefix frontend run build`, restart `gcz-api`, `gcz-bot`) and verify `/login?telegram=1` linking flow deals with the new widget.

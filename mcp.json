@@ -3,10 +3,16 @@
     "name": "GambleCodez AI Sandbox MCP",
     "version": "3.1.0",
     "command": "node",
-    "args": ["/var/www/html/gcz/ai/gcz-sandbox/mcp/dist/index.js"]
+    "args": ["/var/www/html/gcz/ai/mcp/dist/index.js"]
   },
   "context7": {
     "command": "npx",
     "args": ["-y", "@upstash/context7-mcp"]
+  },
+  "coderabbit-cli-mcp": {
+    "name": "CodeRabbit CLI MCP",
+    "version": "0.1.3",
+    "command": "npx",
+    "args": ["-y", "coderabbit-cli-mcp@0.1.3"]
   }
 }

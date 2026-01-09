@@ -1,4 +1,4 @@
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import type { GczMcp } from "../utils/mcp";
 import { pool } from "../services/db.js";
 
 const safe = async (fn: () => Promise<{ content: { type: "json"; json: unknown }[] }>) => {
@@ -9,7 +9,7 @@ const safe = async (fn: () => Promise<{ content: { type: "json"; json: unknown }
   }
 };
 
-export function registerNeural(server: Server) {
+export function registerNeural(server: GczMcp) {
   server.setRequestHandler<any,any>("gcz.vip.brain", async () => safe(async () => {
     const q = await pool.query("select user_id,whale_score from vip_scores order by whale_score desc limit 10");
     return { content:[{type:"json",json:{rows:q.rows}}] };

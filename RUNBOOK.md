@@ -15,8 +15,7 @@ This repo hosts the GambleCodez API (FastAPI), redirect and drops services, plus
 
 ## Environment Variables
 ### Core API
-- `DATABASE_URL` (Postgres connection string)
-- `AI_AGENT_NEON_DB_URL` (fallback Postgres connection string)
+- `AI_AGENT_NEON_DB_URL`  (Postgres connection string)
 - `LOG_LEVEL` (e.g. `info`, `debug`)
 - `SERVICE_NAME` (optional override for JSON log `service` field)
 
@@ -27,10 +26,10 @@ This repo hosts the GambleCodez API (FastAPI), redirect and drops services, plus
 ### Bots
 - `TELEGRAM_BOT_TOKEN` (Telegram bot token)
 - `DISCORD_BOT_TOKEN` (Discord bot token)
-- `API_BASE_URL` / `BACKEND_API_URL` (API base URL for bots; defaults to `https://gamblecodez.com`)
+- `API_BASE_URL` / `BACKEND_API_URL` (API base URL for bots; defaults to `https://gamblecodez.com`use localhost in sandbox ai mode)
 
 ### Drops AI
-- `PERPLEXITY_API_KEY` (Perplexity API access)
+- `PERPLEXITY_API_KEY` ( `Model - Sonar` )(Perplexity AI API access)
 
 ## PM2 Configuration
 PM2 is configured in `ecosystem.config.cjs` with the following defaults:
@@ -40,14 +39,14 @@ PM2 is configured in `ecosystem.config.cjs` with the following defaults:
 - `gcz-bot` -> `bot/start-bot.js`
 - `gcz-discord` -> `discord/start-discord.js`
 - `gcz-watchdog` -> `watchdog.js`
-
+( `ecosystem.sandbox.json` Sandbox ai pm2 )
 Logs are written to `./logs/*.log` (see `error_file` and `out_file` entries in `ecosystem.config.cjs`).
 
 ## Startup & Deployment
 1. Install dependencies:
    - `npm install` (root)
    - `npm install` (in `frontend/` if deploying the Vite app)
-2. Ensure environment variables are loaded (shell or `.env` managed by your process supervisor).
+2. Ensure environment variables are loaded (shell or `.env` ( Sandbox ai - `..env.sandbox` ) managed by your process supervisor).
 3. Start services:
    - `pm2 start ecosystem.config.cjs`
 4. Confirm health endpoints return `200 OK`.

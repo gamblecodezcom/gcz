@@ -1,4 +1,4 @@
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import type { GczMcp } from "../utils/mcp";
 import { pool } from "../services/db.js";
 
 const safe = async (fn: () => Promise<{ content: { type: "json"; json: unknown }[] }>) => {
@@ -9,7 +9,7 @@ const safe = async (fn: () => Promise<{ content: { type: "json"; json: unknown }
   }
 };
 
-export function registerAutopilot(server:Server){
+export function registerAutopilot(server: GczMcp){
 
   server.setRequestHandler<any,any>("gcz.offer.autotune", async (extra: any)=>safe(async()=>{
     const { brand } = (extra.params||{}) as any;

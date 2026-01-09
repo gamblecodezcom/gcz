@@ -13,13 +13,19 @@ import datetime
 import traceback
 import subprocess
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 
 import requests
 import redis
 from fastapi import FastAPI, HTTPException, Header
 from pydantic import BaseModel
 
+from ai.config.loader import build_settings
+from ai.db import DB
+from ai.health_engine import run_health_scan
+from ai.memory_store import add_memory, log_anomaly
+from ai.shared.promo_rules import format_promo, load_rules
+from ai.tools.ai_clients import AIClient
 
 # ======================================================
 # ENV + PATHS
@@ -65,6 +71,12 @@ app = FastAPI(
     version="4.0",
 )
 
+# ======================================================
+# AI CLIENT + RULES
+# ======================================================
+AI_CLIENT: AIClient | None = None
+PROMO_RULES = load_rules()
+
 
 # ======================================================
 # HELPERS
@@ -94,6 +106,19 @@ def telegram(msg: str):
         pass
 
 
+def _promo_prompt(payload: dict, rules: dict) -> str:
+    templates = rules.get("templates", [])
+    cta_phrases = rules.get("cta_phrases", [])
+    return (
+        "Format the following promo for Telegram/Discord.\n"
+        "Rules:\n"
+        f"- Preferred templates: {templates}\n"
+        f"- CTA phrases: {cta_phrases}\n"
+        "- Keep it concise (1-6 lines). Return message only.\n\n"
+        f"Promo fields: {json.dumps(payload)}"
+    )
+
+
 # ======================================================
 # MODELS
 # ======================================================
@@ -107,25 +132,242 @@ class MCPEvent(BaseModel):
     payload: dict
 
 
+class MemoryRequest(BaseModel):
+    category: str
+    message: Optional[str] = None
+    source: Optional[str] = "mcp"
+    meta: Optional[dict] = None
+    limit: int = 50
+
+
+class AnomalyRequest(BaseModel):
+    message: str
+    meta: Optional[dict] = None
+
+
+class PromoFormatRequest(BaseModel):
+    content: Optional[str] = None
+    headline: Optional[str] = None
+    description: Optional[str] = None
+    bonus_code: Optional[str] = None
+    promo_url: Optional[str] = None
+    affiliate_link: Optional[str] = None
+    affiliate_name: Optional[str] = None
+    affiliate_id: Optional[str] = None
+    force_fallback: bool = False
+
+
 # ======================================================
-# GLOBAL HEALTH CHECK
+# STARTUP / SHUTDOWN
 # ======================================================
-@app.get("/health")
-async def health():
+@app.on_event("startup")
+async def startup() -> None:
+    await DB.init()
+    global AI_CLIENT, PROMO_RULES
+    settings = build_settings(ROOT)
+    AI_CLIENT = AIClient(settings)
+    PROMO_RULES = load_rules()
+
+
+@app.on_event("shutdown")
+async def shutdown() -> None:
+    global AI_CLIENT
+    if AI_CLIENT:
+        await AI_CLIENT.close()
+    await DB.close()
+
+
+# ======================================================
+# INTERNAL HEALTH
+# ======================================================
+async def _build_health() -> Dict[str, Any]:
     ok = True
-    issues = []
+    issues: List[str] = []
+    redis_ok = True
 
     try:
         r.ping()
     except Exception:
         ok = False
+        redis_ok = False
         issues.append("redis")
+
+    if DB.enabled:
+        try:
+            await DB.init()
+            db_status = await DB.health_check()
+            if not db_status.get("ok"):
+                ok = False
+                issues.append("db")
+        except Exception as exc:
+            ok = False
+            issues.append("db")
+            db_status = {"ok": False, "error": str(exc)}
+    else:
+        db_status = {"ok": False, "disabled": True}
 
     return {
         "status": "ok" if ok else "degraded",
         "env": ENV,
-        "redis": "up" if not issues else "down",
+        "redis": "up" if redis_ok else "down",
+        "db": db_status,
         "issues": issues,
+    }
+
+
+# ======================================================
+# GLOBAL HEALTH CHECK
+# ======================================================
+@app.get("/health")
+async def health():
+    return await _build_health()
+
+
+@app.get("/status")
+async def status(x_gcz_key: str | None = Header(default=None)):
+    require_auth(x_gcz_key)
+    return await _build_health()
+
+
+@app.post("/scan")
+async def scan(x_gcz_key: str | None = Header(default=None)):
+    require_auth(x_gcz_key)
+    results = await run_health_scan()
+    log_event("scan", results)
+    return results
+
+
+@app.post("/memory")
+async def memory(req: MemoryRequest, x_gcz_key: str | None = Header(default=None)):
+    require_auth(x_gcz_key)
+
+    if req.message:
+        stored = await add_memory(
+            req.category,
+            req.message,
+            req.source or "mcp",
+            req.meta or {},
+        )
+        return {"stored": stored}
+
+    rows = await DB.fetch(
+        """
+        SELECT id, category, message, source, meta, created_at
+        FROM ai_memory
+        WHERE category = $1
+        ORDER BY created_at DESC
+        LIMIT $2
+        """,
+        (req.category, req.limit),
+    )
+    return {"items": rows}
+
+
+@app.get("/memory")
+async def memory_list(
+    limit: int = 200,
+    category: str | None = None,
+    x_gcz_key: str | None = Header(default=None),
+):
+    require_auth(x_gcz_key)
+
+    if category:
+        rows = await DB.fetch(
+            """
+            SELECT id, category, message, source, meta, created_at
+            FROM ai_memory
+            WHERE category = $1
+            ORDER BY created_at DESC
+            LIMIT $2
+            """,
+            (category, limit),
+        )
+    else:
+        rows = await DB.fetch(
+            """
+            SELECT id, category, message, source, meta, created_at
+            FROM ai_memory
+            ORDER BY created_at DESC
+            LIMIT $1
+            """,
+            (limit,),
+        )
+    return {"items": rows}
+
+
+@app.post("/anomaly")
+async def anomaly(req: AnomalyRequest, x_gcz_key: str | None = Header(default=None)):
+    require_auth(x_gcz_key)
+    stored = await log_anomaly("general", req.message, req.meta or {})
+    return {"stored": stored}
+
+
+@app.get("/anomalies")
+async def anomalies(
+    limit: int = 50,
+    x_gcz_key: str | None = Header(default=None),
+):
+    require_auth(x_gcz_key)
+    rows = await DB.fetch(
+        """
+        SELECT id, type, message, meta, created_at
+        FROM anomalies
+        ORDER BY created_at DESC
+        LIMIT $1
+        """,
+        (limit,),
+    )
+    return {"items": rows}
+
+
+@app.post("/promo/format")
+async def promo_format(req: PromoFormatRequest, x_gcz_key: str | None = Header(default=None)):
+    require_auth(x_gcz_key)
+
+    payload = {
+        "content": req.content or "",
+        "headline": req.headline or "",
+        "description": req.description or "",
+        "bonus_code": req.bonus_code or "",
+        "promo_url": req.promo_url or "",
+        "affiliate_link": req.affiliate_link or "",
+        "affiliate_name": req.affiliate_name or "",
+        "affiliate_id": req.affiliate_id or "",
+    }
+
+    global PROMO_RULES
+    rules = load_rules()
+    PROMO_RULES = rules
+
+    if AI_CLIENT and not req.force_fallback:
+        prompt = _promo_prompt(payload, rules)
+        response = await AI_CLIENT.generate(prompt)
+        if response.mode == "ai" and response.text:
+            message = response.text.strip()
+            affiliate_link = payload.get("affiliate_link")
+            if affiliate_link and affiliate_link not in message:
+                cta_phrases = rules.get("cta_phrases", [])
+                cta_phrase = cta_phrases[0] if cta_phrases else "Claim now"
+                cta_template = rules.get("affiliate", {}).get(
+                    "cta_template",
+                    "🔗 Not yet signed up? {affiliate_link}",
+                )
+                cta_line = cta_template.format(
+                    affiliate_link=affiliate_link,
+                    cta=cta_phrase,
+                )
+                message = f"{message}\n\n{cta_line}"
+            return {
+                "message": message,
+                "mode": "ai",
+                "provider": response.provider,
+            }
+
+    fallback = format_promo(payload, rules)
+    return {
+        "message": fallback,
+        "mode": "fallback",
+        "provider": "fallback",
     }
 
 

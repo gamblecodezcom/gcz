@@ -1,0 +1,30 @@
+# ENV UPDATE PLAN
+
+1. **Add Mistral configuration (required for `/api/ai/mistral`).**
+   ```
+   # Mistral
+   MISTRAL_API_KEY="gA1gBzj5LjLWnqctNx8SFfCLZcaRRz8f"
+   MISTRAL_MODEL="mistral-large-2512"
+   MISTRAL_API_BASE="https://api.mistral.ai"  # only override if you have a custom endpoint
+   MISTRAL_USE_SH=1
+   MISTRAL_SH_PATH="/var/www/html/gcz/mistral.sh"
+   ```
+   *Add this block near the AI section so `gcz-api` can read it on startup.*
+
+2. **Fix malformed/duplicate values in the AI section and run `Nx`+`pm2 restart gcz-api` afterwards.**
+   - `MAILSEND_API_KEY` is missing its closing quote; close it so the key parses.
+   - `GOOSE_MODELGOOSE_MODEL` should be `GOOSE_MODEL`; the current key name breaks dotenv parsing.
+   - `OPENROUTER_API_KEY` currently spans two lines; collapse it into a single properly quoted string.
+   - `OPENROUTER_MODEL` line is concatenated with `PROMO_AI_FORMAT_URL`; split them into two lines.
+   - The legacy duplicate `OPENAI_API_KEY` assignment (the quoted version under “AI CLI DEV”) can stay, but make sure only one value is actually used once the file is cleaned.
+   - MISTRAL_API_BASE=`https://api.mistral.ai currently holds the same string as the key; update it to the real endpoint (`https://api.mistral.ai` unless you have a custom URL).
+
+3. **API keys that need verification (format or value issues observed).**
+   - `MAILSEND_API_KEY` (syntax invalid → dotenv ignores it).
+   - `OPENROUTER_API_KEY` (broken multiline value).
+   - `GOOSE_MODEL` (key name is wrong, so Goose provider never sees the model).
+   - `MISTRAL_API_KEY / MISTRAL_API_BASE` (base is ―not a URL; key has to be refreshed once you confirm it works).
+
+   Run `Nx` (per repo instructions) to confirm there are no lint/type errors caused by the env cleanup, then restart gcz-api with `pm2 restart gcz-api`.
+
+Use the resulting `.envchange` contents to patch `.env` so the `/api/ai/mistral` endpoint can start reliably.

@@ -1,3 +1,4 @@
+import os
 import requests
 from requests.exceptions import RequestException, Timeout
 
@@ -6,12 +7,18 @@ class MemoryClient:
         self.base = base.rstrip("/")
         self.timeout = timeout
         self.retries = retries
+        self.key = os.getenv("GCZ_CONTROL_KEY")
 
     # --------------------------------------------------------
     # INTERNAL REQUEST WRAPPER
     # --------------------------------------------------------
     def _request(self, method, path, **kwargs):
         url = f"{self.base}{path}"
+        headers = kwargs.pop("headers", {}) or {}
+        if self.key:
+            headers["x-gcz-key"] = self.key
+        if headers:
+            kwargs["headers"] = headers
 
         for attempt in range(1, self.retries + 1):
             try:

@@ -17,7 +17,7 @@ class H(BaseHTTPRequestHandler):
     if "callback_query" in update:
       data=update["callback_query"]["data"]
       chat=update["callback_query"]["message"]["chat"]["id"]
-      subprocess.run(["node","/var/www/html/gcz/ai/gcz-sandbox/ai/callback-handler.js",data])
+      subprocess.run(["node","/var/www/html/gcz/ai/sandbox/ai/callback-handler.js",data])
       reply(chat,f"Action received: {data}")
     self.send_response(200); self.end_headers()
 

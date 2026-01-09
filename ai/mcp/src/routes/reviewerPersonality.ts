@@ -1,7 +1,7 @@
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import type { GczMcp } from "../utils/mcp";
 import { log } from "../utils/logger.js";
 
-export function registerReviewerPersonality(server: Server) {
+export function registerReviewerPersonality(server: GczMcp) {
 
   let persona = "Direct but helpful AI reviewer";
 

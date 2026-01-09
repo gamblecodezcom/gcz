@@ -1,7 +1,7 @@
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import type { GczMcp } from "../utils/mcp";
 import { log } from "../utils/logger.js";
 
-export function registerAutoPatch(server: Server) {
+export function registerAutoPatch(server: GczMcp) {
 
   const history: any[] = [];
 

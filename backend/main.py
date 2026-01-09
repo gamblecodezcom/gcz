@@ -90,6 +90,8 @@ from routes import (
     dashboard_router,
     sc_router,
     auth_roles_router,
+    drops_intake_router,
+    live_dashboard_router,
 )
 
 # ============================
@@ -302,3 +304,5 @@ app.include_router(profile_router)
 app.include_router(dashboard_router)
 app.include_router(sc_router)
 app.include_router(auth_roles_router)
+app.include_router(drops_intake_router)
+app.include_router(live_dashboard_router)

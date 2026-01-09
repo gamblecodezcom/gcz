@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "updated_at": null,
+  "cta_phrases": [
+    "Claim now",
+    "Join here",
+    "Grab the bonus",
+    "Play now"
+  ],
+  "cta_position": "end",
+  "affiliate": {
+    "base_url": "https://gamblecodez.com",
+    "redirect_path": "/redirect",
+    "cta_template": "🔗 Not yet signed up? {affiliate_link}"
+  },
+  "templates": [
+    "🎁 {headline}\n{description}\n\n💎 Code: {code}\n🔗 {url}\n\n{cta}",
+    "🎁 {headline}\n{description}\n\n🔗 {url}\n\n{cta}",
+    "🎁 {headline}\n{description}\n\n💎 Code: {code}\n\n{cta}",
+    "{description}\n\n{cta}"
+  ],
+  "regex": {
+    "code": "\\b[A-Z0-9]{4,20}\\b",
+    "url": "https?://[^\\s]+"
+  }
+}

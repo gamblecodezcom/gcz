@@ -1,4 +1,4 @@
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import type { GczMcp } from "../utils/mcp";
 import { pool } from "../services/db.js";
 
 const safe = async (fn: () => Promise<{ content: { type: "json"; json: unknown }[] }>) => {
@@ -9,7 +9,7 @@ const safe = async (fn: () => Promise<{ content: { type: "json"; json: unknown }
   }
 };
 
-export function registerCommand(server: Server) {
+export function registerCommand(server: GczMcp) {
   server.setRequestHandler<any,any>("gcz.dashboard.feed", async () => safe(async () => {
     const q = await pool.query("select ts,message,level from ops_log order by ts desc limit 50");
     return { content:[{type:"json",json:{rows:q.rows}}] };

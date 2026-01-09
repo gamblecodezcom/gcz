@@ -1,4 +1,4 @@
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import type { GczMcp } from "../utils/mcp";
 import { pool } from "../services/db.js";
 
 const safe = async (fn: () => Promise<{ content: { type: "json"; json: unknown }[] }>) => {
@@ -9,7 +9,7 @@ const safe = async (fn: () => Promise<{ content: { type: "json"; json: unknown }
   }
 };
 
-export function registerGodMode(server: Server) {
+export function registerGodMode(server: GczMcp) {
 
   server.setRequestHandler<any,any>("gcz.user.timeline", async (extra: any) => safe(async ()=>{
     const { user } = (extra.params||{}) as any;

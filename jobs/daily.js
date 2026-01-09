@@ -10,6 +10,9 @@ if (!acquireLock()) {
 try {
   execSync("node jobs/reconcile.js", { stdio: "inherit" });
   execSync("node jobs/warmup.js", { stdio: "inherit" });
+  if ((process.env.GCZ_ENV || "production").toLowerCase() === "sandbox") {
+    execSync("node jobs/promoIntel.js", { stdio: "inherit" });
+  }
 
   fs.mkdirSync("logs", { recursive: true });
   fs.writeFileSync("logs/last_daily.txt", new Date().toISOString());

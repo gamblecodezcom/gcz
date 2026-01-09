@@ -4,3 +4,5 @@ requests
 asyncpg
 httpx
 python-dotenv
+redis
+pydantic

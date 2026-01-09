@@ -1,9 +1,9 @@
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import type { GczMcp } from "../utils/mcp";
 import { emitLog } from "../services/telemetry.js";
 
 let history:any[]=[];
 
-export function registerNarrative(server:Server){
+export function registerNarrative(server: GczMcp){
 
   server.setRequestHandler<any,any>("gcz.ai.narrative.event", async (extra: any)=>{
     const ev = (extra.params||{}) as any;

@@ -9,6 +9,8 @@ from .profile import router as profile_router
 from .dashboard import router as dashboard_router
 from .sc import router as sc_router
 from .auth_roles import router as auth_roles_router
+from .drops_intake import router as drops_intake_router
+from .live_dashboard import router as live_dashboard_router
 
 __all__ = [
     "ai_router",
@@ -22,4 +24,6 @@ __all__ = [
     "dashboard_router",
     "sc_router",
     "auth_roles_router",
+    "drops_intake_router",
+    "live_dashboard_router",
 ]

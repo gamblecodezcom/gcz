@@ -26,10 +26,36 @@ class Settings:
 
 
 def _resolve_env_paths(repo_root: Path) -> list[Path]:
-    return [
-        repo_root / "gcz" / ".env",
-        repo_root / ".env",
-    ]
+    env = os.getenv("GCZ_ENV", "").lower()
+    prefer_sandbox = env == "sandbox"
+
+    roots = [repo_root]
+    for parent in repo_root.parents[:2]:
+        roots.append(parent)
+
+    candidates: list[Path] = []
+    for root in roots:
+        candidates.append(root / ".env.sandbox")
+        candidates.append(root / ".env")
+        candidates.append(root / "gcz" / ".env.sandbox")
+        candidates.append(root / "gcz" / ".env")
+
+    # De-dupe while preserving order.
+    seen = set()
+    ordered: list[Path] = []
+    for path in candidates:
+        key = str(path)
+        if key in seen:
+            continue
+        seen.add(key)
+        ordered.append(path)
+
+    if not prefer_sandbox:
+        return ordered
+
+    sandbox_first = [p for p in ordered if p.name == ".env.sandbox"]
+    regular = [p for p in ordered if p.name != ".env.sandbox"]
+    return sandbox_first + regular
 
 
 def load_env(repo_root: Path) -> Dict[str, str]:

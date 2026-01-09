@@ -1,8 +1,8 @@
 import { Pool } from "pg";
 import { log } from "../utils/logger";
 
-const pool = new Pool({
-  connectionString: process.env.GCZ_DB
+export const pool = new Pool({
+  connectionString: process.env.GCZ_DB || process.env.DATABASE_URL
 });
 
 export async function query(sql: string, params: any[] = []) {

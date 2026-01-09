@@ -1,0 +1,1256 @@
+🧠 GAMBLECODEZ — FULL DEGEN ADMIN PANEL SPEC
+“ONE PANEL. ONE SOURCE OF TRUTH. EVERYTHING IN SYNC.”
+
+This is the canonical spec for the GambleCodez ADMIN PANEL — the brain behind:
+- Sites & affiliate control
+- Raffles (hidden + public)
+- Daily spin “never-ending raffle”
+- Rewards config (SC / Crypto / Cwallet / Lootbox URL)
+- Blacklist & safety
+- Degen Profile sync (what players see)
+- Site push notifications
+- Telegram bot + channel announcements
+- CSV import/export
+- Full async DB sync with frontend
+
+NO casino payout automation.
+Admin panel = control, config, logging, and messaging.
+All tipping still happens manually from sites/wallets.
+
+────────────────────────────────────────
+🧱 1. CORE PRINCIPLES
+────────────────────────────────────────
+
+- SINGLE SOURCE OF TRUTH:
+  - If it changes here, it’s “real” across:
+    - Database
+    - Degen Profile
+    - Frontend website
+    - Telegram announcements
+    - Site push notifications
+
+- FULLY ASYNC:
+  - Every action:
+    - Writes DB
+    - Optionally emits:
+      - Site push
+      - Degen Profile updates
+      - Telegram bot messages
+      - CSV export queue (if needed)
+
+- NEVER BLOCK USER FLOW:
+  - Admin actions are instant.
+  - Heavy tasks (exports, warmups, big updates) done async.
+
+- ATOMIC:
+  - Each change is clearly scoped:
+    - Update site URL
+    - Toggle “eligible for giveaways”
+    - Blacklist domain
+    - Create raffle
+    - Draw winner
+  - Every action logged.
+
+- VISUAL VIBE:
+  - Same neon degen theme as Degen Profile, but more “control room”:
+    - Dark gradient background
+    - Neon outlines
+    - Data grids & cards
+    - Status pills
+    - Clear “danger” states (red).
+
+────────────────────────────────────────
+🧭 2. ADMIN PANEL LAYOUT & NAVIGATION
+────────────────────────────────────────
+
+ROUTE (for admin):
+- /admin
+
+TOP NAV (GLOBAL):
+- GambleCodez crown logo (mini)
+- Sections:
+  - Dashboard
+  - Sites & Affiliates
+  - Raffles & Wheel
+  - Rewards & Giveaways
+  - Players & Identity
+  - Notifications & Telegram
+  - Blacklist & Safety
+  - Logs & Exports
+  - Settings
+
+RIGHT SIDE:
+- Admin username
+- Role badge (Owner / Mod)
+- [Logout]
+
+PAGE LAYOUT:
+- Top: Section title + filters/actions
+- Middle: Main content (grid/tables/cards)
+- Right/Bottom: Detail panels / logs / previews
+
+────────────────────────────────────────
+📊 3. ADMIN DASHBOARD (HOME)
+────────────────────────────────────────
+
+PURPOSE: Instant snapshot of the whole ecosystem.
+
+WIDGETS:
+
+1) LIVE METRICS
+   - Active players today
+   - New signups (24h)
+   - Total linked casino accounts
+   - Current active raffles
+   - Daily wheel spins used / remaining
+   - Telegram-connected users
+
+2) RAFFLES SNAPSHOT
+   - Ongoing raffles:
+     - Name
+     - Prize type
+     - Entries count
+     - End time
+   - “Draw winners” quick buttons.
+
+3) SITES SNAPSHOT
+   - Hero sites:
+     - Runewager, Winna, Stake, Shuffle, Goated
+   - Status:
+     - Online / Paused / Blacklisted
+   - Number of players linked for each.
+
+4) NOTIFICATION QUEUE
+   - Recently sent:
+     - Site push notifications
+     - Telegram announcements
+   - Status:
+     - Sent / Failed / Pending
+
+5) RECENT ADMIN ACTIONS
+   - A short log of:
+     - Site updates
+     - Raffle changes
+     - Blacklist additions
+     - Rewards logged
+
+────────────────────────────────────────
+🏷️ 4. SITES & AFFILIATES CONTROL
+────────────────────────────────────────
+
+GOAL:
+- One place to manage:
+  - Site list used by Degen Profiles
+  - Hero priority
+  - Giveaway eligibility by type
+  - URL changes
+  - Blacklisting/pausing
+
+TABLE: SITES LIST
+Columns:
+- Logo + Name
+- URL
+- Category (Sweeps / Crypto / Hybrid / Lootbox)
+- Jurisdiction (US / Non-US / Global / Other)
+- Hero flag (Hero / Normal)
+- Giveaway eligibility:
+  - SC Allowed
+  - Crypto Allowed
+  - Cwallet Allowed
+  - Lootbox URL Allowed
+- Status:
+  - Active
+  - Paused
+  - Blacklisted
+- Linked Players (count)
+- Actions
+
+SITE DETAIL PANEL (on row click):
+- Basic info:
+  - Name, slug, URL
+  - Description
+  - Tags
+  - Jurisdiction
+- Display preferences:
+  - Hero row (yes/no)
+  - Show in Degen Profile (yes/no)
+  - Sort order
+- Giveaway config:
+  - Can this site appear as:
+    - SC Tip site? (Runewager = YES only)
+    - Crypto Tip site?
+    - Cwallet ID mapping site?
+    - Lootbox URL sponsor?
+- Safety/limits:
+  - Blacklisted flag (yes/no)
+  - Reason, notes
+
+ACTIONS:
+- [Add Site]
+- [Edit]
+- [Pause/Resume]
+- [Blacklist]
+- [Test Redirect] (for your own affiliate link warmups)
+
+Degen Profile uses:
+- Only sites with:
+  - “Show in Degen Profile = true”
+  - “Status = Active”
+- Raffle giveaway selection uses:
+  - “Allowed for X reward type” flags.
+
+────────────────────────────────────────
+🎟️ 5. RAFFLES & WHEEL ENGINE
+────────────────────────────────────────
+
+This section powers:
+- Standard raffles (with start/end, winners)
+- Hidden / secret code raffles
+- “Never-ending raffle” via daily spin wheel
+
+TABS:
+1) Raffles
+2) Daily Wheel / Never-Ending Raffle
+
+──────────
+5.1 RAFFLES TAB
+──────────
+
+RAFFLES TABLE:
+Columns:
+- Name
+- Type:
+  - Public
+  - Hidden (only accessible via secret code)
+- Reward type:
+  - Runewager SC Tip
+  - Crypto Tip
+  - Cwallet Transfer
+  - Lootbox Claim URL
+- Status:
+  - Draft
+  - Live
+  - Ended
+  - Winners Drawn
+- Entries:
+  - Total entries
+  - Unique users
+- Ends at
+- Actions
+
+CREATE RAFFLE MODAL:
+Fields:
+- Basic:
+  - Name
+  - Description
+  - Start time
+  - End time (or “Until manually ended”)
+- Visibility:
+  - Public (shows in Degen Profile)
+  - Hidden (only accessible via secret code entry)
+- Secret Code (optional):
+  - Code phrase string
+  - Case sensitivity toggle
+  - Max uses (optional)
+- Entry rules:
+  - Sources allowed:
+    - Daily check-in
+    - Degen Wheel
+    - Secret code
+    - Manual admin grants
+  - Entries per source (e.g., +5 per wheel spin)
+- Reward:
+  - Reward type:
+    - Runewager SC Tip
+    - Crypto Tip
+    - Cwallet Transfer
+    - Lootbox Claim URL
+  - For SC Tip:
+    - Site: Runewager (fixed)
+  - For Crypto:
+    - Asset type options (BTC/ETH/SOL/USDT)
+  - For Cwallet:
+    - Note: “Admin must manually send via Cwallet”
+  - For Lootbox:
+    - Note: “Admin inputs URL when winner is drawn”
+- Winners:
+  - Number of winners
+  - Can winners repeat? (Yes/No)
+  - Selection method:
+    - Random
+    - Weighted by entries
+
+ACTIONS ON RAFFLE:
+- [View entries]:
+  - Shows:
+    - User
+    - Total entries
+    - Source breakdown (wheel / secret code / etc.)
+- [Draw winners]:
+  - Select number of winners (override default if desired)
+  - Confirm
+  - System picks winners and:
+    - Logs winners
+    - Prepares data for:
+      - Degen Profile updates
+      - Site push notifications
+      - Telegram announcements
+- [End raffle now]
+- [Duplicate raffle]
+
+──────────
+5.2 DAILY WHEEL / NEVER-ENDING RAFFLE
+──────────
+
+This tab controls:
+- The daily spin config
+- The “never-ending raffle” logic
+
+PANELS:
+
+1) DAILY WHEEL CONFIG:
+   - Spins per day per user
+   - Prize slots:
+     - Entry multiplier:
+       - +1, +5, +10 entries, etc.
+     - Chance weights per slot
+   - Wheel visual segments (for frontend):
+     - Label
+     - Color
+     - Reward mapping
+
+2) NEVER-ENDING RAFFLE CONFIG:
+   - Target raffle:
+     - Which raffle is the “never-ending” one?
+   - Entry link:
+     - Each wheel result = X entries into this raffle.
+   - Winner frequency:
+     - Daily / Weekly / Manual
+   - Auto-draw toggle:
+     - If ON:
+       - At set time, system selects winners
+       - Logs results
+       - Preps notifications (Degen Profile + Telegram + site push)
+
+────────────────────────────────────────
+🎁 6. REWARDS & GIVEAWAYS (LOGGING ONLY)
+────────────────────────────────────────
+
+Remember: No automated payouts.  
+This section logs what you do manually.
+
+TABS:
+1) Runewager SC Tips
+2) Crypto Tips
+3) Lootbox Rewards
+4) Cwallet Transfers (logged)
+
+──────────
+6.1 RUNEWAGER SC TIPS
+──────────
+
+TABLE:
+- User
+- Runewager username
+- Runewager email
+- SC amount
+- Date
+- Admin who logged
+- Note
+
+ACTIONS:
+- [Log new SC tip]
+  - Choose user
+  - Display their Runewager info
+  - Enter SC amount
+  - Note (optional)
+  - Save → log entry + activity for user
+
+──────────
+6.2 CRYPTO TIPS
+──────────
+
+TABLE:
+- User
+- Asset (BTC/ETH/SOL/USDT)
+- Amount
+- Destination:
+  - Cwallet ID or crypto address
+- Date
+- Admin
+- TX hash (optional)
+- Note
+
+ACTIONS:
+- [Log new crypto tip]
+  - Choose user
+  - Show their stored addresses and Cwallet ID
+  - Select asset type
+  - Enter amount
+  - Select destination:
+    - Cwallet ID
+    - Specific address (BTC/ETH/etc.)
+  - TX hash (optional)
+  - Note (optional)
+
+──────────
+6.3 LOOTBOX REWARDS
+──────────
+
+TABLE:
+- User
+- Lootbox URL (masked in admin list, full in detail)
+- Site/sponsor
+- Date
+- Status: Pending / Claimed / Expired
+- Admin
+- Note
+
+ACTIONS:
+- [Log lootbox reward]
+  - Choose user
+  - Input:
+    - Lootbox URL
+    - Site/sponsor name
+    - Expiration (optional)
+    - Note
+  - Saves & links to user’s Degen Profile.
+
+──────────
+6.4 CWALLET TRANSFERS (LOG ONLY)
+──────────
+
+Same pattern as Crypto tips, but specifically for Cwallet transfers.
+
+────────────────────────────────────────
+🧍 7. PLAYERS & IDENTITY
+────────────────────────────────────────
+
+This is the admin lens over the Degen Profile data.
+
+PLAYERS TABLE:
+- Username
+- Email (if used)
+- Telegram username
+- Cwallet ID
+- Jurisdiction
+- Linked casino count
+- Last active
+- Flags (e.g., VIP, Watchlist)
+
+ON ROW CLICK → PLAYER DETAIL PANEL:
+Sections:
+
+1) Identity:
+   - Username
+   - Email
+   - Telegram
+   - Cwallet ID
+   - Jurisdiction
+   - Created at / Last login
+
+2) Linked Casinos:
+   - List of all casinos:
+     - Site name
+     - Identifier type (username/email/player ID)
+     - Value
+     - Linked at
+
+3) Raffles:
+   - Raffles participated in
+   - Entries per raffle
+   - Wins
+   - Secret code usage
+
+4) Rewards:
+   - SC tips logged
+   - Crypto tips logged
+   - Lootbox URLs logged
+   - Cwallet transfer logs
+
+5) Security:
+   - PIN reset action (if you support it)
+   - Account status:
+     - Active / Suspended / Banned
+
+ACTIONS:
+- [View as player] (read-only preview of their Degen Profile)
+- [Reset PIN] (if you allow; likely you send them a process)
+- [Flag user] (Note for internal)
+- [Ban/Suspend] (if needed)
+
+────────────────────────────────────────
+📣 8. NOTIFICATIONS & TELEGRAM
+────────────────────────────────────────
+
+This controls:
+- Site push notifications (for web frontend)
+- Broadcast to Degen Profiles (in-dashboard banners)
+- Telegram bot & channel announcements
+
+TABS:
+1) Site Push Notifications
+2) Degen Profile Banners
+3) Telegram Announcements
+
+──────────
+8.1 SITE PUSH NOTIFICATIONS
+──────────
+
+TABLE:
+- Title
+- Type:
+  - Info / Giveaway / Alert
+- Audience:
+  - All users / Segment
+- Status:
+  - Draft / Scheduled / Sent
+- Start / End times
+
+CREATE NOTIFICATION:
+- Fields:
+  - Title
+  - Body text (short)
+  - Type
+  - Target segment:
+    - All
+    - By jurisdiction
+    - By linked site (e.g., only users linked to Runewager)
+  - Start & end time
+- Behavior:
+  - Appears as banner or “bell” notifications in frontend.
+
+──────────
+8.2 DEGEN PROFILE BANNERS
+──────────
+
+Specific to Profile dashboard:
+- Example: “New secret code drops at 8PM”, “New raffle: Runewager SC Blitz”
+
+CONFIG:
+- Banner type:
+  - Info / Warning / Promo
+- Text
+- Link to:
+  - Raffle
+  - Site
+  - Degen Wheel
+- Visibility rules:
+  - All users
+  - Only users with certain site linked
+  - Only winners of a recent raffle
+
+──────────
+8.3 TELEGRAM ANNOUNCEMENTS
+──────────
+
+For broadcasts to:
+- Telegram channel
+- Optionally via bot to connected users’ DMs (if supported in your bot logic).
+
+FORM:
+- Message template:
+  - Text with variables:
+    - {{raffle_name}}
+    - {{prize}}
+    - {{winners_list}}
+- Targets:
+  - Channel broadcast
+  - Bot broadcast to:
+    - All linked Telegram users
+    - Only raffle participants
+    - Only winners
+
+SPECIAL FLOW — RAFFLE WINNER ANNOUNCEMENT:
+When you draw winners:
+- Panel shows pre-filled template:
+  - “Congrats to {{usernames}} — you just won {{prize}} in the {{raffle_name}} raffle!”
+- You can:
+  - Edit text
+  - Send to Telegram channel
+  - Optionally send DMs via bot to each winner:
+    - “You won! Check your GambleCodez dashboard to see your reward details.”
+
+────────────────────────────────────────
+🚫 9. BLACKLIST & SAFETY
+────────────────────────────────────────
+
+GOAL:
+- Control which sites, domains, or patterns are blocked / hidden / restricted.
+
+TABS:
+1) Site / Domain Blacklist
+2) Player Blacklist
+
+──────────
+9.1 SITE / DOMAIN BLACKLIST
+──────────
+
+TABLE:
+- Domain or site ID
+- Reason
+- Scope:
+  - Hide from Degen Profile
+  - Block redirects
+  - Block linking as casino account
+- Added by
+- Added at
+
+ACTIONS:
+- [Add blacklist entry]
+- [Remove]
+- [Convert to “Paused Site”] (downgrade instead of blacklist)
+
+EFFECT ON Degen Profile:
+- Blacklisted sites:
+  - Do not show in account linking grid.
+  - Do not appear as giveaway target.
+- If site is blacklisted after being linked:
+  - User’s link still exists (for history) but card may show:
+    - “This site is no longer supported.”
+
+──────────
+9.2 PLAYER BLACKLIST
+──────────
+
+TABLE:
+- User
+- Reason
+- Scope:
+  - Cannot enter raffles
+  - Cannot receive rewards
+  - Cannot spin wheel
+- Added by
+- Added at
+
+────────────────────────────────────────
+📁 10. LOGS & EXPORTS (DB + CSV)
+────────────────────────────────────────
+
+LOG TYPES:
+- Admin actions:
+  - Site changes
+  - Raffle actions
+  - Rewards logged
+  - Notifications sent
+  - Blacklist changes
+- User events (summary/log view only):
+  - Raffle entries
+  - Wheel spins
+  - Secret code submissions
+
+EXPORT:
+- CSV export options:
+  - Raffle entries by raffle
+  - Winners list with contact/identity data
+  - Linked casinos dataset (users x sites)
+  - Reward logs (SC + Crypto + Lootbox)
+- Export jobs:
+  - Async
+  - Show status:
+    - Queued / Processing / Ready
+  - Download link when done
+
+────────────────────────────────────────
+⚙️ 11. SETTINGS (GLOBAL CONFIG)
+────────────────────────────────────────
+
+KEY SETTINGS:
+- Hero sites configuration:
+  - Which sites get priority in UI
+- Default reward presets:
+  - Common SC tip amounts
+  - Common crypto tip amounts
+- Wheel defaults:
+  - Default number of spins
+  - Default entry mapping to raffle
+- Telegram:
+  - Bot token (not shown, just label)
+  - Channel IDs / links
+- Branding:
+  - Colors
+  - Logo variants (light/dark)
+- Legal / disclaimers:
+  - Text used on frontend.
+
+────────────────────────────────────────
+🧨 12. VIBE SNAPSHOT — HOW IT FEELS TO USE
+────────────────────────────────────────
+
+You open /admin:
+
+- The screen looks like a neon ops center.
+- Left side: nav glowing with section names.
+- Top: “Welcome back, Tyler — all systems synced.”
+- You click Raffles:
+  - See all active & hidden raffles.
+  - One button to draw winners.
+  - Another to broadcast to Degen Profiles + Telegram.
+- You click Sites:
+  - Edit a URL once → instantly updates everywhere.
+  - Toggle “Eligible for Crypto Tips” → now appears as a choice in reward logging.
+- You click a player:
+  - You see everything:
+    - Their linked casinos
+    - Raffles entered
+    - Rewards they got
+    - Where they’re active.
+- You create a hidden raffle with a secret phrase:
+  - Drop the code on X or Telegram.
+  - Watch entries flow in.
+  - End the raffle.
+  - Draw 3 winners.
+  - One click → announce winners to channel + show them in their Degen Profile.
+
+
+
+🧠 GAMBLECODEZ — DEGEN ADMIN PANEL SPEC (EXTENDED)
+“ONE PANEL. ONE SOURCE OF TRUTH. EVERYTHING IN SYNC.”
+
+This extends the existing Admin Panel spec with three new subsystems:
+- Newsletter Dashboard
+- Ads Dashboard
+- Telegram Bot Dashboard
+
+These plug into the same degen neon control-room vibe and stay fully async with:
+- Database
+- Degen Profile
+- Frontend site
+- CSV exports
+- Telegram ecosystem
+
+No casino payout automation.  
+All tipping remains manual.  
+These modules are about communication, growth, and monetization.
+
+────────────────────────────────────────
+✉️ 13. NEWSLETTER DASHBOARD
+────────────────────────────────────────
+
+GOAL:
+- Manage email-based communications:
+  - Announcements
+  - Raffles
+  - Secret codes
+  - Partner promos
+- Sync with player data:
+  - Jurisdiction
+  - Linked sites
+  - Raffle participation
+  - VIP status
+
+NAV:
+- /admin → “Newsletter”
+
+LAYOUT:
+Tabs:
+1) Campaigns
+2) Audience & Segments
+3) Templates
+4) Logs & Stats
+
+──────────
+13.1 CAMPAIGNS
+──────────
+
+CAMPAIGNS TABLE:
+- Name
+- Subject line
+- Status:
+  - Draft / Scheduled / Sending / Sent
+- Audience segment
+- Sent count
+- Open rate (if tracked)
+- Click rate (if tracked)
+- Created at
+- Actions: Edit / Duplicate / View Stats
+
+CREATE CAMPAIGN:
+- Step 1: Basics
+  - Name
+  - Subject
+  - Preheader text
+- Step 2: Audience
+  - Choose segment:
+    - All subscribers
+    - Jurisdiction-based
+    - Linked to specific site (e.g., Runewager)
+    - Has Telegram linked / doesn’t have Telegram
+    - Has entered a raffle in last X days
+    - VIP / non-VIP
+- Step 3: Content
+  - Rich text or HTML editor
+  - Dynamic tokens:
+    - {{username}}
+    - {{telegram_username}}
+    - {{cwallet_id}}
+    - {{top_site}}
+- Step 4: Schedule
+  - Send now
+  - Schedule date/time
+
+Once created:
+- Can preview test sends to a test email.
+
+──────────
+13.2 AUDIENCE & SEGMENTS
+──────────
+
+AUDIENCE TABLE:
+- Email
+- Username
+- Jurisdiction
+- Linked Telegram? (yes/no)
+- Linked Cwallet? (yes/no)
+- Linked sites count
+- Last opened email
+- Last clicked email
+- Unsubscribed? (yes/no)
+
+SEGMENTS:
+- Admin can define dynamic segments using conditions:
+  - Jurisdiction = US / NON-US / GLOBAL
+  - Has linked Runewager
+  - Has joined any Sweeps site
+  - Has joined any Crypto site
+  - Has spun wheel in last X days
+  - Has >= N raffle entries
+  - Has Telegram linked / not linked
+  - Has Cwallet set / not set
+
+Each segment gets:
+- Name
+- Description
+- Approx count
+- Editable rules
+
+──────────
+13.3 TEMPLATES
+──────────
+
+TEMPLATES TABLE:
+- Name
+- Type:
+  - Raffle announcement
+  - Secret code drop
+  - New site added
+  - Runewager SC blitz
+  - Crypto tip campaigns
+- Last used
+- Actions: Edit, Duplicate
+
+TEMPLATE EDITOR:
+- Subject suggestion
+- Body:
+  - Text + HTML + dynamic tokens
+- Preview:
+  - Desktop
+  - Mobile
+
+──────────
+13.4 LOGS & STATS
+──────────
+
+GLOBAL STATS:
+- Total subscribers
+- New signups (7 days)
+- Unsubscribes (7 days)
+- Top-performing campaigns
+
+CAMPAIGN DETAIL STATS:
+- Open rate
+- Click rate
+- Bounced
+- Unsubscribed from that campaign
+- Link-level click stats (which URLs were most clicked)
+
+────────────────────────────────────────
+🧲 14. ADS DASHBOARD
+────────────────────────────────────────
+
+GOAL:
+- Central control for:
+  - Frontend ad placements (banners, tiles, in-content)
+  - Sponsored raffles
+  - Featured sites in Degen Profile
+- Everything driven by the Admin Panel, not hard-coded.
+
+NAV:
+- /admin → “Ads”
+
+LAYOUT:
+Tabs:
+1) Placements
+2) Campaigns
+3) Sponsored Raffles
+4) Performance
+
+──────────
+14.1 PLACEMENTS
+──────────
+
+PLACEMENTS TABLE:
+- Placement ID (e.g., HOME_HERO, PROFILE_SIDEBAR, WHEEL_FOOTER)
+- Location:
+  - Home page hero
+  - Profile sidebar
+  - Below spin wheel
+  - Between site cards
+- Status:
+  - Active / Paused
+- Current campaign name
+- Priority
+- Actions
+
+PLACEMENT DETAIL:
+- Preview area mocking that location.
+- Config:
+  - Allowed campaign types:
+    - Static image/banner
+    - Site feature card (affiliate highlight)
+    - Text promo block
+  - Rotation mode:
+    - Single campaign
+    - Weighted rotation among campaigns
+  - Frequency capping (optional):
+    - Limit impressions per user per day
+
+──────────
+14.2 CAMPAIGNS
+──────────
+
+CAMPAIGNS TABLE:
+- Name
+- Type:
+  - Internal Promo
+  - Affiliate Highlight
+  - Sponsored Campaign
+- Linked site (optional)
+- Status:
+  - Draft / Active / Paused / Ended
+- Start & end dates
+- Target placements
+- Actions: Edit / Pause / Duplicate
+
+CAMPAIGN CONFIG:
+- Basic:
+  - Name
+  - Type
+  - Sponsor (if sponsored)
+  - Linked site (optional)
+- Creative:
+  - Image URL / upload
+  - Headline
+  - Subtext
+  - CTA button text
+  - Target URL (your redirect or external)
+- Targets:
+  - Placements allowed (IDs)
+  - Audience filters:
+    - Jurisdiction
+    - Has linked a specific site or not
+    - VIP segment
+- Scheduling:
+  - Start/End dates
+  - Daily time windows (optional)
+
+──────────
+14.3 SPONSORED RAFFLES (ADS TIED TO RAFFLES)
+──────────
+
+This links raffles with promotional campaigns.
+
+TABLE:
+- Raffle name
+- Sponsor/site
+- Status
+- Ad campaign linked (yes/no)
+- Clicks / entries attributable
+
+CONFIG:
+- From a raffle:
+  - “Mark as Sponsored” → choose:
+    - Sponsor site (e.g., Runewager)
+    - Ad campaign to tie
+  - This enables:
+    - Displaying sponsor branding on raffle cards
+    - Tracking entries and clicks as campaign KPIs
+
+──────────
+14.4 PERFORMANCE
+──────────
+
+STATS:
+- Impressions by placement
+- Clicks by campaign
+- CTR per placement
+- Top performing:
+  - Campaigns
+  - Sites
+- “Lift” insight:
+  - Increase in linked accounts after campaign.
+
+Filtered by:
+- Date range
+- Placement
+- Campaign type
+
+────────────────────────────────────────
+🤖 15. TELEGRAM BOT DASHBOARD
+────────────────────────────────────────
+
+GOAL:
+- Turn Telegram into a controlled extension of your admin panel:
+  - Commands for admins
+  - Flows for players
+  - Broadcasts & automation around raffles and events
+
+NAV:
+- /admin → “Telegram Bot”
+
+LAYOUT:
+Tabs:
+1) Overview
+2) Commands & Flows
+3) Auto-Triggers
+4) Logs
+
+──────────
+15.1 OVERVIEW
+──────────
+
+SUMMARY:
+- Bot status: Online / Error
+- Connected users:
+  - Count of users linked to GambleCodez
+- Commands usage:
+  - /start count
+  - /link count
+  - /raffles count
+- Recent broadcast results:
+  - Last X messages:
+    - Delivered
+    - Failed
+    - Clicks (if applicable)
+
+SETTINGS SNAPSHOT:
+- Bot username
+- Channel(s) used:
+  - Announcement channel
+  - VIP channel (optional)
+
+──────────
+15.2 COMMANDS & FLOWS
+──────────
+
+COMMON COMMANDS:
+- /start:
+  - Greets user
+  - Asks them to link to their GambleCodez profile via:
+    - Deep link with token
+    - Or a short code they paste into the site.
+- /link:
+  - Resends linking instructions.
+- /profile:
+  - Sends a summary:
+    - Raffle entries
+    - Linked sites count
+    - Latest win (if any)
+- /raffles:
+  - Lists active raffles:
+    - Returns:
+      - Names
+      - Short descriptions
+      - Link to web profile.
+- /wheel:
+  - Returns:
+    - “You have X spins left today.”
+    - CTA link to spin page.
+- /code:
+  - Prompts user to submit a secret code:
+    - Bot forwards code to backend
+    - Backend validates & returns result
+    - Bot reports:
+      - “Code accepted: +X entries added.”
+      - Or “Invalid/expired code.”
+
+ADMIN/BACKOFFICE COMMANDS (optional, role-based):
+- /broadcast <message-id> or select from admin panel.
+- /stats:
+  - Shows quick stats: users, active raffles, etc.
+
+In the Telegram Bot Dashboard:
+- You see list of commands and can edit:
+  - Description
+  - Enabled/disabled
+
+──────────
+15.3 AUTO-TRIGGERS
+──────────
+
+EVENT-DRIVEN MESSAGES:
+- When certain events happen in your system, the bot can:
+  - Send DM to user
+  - Or post in channel(s)
+
+CONFIGURABLE TRIGGERS:
+1) Raffle win:
+   - Trigger: user becomes a winner.
+   - Action:
+     - DM to that user:
+       - “You won {{raffle_name}}! Check your dashboard for reward details.”
+     - Optionally add:
+       - Channel announcement template.
+
+2) New raffle:
+   - Trigger: new raffle created and marked “announce to Telegram”.
+   - Action:
+     - Post in channel:
+       - “New raffle: {{raffle_name}} – {{short_desc}}. Join on GambleCodez.”
+
+3) Secret code campaign:
+   - Trigger: new secret code created with Telegram flag.
+   - Action:
+     - Post hint or full code to:
+       - Channel
+       - Or only DM to selected segment.
+
+4) Daily reminders:
+   - Trigger: daily scheduled time.
+   - Action:
+     - DM to users (configurable):
+       - “You have {{spins_left}} wheel spins remaining today.”
+       - Or “You have unclaimed rewards.”
+
+UI CONFIG FOR EACH TRIGGER:
+- Toggle ON/OFF.
+- Template text with variables.
+- Target:
+  - DM to linked users
+  - Post to one or more channels
+
+──────────
+15.4 LOGS
+──────────
+
+LOG TYPES:
+- DM logs:
+  - User
+  - Message type
+  - Status: Sent / Failed
+  - Timestamp
+- Command calls:
+  - User
+  - Command
+  - Result
+- Channel posts:
+  - Channel
+  - Message snippet
+  - Timestamp
+
+FILTERS:
+- Date range
+- Type (DM / Command / Channel)
+- User
+- Raffle / Campaign context (if linked)
+
+────────────────────────────────────────
+🧠 16. HOW IT ALL FITS TOGETHER
+────────────────────────────────────────
+
+NOW THE ADMIN PANEL HAS:
+
+- Degen Profile sync:
+  - Sites
+  - Raffles
+  - Rewards
+  - Activity
+
+- Newsletter:
+  - Truly segment-based
+  - Uses same identity:
+    - Jurisdiction
+    - Linked sites
+    - Raffle activity
+    - Telegram link status
+
+- Ads:
+  - Drives what’s featured visually
+  - Sponsored raffles
+  - Site promotion
+  - All tracked in one place
+
+- Telegram Bot:
+  - Real-time engagement channel
+  - Secret code flows
+  - Winner announcements
+  - Daily reminders
+
+SCENARIO EXAMPLE:
+
+1) You create a sponsored Runewager raffle:
+   - In “Raffles & Wheel” → new raffle, reward type “Runewager SC Tip”.
+   - Mark it as “Sponsored” by Runewager.
+   - Set it to allow entries via:
+     - Wheel
+     - Secret code
+     - Manual entry bonuses.
+
+2) You create a secret code campaign:
+   - In Raffles: set secret code “RUNEBLITZ”.
+   - In Telegram Bot Dashboard:
+     - Enable an auto-trigger:
+       - Post a hint or code in your channel.
+
+3) You push visual ads:
+   - In Ads Dashboard:
+     - Create a campaign featuring Runewager.
+     - Assign it to:
+       - Profile sidebar
+       - Wheel footer.
+     - It shows to users who don’t yet have Runewager linked.
+
+4) You send a newsletter hit:
+   - In Newsletter:
+     - Segment: users with no linked Runewager, but active in raffles.
+     - Campaign: “Runewager SC Blitz + Secret Code”.
+     - Email includes:
+       - Promo
+       - Link to dashboard.
+
+5) The system quietly syncs it all:
+   - Players see:
+     - The raffle in their Degen Profile.
+     - The ads on site.
+     - The Telegram posts in their channel.
+     - The email in their inbox.
+   - When winners are drawn:
+     - Admin draws winners in Raffles.
+     - Winners:
+       - See win in Degen Profile.
+       - Get DM via bot (if enabled).
+     - You log SC tips manually in Rewards.
+
+Everything is orchestrated from one degen neon admin cockpit.  
+Nothing is out-of-sync.  
+No double-entry.  
+No guessing.
+
+────────────────────────────────────────
+END OF EXTENDED ADMIN PANEL SPEC (NEWSLETTER + ADS + TELEGRAM BOT)
+────────────────────────────────────────
+
+
+
+
+
+
+
+
+
+
+It feels less like an admin tool, more like a **control room for your GambleCodez universe**.
+
+────────────────────────────────────────
+END OF FULL DEGEN ADMIN PANEL SPEC
+────────────────────────────────────────

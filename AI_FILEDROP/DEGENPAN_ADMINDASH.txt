@@ -1,0 +1,174 @@
+🧠 STEP 6/6 — ADMIN PANEL: NEWSLETTER + ADS + TELEGRAM BOT
+
+Use Degen_Profile.txt and ADMIN_DASH.txt as full context.
+
+Build the Newsletter Dashboard, Ads Dashboard, and Telegram Bot Dashboard.
+
+────────────────────────────────────────
+1. NEWSLETTER DASHBOARD
+────────────────────────────────────────
+Tabs:
+- Campaigns
+- Audience & Segments
+- Templates
+- Logs & Stats
+
+Campaigns:
+- Name, subject, status (Draft / Scheduled / Sending / Sent)
+- Audience segment
+- Sent count
+- Open rate
+- Click rate
+- Created at
+
+Create campaign:
+- Name
+- Subject
+- Preheader
+- Segment selection:
+  - All subscribers
+  - Jurisdiction-based
+  - Linked to specific site
+  - Telegram linked / not linked
+  - Raffle-active users
+  - VIP segment
+- Content editor (HTML + dynamic tokens)
+- Schedule or send now
+
+Audience:
+- Email
+- Username
+- Jurisdiction
+- Telegram linked?
+- Cwallet linked?
+- Linked sites count
+- Last opened / clicked
+- Unsubscribed?
+
+Segments:
+- Dynamic rules:
+  - Jurisdiction
+  - Linked sites
+  - Raffle activity
+  - Wheel activity
+  - Telegram status
+  - Cwallet status
+
+Templates:
+- Raffle announcement
+- Secret code drop
+- New site added
+- SC blitz
+- Crypto promo
+
+Stats:
+- Global subscriber metrics
+- Campaign-level open/click/bounce
+- Link-level click stats
+
+────────────────────────────────────────
+2. ADS DASHBOARD
+────────────────────────────────────────
+Tabs:
+- Placements
+- Campaigns
+- Sponsored Raffles
+- Performance
+
+Placements:
+- Placement ID (HOME_HERO, PROFILE_SIDEBAR, WHEEL_FOOTER)
+- Location preview
+- Status (Active / Paused)
+- Current campaign
+- Priority
+- Rotation mode:
+  - Single
+  - Weighted rotation
+- Frequency capping (optional)
+
+Campaigns:
+- Name
+- Type (Internal Promo / Affiliate Highlight / Sponsored)
+- Linked site (optional)
+- Creative:
+  - Image
+  - Headline
+  - Subtext
+  - CTA button
+  - Target URL
+- Audience filters:
+  - Jurisdiction
+  - Linked site status
+  - VIP segment
+- Scheduling:
+  - Start/end dates
+  - Daily time windows
+
+Sponsored Raffles:
+- Raffle name
+- Sponsor site
+- Linked ad campaign
+- Clicks
+- Entries attributed
+
+Performance:
+- Impressions by placement
+- Clicks by campaign
+- CTR
+- Lift in linked accounts
+
+────────────────────────────────────────
+3. TELEGRAM BOT DASHBOARD
+────────────────────────────────────────
+Tabs:
+- Overview
+- Commands & Flows
+- Auto-Triggers
+- Logs
+
+Overview:
+- Bot status (Online / Error)
+- Connected users count
+- Command usage:
+  - /start
+  - /link
+  - /raffles
+  - /wheel
+  - /code
+- Recent broadcast results:
+  - Delivered
+  - Failed
+  - Clicks
+
+Commands:
+- /start → greet + link account
+- /link → resend linking instructions
+- /profile → show user stats
+- /raffles → list active raffles
+- /wheel → show spins left
+- /code → submit secret code
+- Admin commands:
+  - /broadcast
+  - /stats
+
+Auto-Triggers:
+- Raffle win:
+  - DM winner
+  - Optional channel announcement
+- New raffle:
+  - Auto-post to channel
+- Secret code:
+  - Hint or full code drop
+- Daily reminders:
+  - Spins left
+  - Unclaimed rewards
+
+Logs:
+- DM logs
+- Command logs
+- Channel posts
+- Filter by:
+  - Date
+  - User
+  - Type
+  - Raffle/campaign context

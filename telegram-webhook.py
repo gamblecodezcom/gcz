@@ -19,7 +19,7 @@ BOT_API = f"https://api.telegram.org/bot{TOKEN}"
 CALLBACK_HANDLER = (
     "/var/www/html/gcz/ai/gcz-prod/ai/callback-handler.js"
     if ENV == "production"
-    else "/var/www/html/gcz/ai/gcz-sandbox/ai/callback-handler.js"
+    else "/var/www/html/gcz/ai/sandbox/ai/callback-handler.js"
 )
 
 PORT = 9098 if ENV == "production" else 9099

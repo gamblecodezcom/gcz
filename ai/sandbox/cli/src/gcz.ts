@@ -4,11 +4,15 @@ import fetch from "node-fetch";
 import { log } from "./utils/logger";
 
 const MCP_URL = process.env.GCZ_MCP_URL || "http://127.0.0.1:3001";
+const MCP_KEY = process.env.GCZ_MCP_KEY || process.env.GCZ_CONTROL_KEY;
 
 async function callTool(tool: string, body: any = {}) {
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (MCP_KEY) headers["x-gcz-key"] = MCP_KEY;
+
   const res = await fetch(`${MCP_URL}/tool/${tool}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify(body)
   });
   return res.json();

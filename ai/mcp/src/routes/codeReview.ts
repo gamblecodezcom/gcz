@@ -1,7 +1,7 @@
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import type { GczMcp } from "../utils/mcp";
 import { reviewCode } from "../services/codereview.js";
 
-export function registerCodeReview(server: Server) {
+export function registerCodeReview(server: GczMcp) {
 
   server.setRequestHandler<any,any>("gcz.codereview.scan", async (extra: any) => {
 

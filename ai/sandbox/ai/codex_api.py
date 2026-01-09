@@ -3,9 +3,21 @@ import json
 import datetime
 import traceback
 import subprocess
+import sys
+from pathlib import Path
+
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import requests
+
+ROOT = Path("/var/www/html/gcz")
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from ai.config.loader import build_settings
+from ai.tools.ai_clients import AIClient
+from ai.sandbox.codex_ext import risk_engine, self_heal
+import promo_intel_scan
 
 # ================================
 # CONSTANTS
@@ -21,6 +33,8 @@ TG_ADMIN = os.getenv("TELEGRAM_ADMIN_ID")
 TG_API = f"https://api.telegram.org/bot{TG_TOKEN}" if TG_TOKEN else None
 
 FREEZE = False
+
+AI_CLIENT: AIClient | None = None
 
 
 # ================================
@@ -60,15 +74,18 @@ def safe_shell(cmd):
 
 
 def risk_score(text):
-    t = text.lower()
-    score = 0
-    if "restart" in t:
-        score += 2
-    if "deploy" in t:
-        score += 3
-    if "database" in t:
-        score += 5
-    return score
+    try:
+        return int(risk_engine.score(text))
+    except Exception:
+        t = text.lower()
+        score = 0
+        if "restart" in t:
+            score += 2
+        if "deploy" in t:
+            score += 3
+        if "database" in t:
+            score += 5
+        return score
 
 
 # ================================
@@ -77,14 +94,73 @@ def risk_score(text):
 app = FastAPI(title=APP_TITLE)
 
 
+@app.on_event("startup")
+async def startup() -> None:
+    global AI_CLIENT
+    AI_CLIENT = AIClient(build_settings(ROOT))
+
+
+@app.on_event("shutdown")
+async def shutdown() -> None:
+    global AI_CLIENT
+    if AI_CLIENT:
+        await AI_CLIENT.close()
+
+
 class ChatRequest(BaseModel):
     message: str
     user: str | None = "anonymous"
 
 
+class RiskRequest(BaseModel):
+    text: str
+
+
+class PromptRequest(BaseModel):
+    prompt: str
+
+
 @app.get("/health")
 async def health():
     return {"status": "ok", "env": ENV, "mode": "god"}
+
+
+@app.post("/codex/risk")
+async def codex_risk(req: RiskRequest):
+    score = risk_score(req.text)
+    log_event("risk", {"text": req.text[:200], "score": score})
+    return {"risk": score}
+
+
+@app.post("/codex/self-heal")
+async def codex_self_heal():
+    try:
+        self_heal.heal()
+        log_event("self_heal", {"status": "ok"})
+        return {"status": "ok"}
+    except Exception as exc:
+        log_event("self_heal_error", {"error": str(exc)})
+        raise HTTPException(500, "self-heal failed")
+
+
+@app.post("/promo/scan")
+async def promo_scan():
+    try:
+        summary = await promo_intel_scan.run_scan()
+        log_event("promo_scan", summary)
+        return {"status": "ok", "summary": summary}
+    except Exception as exc:
+        log_event("promo_scan_error", {"error": str(exc)})
+        raise HTTPException(500, "promo scan failed")
+
+
+@app.post("/prompt")
+async def prompt_experiment(req: PromptRequest):
+    if not AI_CLIENT:
+        raise HTTPException(503, "AI client unavailable")
+    response = await AI_CLIENT.generate(req.prompt)
+    log_event("prompt", {"provider": response.provider, "mode": response.mode})
+    return {"provider": response.provider, "mode": response.mode, "text": response.text}
 
 
 # ================================

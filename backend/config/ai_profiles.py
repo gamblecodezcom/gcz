@@ -40,6 +40,11 @@ def get_ai_profile(provider: str):
             "model": settings.OPENROUTER_MODEL,
             "base": "https://openrouter.ai/api/v1",
         },
+        "mistral": {
+            "api_key": settings.MISTRAL_API_KEY,
+            "model": settings.MISTRAL_MODEL,
+            "base": settings.MISTRAL_API_BASE,
+        },
     }
 
     return profiles.get(provider)

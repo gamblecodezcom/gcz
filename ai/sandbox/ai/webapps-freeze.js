@@ -1,8 +1,8 @@
 import fs from "fs";
 import crypto from "crypto";
 
-const FILE="/var/www/html/gcz/ai/gcz-sandbox/ai/webapps.json";
-const FREEZE="/var/www/html/gcz/ai/gcz-sandbox/ai/webapps.lock";
+const FILE="/var/www/html/gcz/ai/sandbox/ai/webapps.json";
+const FREEZE="/var/www/html/gcz/ai/sandbox/ai/webapps.lock";
 const ALERT="/var/log/gcz/webapps-anomaly.log";
 
 function sha(v){return crypto.createHash("sha256").update(v).digest("hex");}

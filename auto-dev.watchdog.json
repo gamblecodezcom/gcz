@@ -3,7 +3,7 @@
     {
       "name": "gcz-sandbox-bot",
       "script": "bot.js",
-      "cwd": "/var/www/html/gcz/ai/gcz-sandbox/bot",
+      "cwd": "/var/www/html/gcz/ai/sandbox/bot",
       "interpreter": "node",
       "exec_mode": "fork",
       "instances": 1,
@@ -18,13 +18,13 @@
       "name": "gcz-sandbox-api",
       "script": "uvicorn",
       "args": "backend.main:app --host 0.0.0.0 --port 9000",
-      "cwd": "/var/www/html/gcz/ai/gcz-sandbox",
+      "cwd": "/var/www/html/gcz/ai/sandbox",
       "interpreter": "python3",
       "exec_mode": "fork",
       "instances": 1,
       "env_file": "/var/www/html/gcz/.env.sandbox",
       "env": {
-        "PYTHONPATH": "/var/www/html/gcz/ai/gcz-sandbox",
+        "PYTHONPATH": "/var/www/html/gcz/ai/sandbox",
         "NODE_ENV": "sandbox",
         "GCZ_ENV": "sandbox"
       }
@@ -33,13 +33,13 @@
       "name": "gcz-sandbox-redirect",
       "script": "uvicorn",
       "args": "backend.redirect:app --host 0.0.0.0 --port 9001",
-      "cwd": "/var/www/html/gcz/ai/gcz-sandbox",
+      "cwd": "/var/www/html/gcz/ai/sandbox",
       "interpreter": "python3",
       "exec_mode": "fork",
       "instances": 1,
       "env_file": "/var/www/html/gcz/.env.sandbox",
       "env": {
-        "PYTHONPATH": "/var/www/html/gcz/ai/gcz-sandbox",
+        "PYTHONPATH": "/var/www/html/gcz/ai/sandbox",
         "NODE_ENV": "sandbox",
         "GCZ_ENV": "sandbox"
       }
@@ -48,13 +48,13 @@
       "name": "gcz-sandbox-drops",
       "script": "uvicorn",
       "args": "backend.drops:app --host 0.0.0.0 --port 9002",
-      "cwd": "/var/www/html/gcz/ai/gcz-sandbox",
+      "cwd": "/var/www/html/gcz/ai/sandbox",
       "interpreter": "python3",
       "exec_mode": "fork",
       "instances": 1,
       "env_file": "/var/www/html/gcz/.env.sandbox",
       "env": {
-        "PYTHONPATH": "/var/www/html/gcz/ai/gcz-sandbox",
+        "PYTHONPATH": "/var/www/html/gcz/ai/sandbox",
         "NODE_ENV": "sandbox",
         "GCZ_ENV": "sandbox"
       }
@@ -62,7 +62,7 @@
     {
       "name": "gcz-sandbox-discord",
       "script": "start-discord.js",
-      "cwd": "/var/www/html/gcz/ai/gcz-sandbox/discord",
+      "cwd": "/var/www/html/gcz/ai/sandbox/discord",
       "interpreter": "node",
       "exec_mode": "fork",
       "instances": 1,
@@ -74,8 +74,8 @@
       }
     },
     {
-      "name": "gcz-sandbox-watchdog",
-      "script": "ai/ai_watchdog.py",
+      "name": "gcz-sandbox-ai-watchdog",
+      "script": "ai/sandbox/ai_watchdog.py",
       "cwd": "/var/www/html/gcz",
       "interpreter": "python3",
       "exec_mode": "fork",
@@ -91,15 +91,15 @@
     {
       "name": "gcz-sandbox-ai",
       "script": "uvicorn",
-      "args": "ai.server:app --host 0.0.0.0 --port 9010",
-      "cwd": "/var/www/html/gcz/ai/gcz-sandbox",
+      "args": "server:app --host 0.0.0.0 --port 9010",
+      "cwd": "/var/www/html/gcz/ai/sandbox",
       "interpreter": "python3",
       "exec_mode": "fork",
       "instances": 1,
       "env_file": "/var/www/html/gcz/.env.sandbox",
       "env": {
         "GCZ_ENV": "sandbox",
-        "PYTHONPATH": "/var/www/html/gcz/ai/gcz-sandbox",
+        "PYTHONPATH": "/var/www/html/gcz/ai/sandbox",
         "NODE_ENV": "sandbox"
       }
     }

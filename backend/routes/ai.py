@@ -9,6 +9,7 @@ from services.ai import (
     stream_perplexity,
     perplexity_search,
     perplexity_embed,
+    mistral_chat,
 )
 
 router = APIRouter(prefix="/api/ai", tags=["AI"])
@@ -110,3 +111,27 @@ async def ai_perplexity_stream(payload: PerplexityRequest):
     except Exception as e:
         logger.error(f"[AI] /perplexity-stream error: {e}")
         raise HTTPException(status_code=500, detail="AI streaming error")
+
+
+# ============================================================
+#  /mistral (chat completion via mistral.sh or HTTP)
+# ============================================================
+
+@router.post("/mistral")
+async def ai_mistral(payload: PerplexityRequest):
+    prompt = payload.prompt.strip()
+    if not prompt:
+        raise HTTPException(status_code=400, detail="Prompt cannot be empty")
+
+    try:
+        logger.info(f"[AI] /mistral: {prompt[:80]}...")
+        response = await mistral_chat(prompt)
+        return {"response": response}
+
+    except RuntimeError as e:
+        logger.warning(f"[AI] /mistral not configured: {e}")
+        raise HTTPException(status_code=503, detail="Mistral is not configured")
+
+    except Exception as e:
+        logger.error(f"[AI] /mistral error: {e}")
+        raise HTTPException(status_code=500, detail="AI processing error")

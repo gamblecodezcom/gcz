@@ -24,27 +24,21 @@ export const LiveDashboard = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      // TODO: Replace with actual API endpoint
-      // For now, using mock data
-      setPromoCodes([
-        {
-          id: '1',
-          site: 'Stake.us',
-          code: 'GCZ50',
-          description: '50 Free Sweeps Coins',
-          createdAt: new Date().toISOString(),
-        },
-      ]);
-      setPromoLinks([
-        {
-          id: '1',
-          site: 'Rollbit',
-          url: 'https://rollbit.com/ref/gcz',
-          description: '10% Lootbox Boost',
-          createdAt: new Date().toISOString(),
-        },
-      ]);
-      setLoading(false);
+      try {
+        const response = await fetch('/api/live-dashboard?status=live');
+        if (!response.ok) {
+          throw new Error(`Live dashboard fetch failed (${response.status})`);
+        }
+        const data = await response.json();
+        setPromoCodes(Array.isArray(data?.promoCodes) ? data.promoCodes : []);
+        setPromoLinks(Array.isArray(data?.promoLinks) ? data.promoLinks : []);
+      } catch (error) {
+        console.error('Failed to fetch live promos:', error);
+        setPromoCodes([]);
+        setPromoLinks([]);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchData();

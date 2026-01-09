@@ -1,7 +1,7 @@
 import fs from "fs";
 import crypto from "crypto";
 
-const FILE="/var/www/html/gcz/ai/gcz-sandbox/ai/webapps.json";
+const FILE="/var/www/html/gcz/ai/sandbox/ai/webapps.json";
 const HISTORY="/var/log/gcz/webapps-history.json";
 const ALERT="/var/log/gcz/webapps-anomaly.log";
 
